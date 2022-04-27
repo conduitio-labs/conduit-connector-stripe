@@ -16,10 +16,10 @@ package config
 
 const (
 	// SecretKey is the config name for Stripe secret key.
-	SecretKey = "secretKey"
+	SecretKey = "stripe.secretKey"
 
 	// ResourceName is the config name for Stripe resource.
-	ResourceName = "resourceName"
+	ResourceName = "stripe.resourceName"
 )
 
 // Config represents configuration needed for Stripe.
