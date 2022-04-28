@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package httpclient
+package http
 
 import (
 	"github.com/hashicorp/go-retryablehttp"
@@ -20,20 +20,18 @@ import (
 	"github.com/ConduitIO/conduit-connector-stripe/config"
 )
 
-const retryMax = 3
-
-// HTTPClient -  retryable http client.
-type HTTPClient struct {
+// A Client represents retryable http client.
+type Client struct {
 	config     *config.Config
 	httpClient *retryablehttp.Client
 }
 
 // NewClient returns a new retryable http client.
-func NewClient(config *config.Config) *HTTPClient {
+func NewClient(config *config.Config) *Client {
 	retryClient := retryablehttp.NewClient()
-	retryClient.RetryMax = retryMax
+	retryClient.RetryMax = config.HTTPClientRetryMax
 
-	return &HTTPClient{
+	return &Client{
 		httpClient: retryClient,
 		config:     config,
 	}

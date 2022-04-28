@@ -32,6 +32,7 @@ func TestSource_Configure(t *testing.T) {
 		cfg                  map[string]string
 		expectedSecretKey    string
 		expectedResourceName string
+		expectedRetryMax     int
 		expectedErr          error
 	}{
 		{
@@ -42,6 +43,7 @@ func TestSource_Configure(t *testing.T) {
 			},
 			expectedSecretKey:    "sk_51JB",
 			expectedResourceName: "subscriptions",
+			expectedRetryMax:     config.RetryMaxDefault,
 		},
 		{
 			name: "No secret key and resource name",
