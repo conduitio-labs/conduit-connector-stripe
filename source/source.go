@@ -16,8 +16,7 @@ package source
 
 import (
 	"context"
-
-	"github.com/pkg/errors"
+	"fmt"
 
 	sdk "github.com/conduitio/conduit-connector-sdk"
 
@@ -41,7 +40,7 @@ func NewSource() sdk.Source {
 func (s *Source) Configure(ctx context.Context, cfgRaw map[string]string) error {
 	cfg, err := config.Parse(cfgRaw)
 	if err != nil {
-		return errors.Wrap(err, "parse configuration")
+		return fmt.Errorf("parse configuration: %w", err)
 	}
 
 	s.config = &cfg

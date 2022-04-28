@@ -18,7 +18,6 @@ import (
 	"fmt"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/pkg/errors"
 	"go.uber.org/multierr"
 )
 
@@ -31,7 +30,7 @@ func (c Config) Validate() error {
 	validationErr := validate.Struct(c)
 	if validationErr != nil {
 		if _, ok := validationErr.(*validator.InvalidValidationError); ok {
-			return errors.Wrap(validationErr, "validate config struct")
+			return fmt.Errorf("validate config struct: %w", validationErr)
 		}
 
 		for _, e := range validationErr.(validator.ValidationErrors) {
