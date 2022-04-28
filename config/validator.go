@@ -18,7 +18,6 @@ import (
 	"fmt"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/pkg/errors"
 	"go.uber.org/multierr"
 )
 
@@ -31,12 +30,15 @@ func (c Config) Validate() error {
 	validationErr := validate.Struct(c)
 	if validationErr != nil {
 		if _, ok := validationErr.(*validator.InvalidValidationError); ok {
-			return errors.Wrap(validationErr, "validate config struct")
+			return fmt.Errorf("validate config struct: %w", validationErr)
 		}
 
 		for _, e := range validationErr.(validator.ValidationErrors) {
-			if e.ActualTag() == "required" {
-				err = multierr.Append(err, requiredConfigErr(configName(e.Field())))
+			switch e.ActualTag() {
+			case "required":
+				err = multierr.Append(err, c.RequiredConfigErr(c.configName(e.Field())))
+			case "gte", "lte":
+				err = multierr.Append(err, c.OutOfRangeConfigErr(c.configName(e.Field())))
 			}
 		}
 	}
@@ -44,13 +46,25 @@ func (c Config) Validate() error {
 	return err
 }
 
-func requiredConfigErr(name string) error {
+// RequiredConfigErr returns the formatted required field config error.
+func (c Config) RequiredConfigErr(name string) error {
 	return fmt.Errorf("%q config value must be set", name)
 }
 
-func configName(fieldName string) string {
+// OutOfRangeConfigErr returns the formatted out of range error.
+func (c Config) OutOfRangeConfigErr(name string) error {
+	return fmt.Errorf("%q is out of range", name)
+}
+
+// IntegerTypeConfigErr returns the formatted integer type error.
+func (c Config) IntegerTypeConfigErr(name string) error {
+	return fmt.Errorf("%q config value must be an integer", name)
+}
+
+func (c Config) configName(fieldName string) string {
 	return map[string]string{
-		"SecretKey":    SecretKey,
-		"ResourceName": ResourceName,
+		"SecretKey":          SecretKey,
+		"ResourceName":       ResourceName,
+		"HTTPClientRetryMax": HTTPClientRetryMax,
 	}[fieldName]
 }

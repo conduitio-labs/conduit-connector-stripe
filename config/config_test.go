@@ -22,21 +22,26 @@ import (
 )
 
 func TestParse(t *testing.T) {
+	underTestConfig := Config{}
+
 	tests := []struct {
 		name                 string
 		cfg                  map[string]string
 		expectedSecretKey    string
 		expectedResourceName string
+		expectedRetryMax     int
 		expectedErr          error
 	}{
 		{
 			name: "Valid config",
 			cfg: map[string]string{
-				SecretKey:    "sk_51JB",
-				ResourceName: "subscriptions",
+				SecretKey:          "sk_51JB",
+				ResourceName:       "subscriptions",
+				HTTPClientRetryMax: "5",
 			},
 			expectedSecretKey:    "sk_51JB",
 			expectedResourceName: "subscriptions",
+			expectedRetryMax:     5,
 		},
 		{
 			name: "No secret key",
@@ -44,7 +49,7 @@ func TestParse(t *testing.T) {
 				SecretKey:    "",
 				ResourceName: "subscriptions",
 			},
-			expectedErr: requiredConfigErr(SecretKey),
+			expectedErr: underTestConfig.RequiredConfigErr(SecretKey),
 		},
 		{
 			name: "Empty secret key",
@@ -52,14 +57,14 @@ func TestParse(t *testing.T) {
 				SecretKey:    "",
 				ResourceName: "subscriptions",
 			},
-			expectedErr: requiredConfigErr(SecretKey),
+			expectedErr: underTestConfig.RequiredConfigErr(SecretKey),
 		},
 		{
 			name: "No resource name",
 			cfg: map[string]string{
 				SecretKey: "sk_51JB",
 			},
-			expectedErr: requiredConfigErr(ResourceName),
+			expectedErr: underTestConfig.RequiredConfigErr(ResourceName),
 		},
 		{
 			name: "Empty resource name",
@@ -67,7 +72,7 @@ func TestParse(t *testing.T) {
 				SecretKey:    "sk_51JB",
 				ResourceName: "",
 			},
-			expectedErr: requiredConfigErr(ResourceName),
+			expectedErr: underTestConfig.RequiredConfigErr(ResourceName),
 		},
 		{
 			name: "No secret key and resource name",
@@ -75,7 +80,45 @@ func TestParse(t *testing.T) {
 				SecretKey:    "",
 				ResourceName: "",
 			},
-			expectedErr: multierr.Combine(requiredConfigErr(SecretKey), requiredConfigErr(ResourceName)),
+			expectedErr: multierr.Combine(underTestConfig.RequiredConfigErr(SecretKey),
+				underTestConfig.RequiredConfigErr(ResourceName)),
+		},
+		{
+			name: "HTTPClientRetryMax is greater than the value of lte tag",
+			cfg: map[string]string{
+				SecretKey:          "sk_51JB",
+				ResourceName:       "subscriptions",
+				HTTPClientRetryMax: "12",
+			},
+			expectedErr: underTestConfig.OutOfRangeConfigErr(HTTPClientRetryMax),
+		},
+		{
+			name: "HTTPClientRetryMax is more than the value of lte tag",
+			cfg: map[string]string{
+				SecretKey:          "sk_51JB",
+				ResourceName:       "subscriptions",
+				HTTPClientRetryMax: "0",
+			},
+			expectedErr: underTestConfig.OutOfRangeConfigErr(HTTPClientRetryMax),
+		},
+		{
+			name: "Invalid HTTPClientRetryMax",
+			cfg: map[string]string{
+				SecretKey:          "sk_51JB",
+				ResourceName:       "subscriptions",
+				HTTPClientRetryMax: "test",
+			},
+			expectedErr: underTestConfig.IntegerTypeConfigErr(HTTPClientRetryMax),
+		},
+		{
+			name: "HTTPClientRetryMax by default",
+			cfg: map[string]string{
+				SecretKey:    "sk_51JB",
+				ResourceName: "subscriptions",
+			},
+			expectedSecretKey:    "sk_51JB",
+			expectedResourceName: "subscriptions",
+			expectedRetryMax:     RetryMaxDefault,
 		},
 	}
 
@@ -88,6 +131,7 @@ func TestParse(t *testing.T) {
 			} else {
 				assert.Equal(t, tt.expectedSecretKey, cfg.SecretKey)
 				assert.Equal(t, tt.expectedResourceName, cfg.ResourceName)
+				assert.Equal(t, tt.expectedRetryMax, cfg.HTTPClientRetryMax)
 			}
 		})
 	}

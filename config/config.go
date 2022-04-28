@@ -14,18 +14,28 @@
 
 package config
 
-const (
-	// SecretKey is the config name for Stripe secret key.
-	SecretKey = "stripe.secretKey"
-
-	// ResourceName is the config name for Stripe resource.
-	ResourceName = "stripe.resourceName"
+import (
+	"strconv"
 )
 
-// Config represents configuration needed for Stripe.
+const RetryMaxDefault = 3
+
+const (
+	// SecretKey is the configuration name for Stripe secret key.
+	SecretKey = "stripe.secretKey"
+
+	// ResourceName is the configuration name for Stripe resource.
+	ResourceName = "stripe.resourceName"
+
+	// HTTPClientRetryMax is the configuration name for the maximum number of retries in the HTTP client.
+	HTTPClientRetryMax = "stripe.http_client_retry_max"
+)
+
+// A Config represents the configuration needed for Stripe.
 type Config struct {
-	SecretKey    string `validate:"required"`
-	ResourceName string `validate:"required"`
+	SecretKey          string `validate:"required"`
+	ResourceName       string `validate:"required"`
+	HTTPClientRetryMax int    `validate:"gte=1,lte=10"`
 }
 
 // Parse parses Stripe configuration into a Config struct.
@@ -33,6 +43,17 @@ func Parse(cfg map[string]string) (Config, error) {
 	config := Config{
 		SecretKey:    cfg[SecretKey],
 		ResourceName: cfg[ResourceName],
+	}
+
+	if cfg[HTTPClientRetryMax] != "" {
+		retryMax, err := strconv.Atoi(cfg[HTTPClientRetryMax])
+		if err != nil {
+			return Config{}, config.IntegerTypeConfigErr(HTTPClientRetryMax)
+		}
+
+		config.HTTPClientRetryMax = retryMax
+	} else {
+		config.HTTPClientRetryMax = RetryMaxDefault
 	}
 
 	return config, config.Validate()
