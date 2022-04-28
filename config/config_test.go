@@ -102,6 +102,15 @@ func TestParse(t *testing.T) {
 			expectedErr: underTestConfig.OutOfRangeConfigErr(HTTPClientRetryMax),
 		},
 		{
+			name: "Invalid HTTPClientRetryMax",
+			cfg: map[string]string{
+				SecretKey:          "sk_51JB",
+				ResourceName:       "subscriptions",
+				HTTPClientRetryMax: "test",
+			},
+			expectedErr: underTestConfig.IntegerTypeConfigErr(HTTPClientRetryMax),
+		},
+		{
 			name: "HTTPClientRetryMax by default",
 			cfg: map[string]string{
 				SecretKey:    "sk_51JB",

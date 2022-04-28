@@ -56,6 +56,11 @@ func (c Config) OutOfRangeConfigErr(name string) error {
 	return fmt.Errorf("%q is out of range", name)
 }
 
+// IntegerTypeConfigErr returns the formatted integer type error.
+func (c Config) IntegerTypeConfigErr(name string) error {
+	return fmt.Errorf("%q config value must be an integer", name)
+}
+
 func (c Config) configName(fieldName string) string {
 	return map[string]string{
 		"SecretKey":          SecretKey,

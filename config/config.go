@@ -14,7 +14,9 @@
 
 package config
 
-import "strconv"
+import (
+	"strconv"
+)
 
 const RetryMaxDefault = 3
 
@@ -38,15 +40,20 @@ type Config struct {
 
 // Parse parses Stripe configuration into a Config struct.
 func Parse(cfg map[string]string) (Config, error) {
-	retryMax, err := strconv.Atoi(cfg[HTTPClientRetryMax])
-	if err != nil {
-		retryMax = RetryMaxDefault
+	config := Config{
+		SecretKey:    cfg[SecretKey],
+		ResourceName: cfg[ResourceName],
 	}
 
-	config := Config{
-		SecretKey:          cfg[SecretKey],
-		ResourceName:       cfg[ResourceName],
-		HTTPClientRetryMax: retryMax,
+	if cfg[HTTPClientRetryMax] != "" {
+		retryMax, err := strconv.Atoi(cfg[HTTPClientRetryMax])
+		if err != nil {
+			return Config{}, config.IntegerTypeConfigErr(HTTPClientRetryMax)
+		}
+
+		config.HTTPClientRetryMax = retryMax
+	} else {
+		config.HTTPClientRetryMax = RetryMaxDefault
 	}
 
 	return config, config.Validate()
