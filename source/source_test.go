@@ -12,17 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package config
+package source
 
 import (
+	"context"
 	"testing"
 
+	"github.com/ConduitIO/conduit-connector-stripe/config"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/multierr"
 )
 
-func TestParse(t *testing.T) {
-	underTestConfig := Config{}
+func TestSource_Configure(t *testing.T) {
+	underTestConfig := config.Config{}
+	underTestSource := Source{}
 
 	tests := []struct {
 		name                 string
@@ -34,63 +37,33 @@ func TestParse(t *testing.T) {
 		{
 			name: "Valid config",
 			cfg: map[string]string{
-				SecretKey:    "sk_51JB",
-				ResourceName: "subscriptions",
+				config.SecretKey:    "sk_51JB",
+				config.ResourceName: "subscriptions",
 			},
 			expectedSecretKey:    "sk_51JB",
 			expectedResourceName: "subscriptions",
 		},
 		{
-			name: "No secret key",
-			cfg: map[string]string{
-				SecretKey:    "",
-				ResourceName: "subscriptions",
-			},
-			expectedErr: underTestConfig.RequiredConfigErr(SecretKey),
-		},
-		{
-			name: "Empty secret key",
-			cfg: map[string]string{
-				SecretKey:    "",
-				ResourceName: "subscriptions",
-			},
-			expectedErr: underTestConfig.RequiredConfigErr(SecretKey),
-		},
-		{
-			name: "No resource name",
-			cfg: map[string]string{
-				SecretKey: "sk_51JB",
-			},
-			expectedErr: underTestConfig.RequiredConfigErr(ResourceName),
-		},
-		{
-			name: "Empty resource name",
-			cfg: map[string]string{
-				SecretKey:    "sk_51JB",
-				ResourceName: "",
-			},
-			expectedErr: underTestConfig.RequiredConfigErr(ResourceName),
-		},
-		{
 			name: "No secret key and resource name",
 			cfg: map[string]string{
-				SecretKey:    "",
-				ResourceName: "",
+				config.SecretKey:    "",
+				config.ResourceName: "",
 			},
-			expectedErr: multierr.Combine(underTestConfig.RequiredConfigErr(SecretKey),
-				underTestConfig.RequiredConfigErr(ResourceName)),
+			expectedErr: multierr.Combine(underTestConfig.RequiredConfigErr(config.SecretKey),
+				underTestConfig.RequiredConfigErr(config.ResourceName)),
 		},
 	}
 
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			cfg, err := Parse(tt.cfg)
+			err := underTestSource.Configure(context.Background(), tt.cfg)
 			if err != nil {
 				assert.Equal(t, tt.expectedErr.Error(), err.Error())
 			} else {
-				assert.Equal(t, tt.expectedSecretKey, cfg.SecretKey)
-				assert.Equal(t, tt.expectedResourceName, cfg.ResourceName)
+				assert.NoError(t, err)
+				assert.NotNil(t, underTestSource.config)
+				assert.NotNil(t, underTestSource.httpClient)
 			}
 		})
 	}

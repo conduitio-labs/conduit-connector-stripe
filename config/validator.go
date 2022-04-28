@@ -35,7 +35,7 @@ func (c Config) Validate() error {
 
 		for _, e := range validationErr.(validator.ValidationErrors) {
 			if e.ActualTag() == "required" {
-				err = multierr.Append(err, requiredConfigErr(configName(e.Field())))
+				err = multierr.Append(err, c.RequiredConfigErr(c.configName(e.Field())))
 			}
 		}
 	}
@@ -43,11 +43,12 @@ func (c Config) Validate() error {
 	return err
 }
 
-func requiredConfigErr(name string) error {
+// RequiredConfigErr formats required config error.
+func (c Config) RequiredConfigErr(name string) error {
 	return fmt.Errorf("%q config value must be set", name)
 }
 
-func configName(fieldName string) string {
+func (c Config) configName(fieldName string) string {
 	return map[string]string{
 		"SecretKey":    SecretKey,
 		"ResourceName": ResourceName,
