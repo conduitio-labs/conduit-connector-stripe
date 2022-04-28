@@ -20,7 +20,7 @@ import (
 	"github.com/ConduitIO/conduit-connector-stripe/config"
 )
 
-const retryMax = 10
+const retryMax = 3
 
 // HTTPClient -  retryable http client.
 type HTTPClient struct {
