@@ -16,11 +16,13 @@ package source
 
 import (
 	"context"
+	"reflect"
 	"testing"
 
-	"github.com/ConduitIO/conduit-connector-stripe/config"
-	"github.com/stretchr/testify/assert"
 	"go.uber.org/multierr"
+
+	"github.com/ConduitIO/conduit-connector-stripe/clients/http"
+	"github.com/ConduitIO/conduit-connector-stripe/config"
 )
 
 func TestSource_Configure(t *testing.T) {
@@ -28,44 +30,70 @@ func TestSource_Configure(t *testing.T) {
 	underTestSource := Source{}
 
 	tests := []struct {
-		name                 string
-		cfg                  map[string]string
-		expectedSecretKey    string
-		expectedResourceName string
-		expectedRetryMax     int
-		expectedErr          error
+		name        string
+		in          map[string]string
+		want        Source
+		wantErr     bool
+		expectedErr string
 	}{
 		{
-			name: "Valid config",
-			cfg: map[string]string{
+			name: "valid config",
+			in: map[string]string{
 				config.SecretKey:    "sk_51JB",
 				config.ResourceName: "subscriptions",
 			},
-			expectedSecretKey:    "sk_51JB",
-			expectedResourceName: "subscriptions",
-			expectedRetryMax:     config.RetryMaxDefault,
+			want: Source{
+				config: &config.Config{
+					SecretKey:          "sk_51JB",
+					ResourceName:       "subscriptions",
+					HTTPClientRetryMax: 3,
+				},
+				httpClient: http.NewClient(&config.Config{
+					SecretKey:          "sk_51JB",
+					ResourceName:       "subscriptions",
+					HTTPClientRetryMax: 3,
+				}),
+			},
 		},
 		{
-			name: "No secret key and resource name",
-			cfg: map[string]string{
+			name: "no secret key and resource name",
+			in: map[string]string{
 				config.SecretKey:    "",
 				config.ResourceName: "",
 			},
+			wantErr: true,
 			expectedErr: multierr.Combine(underTestConfig.RequiredConfigErr(config.SecretKey),
-				underTestConfig.RequiredConfigErr(config.ResourceName)),
+				underTestConfig.RequiredConfigErr(config.ResourceName)).Error(),
 		},
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			err := underTestSource.Configure(context.Background(), tt.cfg)
+			err := underTestSource.Configure(context.Background(), tt.in)
 			if err != nil {
-				assert.Equal(t, tt.expectedErr.Error(), err.Error())
-			} else {
-				assert.NoError(t, err)
-				assert.NotNil(t, underTestSource.config)
-				assert.NotNil(t, underTestSource.httpClient)
+				if !tt.wantErr {
+					t.Errorf("parse error = \"%s\", wantErr %t", err.Error(), tt.wantErr)
+
+					return
+				}
+
+				if err.Error() != tt.expectedErr {
+					t.Errorf("expected error \"%s\", got \"%s\"", tt.expectedErr, err.Error())
+
+					return
+				}
+
+				return
+			}
+
+			if !reflect.DeepEqual(underTestSource.config, tt.want.config) {
+				t.Errorf("parse = %v, want %v", underTestSource.config, tt.want.config)
+
+				return
+			}
+
+			if underTestSource.httpClient == nil {
+				t.Errorf("parse = %v, want not nil", underTestSource.httpClient)
 			}
 		})
 	}
