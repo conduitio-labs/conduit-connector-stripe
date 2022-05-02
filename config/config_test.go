@@ -37,15 +37,17 @@ func TestParse(t *testing.T) {
 				SecretKey:          "sk_51JB",
 				ResourceName:       "subscriptions",
 				HTTPClientRetryMax: "5",
+				Limit:              "10",
 			},
 			want: Config{
 				SecretKey:          "sk_51JB",
 				ResourceName:       "subscriptions",
 				HTTPClientRetryMax: 5,
+				Limit:              10,
 			},
 		},
 		{
-			name: "HTTPClientRetryMax by default",
+			name: "HTTPClientRetryMax and Limit by default",
 			in: map[string]string{
 				SecretKey:    "sk_51JB",
 				ResourceName: "subscriptions",
@@ -54,6 +56,7 @@ func TestParse(t *testing.T) {
 				SecretKey:          "sk_51JB",
 				ResourceName:       "subscriptions",
 				HTTPClientRetryMax: RetryMaxDefault,
+				Limit:              LimitDefault,
 			},
 		},
 		{

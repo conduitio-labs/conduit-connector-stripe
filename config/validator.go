@@ -66,5 +66,6 @@ func (c Config) configName(fieldName string) string {
 		"SecretKey":          SecretKey,
 		"ResourceName":       ResourceName,
 		"HTTPClientRetryMax": HTTPClientRetryMax,
+		"Limit":              Limit,
 	}[fieldName]
 }

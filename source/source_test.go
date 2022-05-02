@@ -46,12 +46,13 @@ func TestSource_Configure(t *testing.T) {
 				config: &config.Config{
 					SecretKey:          "sk_51JB",
 					ResourceName:       "subscriptions",
-					HTTPClientRetryMax: 3,
+					HTTPClientRetryMax: config.RetryMaxDefault,
+					Limit:              config.LimitDefault,
 				},
 				httpClient: http.NewClient(&config.Config{
 					SecretKey:          "sk_51JB",
 					ResourceName:       "subscriptions",
-					HTTPClientRetryMax: 3,
+					HTTPClientRetryMax: config.RetryMaxDefault,
 				}),
 			},
 		},

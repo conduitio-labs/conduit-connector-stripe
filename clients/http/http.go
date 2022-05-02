@@ -22,8 +22,8 @@ import (
 
 // A Client represents retryable http client.
 type Client struct {
-	config     *config.Config
-	httpClient *retryablehttp.Client
+	HTTPClient *retryablehttp.Client
+	Config     *config.Config
 }
 
 // NewClient returns a new retryable http client.
@@ -32,7 +32,7 @@ func NewClient(config *config.Config) *Client {
 	retryClient.RetryMax = config.HTTPClientRetryMax
 
 	return &Client{
-		httpClient: retryClient,
-		config:     config,
+		HTTPClient: retryClient,
+		Config:     config,
 	}
 }

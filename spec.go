@@ -47,6 +47,11 @@ func Specification() sdk.Specification {
 				Required:    false,
 				Description: "The maximum number of retries in the HTTP client.",
 			},
+			config.Limit: {
+				Default:     strconv.Itoa(config.LimitDefault),
+				Required:    false,
+				Description: "Number of objects returned by the query to Stripe.",
+			},
 		},
 	}
 }
