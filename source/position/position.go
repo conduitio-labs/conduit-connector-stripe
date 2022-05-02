@@ -24,6 +24,8 @@ import (
 	sdk "github.com/conduitio/conduit-connector-sdk"
 )
 
+var errParseHasMore = errors.New("the first part of position must be a bool")
+
 // A Position represents a Stripe position.
 type Position struct {
 	HasMore       bool
@@ -45,7 +47,7 @@ func ParseSDKPosition(p sdk.Position) (Position, error) {
 
 	hasMore, err := strconv.ParseBool(parts[0])
 	if err != nil {
-		return Position{}, errors.New("the first part of position must be a bool")
+		return Position{}, errParseHasMore
 	}
 
 	return Position{
