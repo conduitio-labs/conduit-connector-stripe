@@ -52,6 +52,7 @@ func Parse(cfg map[string]string) (Config, error) {
 		ResourceName: cfg[ResourceName],
 	}
 
+	config.HTTPClientRetryMax = RetryMaxDefault
 	if cfg[HTTPClientRetryMax] != "" {
 		retryMax, err := strconv.Atoi(cfg[HTTPClientRetryMax])
 		if err != nil {
@@ -59,10 +60,9 @@ func Parse(cfg map[string]string) (Config, error) {
 		}
 
 		config.HTTPClientRetryMax = retryMax
-	} else {
-		config.HTTPClientRetryMax = RetryMaxDefault
 	}
 
+	config.Limit = LimitDefault
 	if cfg[Limit] != "" {
 		limit, err := strconv.Atoi(cfg[Limit])
 		if err != nil {
@@ -70,8 +70,6 @@ func Parse(cfg map[string]string) (Config, error) {
 		}
 
 		config.Limit = limit
-	} else {
-		config.Limit = LimitDefault
 	}
 
 	return config, config.Validate()

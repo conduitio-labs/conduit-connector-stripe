@@ -28,6 +28,8 @@ import (
 	"github.com/ConduitIO/conduit-connector-stripe/source/position"
 )
 
+const stripeAPIURL = "https://api.stripe.com/v1"
+
 // A SnapshotIterator represents iteration over a slice of Stripe data.
 type SnapshotIterator struct {
 	httpClient *http.Client
@@ -92,8 +94,8 @@ func (i *SnapshotIterator) getData() error {
 	}
 
 	req, err := retryablehttp.NewRequest("GET",
-		fmt.Sprintf("https://api.stripe.com/v1/%s?limit=%d%s",
-			i.httpClient.Config.ResourceName, i.httpClient.Config.Limit, startingAfter), nil)
+		fmt.Sprintf("%s/%s?limit=%d%s",
+			stripeAPIURL, i.httpClient.Config.ResourceName, i.httpClient.Config.Limit, startingAfter), nil)
 	if err != nil {
 		return fmt.Errorf("new request: %w", err)
 	}
