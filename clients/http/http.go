@@ -52,7 +52,6 @@ func (h http) get(url string, header ...map[string]string) ([]byte, error) {
 		return nil, fmt.Errorf("new request: %w", err)
 	}
 
-	// todo: check if header is nil
 	for i := range header {
 		for k, v := range header[i] {
 			req.Header.Add(k, v)
