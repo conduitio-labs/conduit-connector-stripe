@@ -30,11 +30,6 @@ type http struct {
 	httpClient *retryablehttp.Client
 }
 
-// A HTTP defines the interface to request methods.
-type HTTP interface {
-	GetResources(startingAfter string) (StripeResponse, error)
-}
-
 // NewClient returns a new retryable http client.
 func NewClient(cfg *config.Config) HTTP {
 	retryClient := retryablehttp.NewClient()
