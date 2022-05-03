@@ -21,8 +21,8 @@ import (
 
 	sdk "github.com/conduitio/conduit-connector-sdk"
 
-	"github.com/ConduitIO/conduit-connector-stripe/clients/http"
-	"github.com/ConduitIO/conduit-connector-stripe/source/position"
+	"github.com/conduitio/conduit-connector-stripe/clients/http"
+	"github.com/conduitio/conduit-connector-stripe/source/position"
 )
 
 const actionInsert = "insert"

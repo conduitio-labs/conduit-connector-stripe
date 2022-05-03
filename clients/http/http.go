@@ -20,7 +20,7 @@ import (
 
 	"github.com/hashicorp/go-retryablehttp"
 
-	"github.com/ConduitIO/conduit-connector-stripe/config"
+	"github.com/conduitio/conduit-connector-stripe/config"
 )
 
 const methodGet = "GET"

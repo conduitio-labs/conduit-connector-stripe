@@ -17,8 +17,8 @@ package main
 import (
 	sdk "github.com/conduitio/conduit-connector-sdk"
 
-	stripe "github.com/ConduitIO/conduit-connector-stripe"
-	"github.com/ConduitIO/conduit-connector-stripe/source"
+	stripe "github.com/conduitio/conduit-connector-stripe"
+	"github.com/conduitio/conduit-connector-stripe/source"
 )
 
 func main() {

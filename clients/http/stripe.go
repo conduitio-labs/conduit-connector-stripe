@@ -18,7 +18,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/ConduitIO/conduit-connector-stripe/config"
+	"github.com/conduitio/conduit-connector-stripe/config"
 )
 
 const stripeAPIURL = "https://api.stripe.com/v1"

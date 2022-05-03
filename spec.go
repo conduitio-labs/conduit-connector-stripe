@@ -19,7 +19,7 @@ import (
 
 	sdk "github.com/conduitio/conduit-connector-sdk"
 
-	"github.com/ConduitIO/conduit-connector-stripe/config"
+	"github.com/conduitio/conduit-connector-stripe/config"
 )
 
 type Spec struct{}

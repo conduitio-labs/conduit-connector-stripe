@@ -1,4 +1,4 @@
-module github.com/ConduitIO/conduit-connector-stripe
+module github.com/conduitio/conduit-connector-stripe
 
 go 1.18
 

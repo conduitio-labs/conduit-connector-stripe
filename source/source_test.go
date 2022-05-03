@@ -21,7 +21,7 @@ import (
 
 	"go.uber.org/multierr"
 
-	"github.com/ConduitIO/conduit-connector-stripe/config"
+	"github.com/conduitio/conduit-connector-stripe/config"
 )
 
 func TestSource_Configure(t *testing.T) {
