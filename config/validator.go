@@ -21,13 +21,27 @@ import (
 	"go.uber.org/multierr"
 )
 
+// ResourceNamesMap is a dictionary with valid resources,
+// where the key is the object type and the value is the name
+// of the API endpoints of that object type.
+var ResourceNamesMap = map[string]string{
+	"plan":         "plans",
+	"product":      "products",
+	"subscription": "subscriptions",
+}
+
 // Validate validates configuration fields.
 func (c Config) Validate() error {
 	var err error
 
-	validate := validator.New()
+	validatorInstance := validator.New()
 
-	validationErr := validate.Struct(c)
+	err = validatorInstance.RegisterValidation("resource_name", c.validateResourceName)
+	if err != nil {
+		return fmt.Errorf("register resource_name validation: %w", err)
+	}
+
+	validationErr := validatorInstance.Struct(c)
 	if validationErr != nil {
 		if _, ok := validationErr.(*validator.InvalidValidationError); ok {
 			return fmt.Errorf("validate config struct: %w", validationErr)
@@ -39,6 +53,8 @@ func (c Config) Validate() error {
 				err = multierr.Append(err, c.RequiredConfigErr(c.configName(e.Field())))
 			case "gte", "lte":
 				err = multierr.Append(err, c.OutOfRangeConfigErr(c.configName(e.Field())))
+			case "resource_name":
+				err = multierr.Append(err, c.WrongResourceNameConfigErr(c.configName(e.Field())))
 			}
 		}
 	}
@@ -61,6 +77,11 @@ func (c Config) IntegerTypeConfigErr(name string) error {
 	return fmt.Errorf("%q config value must be an integer", name)
 }
 
+// WrongResourceNameConfigErr returns the formatted wrong resource name error.
+func (c Config) WrongResourceNameConfigErr(name string) error {
+	return fmt.Errorf("%q wrong resource name", name)
+}
+
 func (c Config) configName(fieldName string) string {
 	return map[string]string{
 		"SecretKey":          SecretKey,
@@ -68,4 +89,10 @@ func (c Config) configName(fieldName string) string {
 		"HTTPClientRetryMax": HTTPClientRetryMax,
 		"Limit":              Limit,
 	}[fieldName]
+}
+
+func (c Config) validateResourceName(fl validator.FieldLevel) bool {
+	_, ok := ResourceNamesMap[fl.Field().String()]
+
+	return ok
 }

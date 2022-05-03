@@ -40,7 +40,7 @@ const (
 // A Config represents the configuration needed for Stripe.
 type Config struct {
 	SecretKey          string `validate:"required"`
-	ResourceName       string `validate:"required"`
+	ResourceName       string `validate:"required,resource_name"`
 	HTTPClientRetryMax int    `validate:"gte=1,lte=10"`
 	Limit              int    `validate:"gte=1,lte=100"`
 }

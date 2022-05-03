@@ -17,10 +17,7 @@ package interator
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"time"
-
-	"github.com/hashicorp/go-retryablehttp"
 
 	sdk "github.com/conduitio/conduit-connector-sdk"
 
@@ -28,27 +25,21 @@ import (
 	"github.com/ConduitIO/conduit-connector-stripe/source/position"
 )
 
-const stripeAPIURL = "https://api.stripe.com/v1"
+const actionInsert = "insert"
 
 // A SnapshotIterator represents iteration over a slice of Stripe data.
 type SnapshotIterator struct {
-	httpClient *http.Client
-	position   position.Position
-	response   *Response
-	index      int
-}
-
-// A Response represents a response from Stripe.
-type Response struct {
-	Data    []map[string]interface{} `json:"data"`
-	HasMore bool                     `json:"has_more"`
+	httpClientSvc http.HTTP
+	position      position.Position
+	response      *http.StripeResponse
+	index         int
 }
 
 // NewSnapshotIterator returns SnapshotIterator.
-func NewSnapshotIterator(cli *http.Client, pos position.Position) *SnapshotIterator {
+func NewSnapshotIterator(cliSvc http.HTTP, pos position.Position) *SnapshotIterator {
 	return &SnapshotIterator{
-		httpClient: cli,
-		position:   pos,
+		httpClientSvc: cliSvc,
+		position:      pos,
 	}
 }
 
@@ -56,12 +47,10 @@ func NewSnapshotIterator(cli *http.Client, pos position.Position) *SnapshotItera
 func (i *SnapshotIterator) Next() (sdk.Record, error) {
 	if i.response == nil || len(i.response.Data) == i.index {
 		if i.response != nil && !i.position.HasMore {
-			i.index = 0
-
 			return sdk.Record{}, nil
 		}
 
-		if err := i.getData(); err != nil {
+		if err := i.getResources(); err != nil {
 			return sdk.Record{}, fmt.Errorf("get response data: %w", err)
 		}
 	}
@@ -74,7 +63,7 @@ func (i *SnapshotIterator) Next() (sdk.Record, error) {
 	output := sdk.Record{
 		Position: i.position.FormatSDKPosition(),
 		Metadata: map[string]string{
-			"action": "insert",
+			"action": actionInsert,
 		},
 		CreatedAt: time.Unix(int64(i.response.Data[i.index]["created"].(float64)), 0),
 		Key:       sdk.RawData(i.response.Data[i.index]["id"].(string)),
@@ -87,37 +76,13 @@ func (i *SnapshotIterator) Next() (sdk.Record, error) {
 	return output, nil
 }
 
-func (i *SnapshotIterator) getData() error {
-	startingAfter := ""
-	if i.position.StartingAfter != "" {
-		startingAfter = fmt.Sprintf("&starting_after=%s", i.position.StartingAfter)
-	}
-
-	req, err := retryablehttp.NewRequest("GET",
-		fmt.Sprintf("%s/%s?limit=%d%s",
-			stripeAPIURL, i.httpClient.Config.ResourceName, i.httpClient.Config.Limit, startingAfter), nil)
+func (i *SnapshotIterator) getResources() error {
+	resp, err := i.httpClientSvc.GetResources(i.position.StartingAfter)
 	if err != nil {
-		return fmt.Errorf("new request: %w", err)
+		return fmt.Errorf("get stripe resources: %w", err)
 	}
 
-	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", i.httpClient.Config.SecretKey))
-
-	resp, err := i.httpClient.HTTPClient.Do(req)
-	if err != nil {
-		return fmt.Errorf("do request: %w", err)
-	}
-	defer resp.Body.Close()
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return fmt.Errorf("read all response data: %w", err)
-	}
-
-	err = json.Unmarshal(body, &i.response)
-	if err != nil {
-		return fmt.Errorf("unmarshal response data: %w", err)
-	}
-
+	i.response = &resp
 	i.position.HasMore = i.response.HasMore
 	i.index = 0
 

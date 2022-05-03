@@ -15,24 +15,59 @@
 package http
 
 import (
+	"fmt"
+	"io/ioutil"
+
 	"github.com/hashicorp/go-retryablehttp"
 
 	"github.com/ConduitIO/conduit-connector-stripe/config"
 )
 
-// A Client represents retryable http client.
-type Client struct {
-	HTTPClient *retryablehttp.Client
-	Config     *config.Config
+const methodGet = "GET"
+
+type http struct {
+	cfg        *config.Config
+	httpClient *retryablehttp.Client
+}
+
+// A HTTP defines the interface to request methods.
+type HTTP interface {
+	GetResources(startingAfter string) (StripeResponse, error)
 }
 
 // NewClient returns a new retryable http client.
-func NewClient(config *config.Config) *Client {
+func NewClient(cfg *config.Config) HTTP {
 	retryClient := retryablehttp.NewClient()
-	retryClient.RetryMax = config.HTTPClientRetryMax
+	retryClient.RetryMax = cfg.HTTPClientRetryMax
 
-	return &Client{
-		HTTPClient: retryClient,
-		Config:     config,
+	return http{
+		cfg:        cfg,
+		httpClient: retryClient,
 	}
+}
+
+func (h http) get(url string, header ...map[string]string) ([]byte, error) {
+	req, err := retryablehttp.NewRequest(methodGet, url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("new request: %w", err)
+	}
+
+	// todo: check if header is nil
+	for i := range header {
+		for k, v := range header[i] {
+			req.Header.Add(k, v)
+		}
+	}
+
+	r, err := h.httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("do request: %w", err)
+	}
+
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return nil, fmt.Errorf("read all response body: %w", err)
+	}
+
+	return data, r.Body.Close()
 }
