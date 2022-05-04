@@ -32,50 +32,53 @@ func TestParse(t *testing.T) {
 		expectedErr string
 	}{
 		{
-			name: "Valid config",
+			name: "valid config",
 			in: map[string]string{
 				SecretKey:          "sk_51JB",
-				ResourceName:       "subscriptions",
+				ResourceName:       "subscription",
 				HTTPClientRetryMax: "5",
+				Limit:              "10",
 			},
 			want: Config{
 				SecretKey:          "sk_51JB",
-				ResourceName:       "subscriptions",
+				ResourceName:       "subscription",
 				HTTPClientRetryMax: 5,
+				Limit:              10,
 			},
 		},
 		{
-			name: "HTTPClientRetryMax by default",
+			name: "HTTPClientRetryMax and Limit by default",
 			in: map[string]string{
 				SecretKey:    "sk_51JB",
-				ResourceName: "subscriptions",
+				ResourceName: "subscription",
 			},
 			want: Config{
 				SecretKey:          "sk_51JB",
-				ResourceName:       "subscriptions",
+				ResourceName:       "subscription",
 				HTTPClientRetryMax: RetryMaxDefault,
+				Limit:              LimitDefault,
 			},
 		},
 		{
-			name: "No secret key",
+			name: "no secret key",
 			in: map[string]string{
 				SecretKey:    "",
-				ResourceName: "subscriptions",
+				ResourceName: "subscription",
 			},
 			wantErr:     true,
 			expectedErr: underTestConfig.RequiredConfigErr(SecretKey).Error(),
 		},
 		{
-			name: "Empty secret key",
+			name: "empty secret key",
 			in: map[string]string{
 				SecretKey:    "",
-				ResourceName: "subscriptions",
+				ResourceName: "subscription",
 			},
 			wantErr:     true,
 			expectedErr: underTestConfig.RequiredConfigErr(SecretKey).Error(),
 		},
 		{
-			name: "No resource name",
+			name: "no resource name",
 			in: map[string]string{
 				SecretKey: "sk_51JB",
 			},
@@ -83,7 +86,7 @@ func TestParse(t *testing.T) {
 			expectedErr: underTestConfig.RequiredConfigErr(ResourceName).Error(),
 		},
 		{
-			name: "Empty resource name",
+			name: "empty resource name",
 			in: map[string]string{
 				SecretKey:    "sk_51JB",
 				ResourceName: "",
@@ -92,7 +95,7 @@ func TestParse(t *testing.T) {
 			expectedErr: underTestConfig.RequiredConfigErr(ResourceName).Error(),
 		},
 		{
-			name: "No secret key and resource name",
+			name: "no secret key and resource name",
 			in: map[string]string{
 				SecretKey:    "",
 				ResourceName: "",
@@ -105,7 +108,7 @@ func TestParse(t *testing.T) {
 			name: "HTTPClientRetryMax is greater than the value of lte tag",
 			in: map[string]string{
 				SecretKey:          "sk_51JB",
-				ResourceName:       "subscriptions",
+				ResourceName:       "subscription",
 				HTTPClientRetryMax: "12",
 			},
 			wantErr:     true,
@@ -115,21 +118,30 @@ func TestParse(t *testing.T) {
 			name: "HTTPClientRetryMax is more than the value of lte tag",
 			in: map[string]string{
 				SecretKey:          "sk_51JB",
-				ResourceName:       "subscriptions",
+				ResourceName:       "subscription",
 				HTTPClientRetryMax: "0",
 			},
 			wantErr:     true,
 			expectedErr: underTestConfig.OutOfRangeConfigErr(HTTPClientRetryMax).Error(),
 		},
 		{
-			name: "Invalid HTTPClientRetryMax",
+			name: "invalid HTTPClientRetryMax",
 			in: map[string]string{
 				SecretKey:          "sk_51JB",
-				ResourceName:       "subscriptions",
+				ResourceName:       "subscription",
 				HTTPClientRetryMax: "test",
 			},
 			wantErr:     true,
 			expectedErr: underTestConfig.IntegerTypeConfigErr(HTTPClientRetryMax).Error(),
+		},
+		{
+			name: "Wrong resource name",
+			in: map[string]string{
+				SecretKey:    "sk_51JB",
+				ResourceName: "test",
+			},
+			wantErr:     true,
+			expectedErr: underTestConfig.WrongResourceNameConfigErr(ResourceName).Error(),
 		},
 	}
 

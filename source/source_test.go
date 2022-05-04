@@ -21,8 +21,7 @@ import (
 
 	"go.uber.org/multierr"
 
-	"github.com/ConduitIO/conduit-connector-stripe/clients/http"
-	"github.com/ConduitIO/conduit-connector-stripe/config"
+	"github.com/conduitio/conduit-connector-stripe/config"
 )
 
 func TestSource_Configure(t *testing.T) {
@@ -40,19 +39,15 @@ func TestSource_Configure(t *testing.T) {
 			name: "valid config",
 			in: map[string]string{
 				config.SecretKey:    "sk_51JB",
-				config.ResourceName: "subscriptions",
+				config.ResourceName: "subscription",
 			},
 			want: Source{
-				config: &config.Config{
+				cfg: &config.Config{
 					SecretKey:          "sk_51JB",
-					ResourceName:       "subscriptions",
-					HTTPClientRetryMax: 3,
+					ResourceName:       "subscription",
+					HTTPClientRetryMax: config.RetryMaxDefault,
+					Limit:              config.LimitDefault,
 				},
-				httpClient: http.NewClient(&config.Config{
-					SecretKey:          "sk_51JB",
-					ResourceName:       "subscriptions",
-					HTTPClientRetryMax: 3,
-				}),
 			},
 		},
 		{
@@ -86,14 +81,10 @@ func TestSource_Configure(t *testing.T) {
 				return
 			}
 
-			if !reflect.DeepEqual(underTestSource.config, tt.want.config) {
-				t.Errorf("parse = %v, want %v", underTestSource.config, tt.want.config)
+			if !reflect.DeepEqual(underTestSource.cfg, tt.want.cfg) {
+				t.Errorf("parse = %v, want %v", underTestSource.cfg, tt.want.cfg)
 
 				return
-			}
-
-			if underTestSource.httpClient == nil {
-				t.Errorf("parse = %v, want not nil", underTestSource.httpClient)
 			}
 		})
 	}

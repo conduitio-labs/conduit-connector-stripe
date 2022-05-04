@@ -12,15 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
+package http
 
-import (
-	sdk "github.com/conduitio/conduit-connector-sdk"
-
-	stripe "github.com/conduitio/conduit-connector-stripe"
-	"github.com/conduitio/conduit-connector-stripe/source"
-)
-
-func main() {
-	sdk.Serve(stripe.Specification, source.NewSource, nil)
+// An HTTP defines the interface to request methods.
+type HTTP interface {
+	GetResources(startingAfter string) (StripeResponse, error)
 }

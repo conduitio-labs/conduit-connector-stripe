@@ -19,15 +19,13 @@ import (
 
 	sdk "github.com/conduitio/conduit-connector-sdk"
 
-	"github.com/ConduitIO/conduit-connector-stripe/clients/http"
-	"github.com/ConduitIO/conduit-connector-stripe/config"
+	"github.com/conduitio/conduit-connector-stripe/config"
 )
 
 // A Source represents the source connector.
 type Source struct {
 	sdk.UnimplementedSource
-	config     *config.Config
-	httpClient *http.Client
+	cfg *config.Config
 }
 
 // NewSource initialises a new source.
@@ -42,9 +40,7 @@ func (s *Source) Configure(ctx context.Context, cfgRaw map[string]string) error 
 		return err
 	}
 
-	s.config = &cfg
-
-	s.httpClient = http.NewClient(s.config)
+	s.cfg = &cfg
 
 	return nil
 }
