@@ -15,9 +15,11 @@
 package stripe
 
 import (
+	"strconv"
+
 	sdk "github.com/conduitio/conduit-connector-sdk"
 
-	"github.com/ConduitIO/conduit-connector-stripe/config"
+	"github.com/conduitio/conduit-connector-stripe/config"
 )
 
 type Spec struct{}
@@ -39,6 +41,16 @@ func Specification() sdk.Specification {
 				Default:     "",
 				Required:    true,
 				Description: "Stripe resource name.",
+			},
+			config.HTTPClientRetryMax: {
+				Default:     strconv.Itoa(config.RetryMaxDefault),
+				Required:    false,
+				Description: "The maximum number of retries in the HTTP client.",
+			},
+			config.Limit: {
+				Default:     strconv.Itoa(config.LimitDefault),
+				Required:    false,
+				Description: "Number of objects returned by the query to Stripe.",
 			},
 		},
 	}
