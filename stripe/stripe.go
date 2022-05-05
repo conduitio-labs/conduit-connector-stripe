@@ -12,38 +12,52 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package http
+package stripe
 
 import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/conduitio/conduit-connector-stripe/clients/http"
 	"github.com/conduitio/conduit-connector-stripe/config"
 )
 
 const stripeAPIURL = "https://api.stripe.com/v1"
 
-// A StripeResponse represents a response from Stripe.
-type StripeResponse struct {
+type stripe struct {
+	cfg     *config.Config
+	httpCli http.Client
+}
+
+// New initialises a new Stripe client.
+func New(cfg *config.Config) Stripe {
+	return stripe{
+		cfg:     cfg,
+		httpCli: http.NewClient(cfg),
+	}
+}
+
+// A Response represents a response data from Stripe.
+type Response struct {
 	Data    []map[string]interface{} `json:"data"`
 	HasMore bool                     `json:"has_more"`
 }
 
-// GetResources returns Stripe resources.
-func (h http) GetResources(startingAfter string) (StripeResponse, error) {
-	var resp StripeResponse
+// GetResource returns a list of resource objects from Stripe.
+func (s stripe) GetResource(startingAfter string) (Response, error) {
+	var resp Response
 
 	if startingAfter != "" {
 		startingAfter = fmt.Sprintf("&starting_after=%s", startingAfter)
 	}
 
 	url := fmt.Sprintf("%s/%s?limit=%d%s",
-		stripeAPIURL, config.ResourceNamesMap[h.cfg.ResourceName], h.cfg.Limit, startingAfter)
+		stripeAPIURL, config.ResourceNamesMap[s.cfg.ResourceName], s.cfg.Limit, startingAfter)
 
 	header := make(map[string]string, 1)
-	header["Authorization"] = fmt.Sprintf("Bearer %s", h.cfg.SecretKey)
+	header["Authorization"] = fmt.Sprintf("Bearer %s", s.cfg.SecretKey)
 
-	data, err := h.get(url, header)
+	data, err := s.httpCli.Get(url, header)
 	if err != nil {
 		return resp, fmt.Errorf("get data from stripe, by url and header: %w", err)
 	}

@@ -21,9 +21,9 @@ import (
 
 	"github.com/golang/mock/gomock"
 
-	"github.com/conduitio/conduit-connector-stripe/clients/http"
-	"github.com/conduitio/conduit-connector-stripe/clients/http/mock"
 	"github.com/conduitio/conduit-connector-stripe/source/position"
+	"github.com/conduitio/conduit-connector-stripe/stripe"
+	"github.com/conduitio/conduit-connector-stripe/stripe/mock"
 )
 
 func TestIterator_Next(t *testing.T) {
@@ -145,7 +145,7 @@ func TestIterator_Integration_Next(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 
-		result := http.StripeResponse{
+		result := stripe.Response{
 			Data: []map[string]interface{}{
 				{
 					"id":      "cus_LY6gsj",
@@ -163,8 +163,8 @@ func TestIterator_Integration_Next(t *testing.T) {
 
 		pos := position.Position{}
 
-		m := mock.NewMockHTTP(ctrl)
-		m.EXPECT().GetResources(pos.StartingAfter).Return(result, nil)
+		m := mock.NewMockStripe(ctrl)
+		m.EXPECT().GetResource(pos.StartingAfter).Return(result, nil)
 
 		iter := NewSnapshotIterator(m, pos)
 

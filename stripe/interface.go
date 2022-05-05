@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package http
+package stripe
 
-// An HTTP defines the interface to request methods.
-type HTTP interface {
-	GetResources(startingAfter string) (StripeResponse, error)
+// A Stripe defines the interface of methods.
+type Stripe interface {
+	GetResource(startingAfter string) (Response, error)
 }

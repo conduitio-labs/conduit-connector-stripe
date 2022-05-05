@@ -20,8 +20,8 @@ import (
 	"time"
 
 	sdk "github.com/conduitio/conduit-connector-sdk"
+	"github.com/conduitio/conduit-connector-stripe/stripe"
 
-	"github.com/conduitio/conduit-connector-stripe/clients/http"
 	"github.com/conduitio/conduit-connector-stripe/source/position"
 )
 
@@ -32,17 +32,17 @@ const (
 
 // A SnapshotIterator represents iteration over a slice of Stripe data.
 type SnapshotIterator struct {
-	httpClientSvc http.HTTP
-	position      position.Position
-	response      *http.StripeResponse
-	index         int
+	stripeSvc stripe.Stripe
+	position  position.Position
+	response  *stripe.Response
+	index     int
 }
 
 // NewSnapshotIterator returns SnapshotIterator.
-func NewSnapshotIterator(cliSvc http.HTTP, pos position.Position) *SnapshotIterator {
+func NewSnapshotIterator(stripeSvc stripe.Stripe, pos position.Position) *SnapshotIterator {
 	return &SnapshotIterator{
-		httpClientSvc: cliSvc,
-		position:      pos,
+		stripeSvc: stripeSvc,
+		position:  pos,
 	}
 }
 
@@ -80,7 +80,7 @@ func (i *SnapshotIterator) Next() (sdk.Record, error) {
 }
 
 func (i *SnapshotIterator) populateWithResource() error {
-	resp, err := i.httpClientSvc.GetResources(i.position.StartingAfter)
+	resp, err := i.stripeSvc.GetResource(i.position.StartingAfter)
 	if err != nil {
 		return fmt.Errorf("get stripe resources: %w", err)
 	}
