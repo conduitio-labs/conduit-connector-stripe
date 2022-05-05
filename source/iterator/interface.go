@@ -14,9 +14,18 @@
 
 package iterator
 
-import sdk "github.com/conduitio/conduit-connector-sdk"
+import (
+	sdk "github.com/conduitio/conduit-connector-sdk"
+
+	"github.com/conduitio/conduit-connector-stripe/models"
+)
 
 // An Iterator defines the interface to iterator methods.
 type Iterator interface {
 	Next() (sdk.Record, error)
+}
+
+// A Stripe defines the interface of methods.
+type Stripe interface {
+	GetResource(startingAfter string) (models.StripeResponse, error)
 }

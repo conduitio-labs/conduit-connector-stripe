@@ -19,10 +19,10 @@ import (
 
 	sdk "github.com/conduitio/conduit-connector-sdk"
 
-	"github.com/conduitio/conduit-connector-stripe/clients/http"
 	"github.com/conduitio/conduit-connector-stripe/config"
 	"github.com/conduitio/conduit-connector-stripe/source/iterator"
 	"github.com/conduitio/conduit-connector-stripe/source/position"
+	"github.com/conduitio/conduit-connector-stripe/stripe"
 )
 
 // A Source represents the source connector.
@@ -56,7 +56,7 @@ func (s *Source) Open(ctx context.Context, rp sdk.Position) error {
 		return err
 	}
 
-	s.iterator = iterator.NewSnapshotIterator(http.NewClient(s.cfg), p)
+	s.iterator = iterator.NewSnapshotIterator(stripe.New(s.cfg), p)
 
 	return nil
 }
