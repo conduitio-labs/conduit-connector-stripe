@@ -20,9 +20,9 @@ import (
 	"time"
 
 	sdk "github.com/conduitio/conduit-connector-sdk"
-	"github.com/conduitio/conduit-connector-stripe/stripe"
 
 	"github.com/conduitio/conduit-connector-stripe/source/position"
+	"github.com/conduitio/conduit-connector-stripe/source/stripe"
 )
 
 const (

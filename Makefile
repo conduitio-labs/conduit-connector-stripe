@@ -10,4 +10,4 @@ lint:
 	golangci-lint run -c .golangci.yml --go=1.18
 
 mockgen:
-	mockgen -package mock -source stripe/interface.go -destination stripe/mock/stripe.go
+	mockgen -package mock -source source/stripe/interface.go -destination source/stripe/mock/stripe.go

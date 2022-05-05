@@ -22,8 +22,8 @@ import (
 	"github.com/golang/mock/gomock"
 
 	"github.com/conduitio/conduit-connector-stripe/source/position"
-	"github.com/conduitio/conduit-connector-stripe/stripe"
-	"github.com/conduitio/conduit-connector-stripe/stripe/mock"
+	"github.com/conduitio/conduit-connector-stripe/source/stripe"
+	"github.com/conduitio/conduit-connector-stripe/source/stripe/mock"
 )
 
 func TestIterator_Next(t *testing.T) {
