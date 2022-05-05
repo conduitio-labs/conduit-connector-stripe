@@ -20,32 +20,27 @@ import (
 
 	"github.com/conduitio/conduit-connector-stripe/clients/http"
 	"github.com/conduitio/conduit-connector-stripe/config"
+	"github.com/conduitio/conduit-connector-stripe/models"
 )
 
 const stripeAPIURL = "https://api.stripe.com/v1"
 
-type stripe struct {
+type Stripe struct {
 	cfg     *config.Config
 	httpCli http.Client
 }
 
 // New initialises a new Stripe client.
 func New(cfg *config.Config) Stripe {
-	return stripe{
+	return Stripe{
 		cfg:     cfg,
 		httpCli: http.NewClient(cfg),
 	}
 }
 
-// A Response represents a response data from Stripe.
-type Response struct {
-	Data    []map[string]interface{} `json:"data"`
-	HasMore bool                     `json:"has_more"`
-}
-
 // GetResource returns a list of resource objects from Stripe.
-func (s stripe) GetResource(startingAfter string) (Response, error) {
-	var resp Response
+func (s Stripe) GetResource(startingAfter string) (models.StripeResponse, error) {
+	var resp models.StripeResponse
 
 	if startingAfter != "" {
 		startingAfter = fmt.Sprintf("&starting_after=%s", startingAfter)

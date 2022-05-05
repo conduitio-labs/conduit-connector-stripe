@@ -22,7 +22,7 @@ import (
 	"github.com/conduitio/conduit-connector-stripe/config"
 	"github.com/conduitio/conduit-connector-stripe/source/iterator"
 	"github.com/conduitio/conduit-connector-stripe/source/position"
-	"github.com/conduitio/conduit-connector-stripe/source/stripe"
+	"github.com/conduitio/conduit-connector-stripe/stripe"
 )
 
 // A Source represents the source connector.

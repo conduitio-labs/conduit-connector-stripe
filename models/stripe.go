@@ -12,9 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package stripe
+package models
 
-// A Stripe defines the interface of methods.
-type Stripe interface {
-	GetResource(startingAfter string) (Response, error)
+// A StripeResponse represents a response data from Stripe.
+type StripeResponse struct {
+	Data    []map[string]interface{} `json:"data"`
+	HasMore bool                     `json:"has_more"`
 }

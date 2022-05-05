@@ -21,8 +21,8 @@ import (
 
 	sdk "github.com/conduitio/conduit-connector-sdk"
 
+	"github.com/conduitio/conduit-connector-stripe/models"
 	"github.com/conduitio/conduit-connector-stripe/source/position"
-	"github.com/conduitio/conduit-connector-stripe/source/stripe"
 )
 
 const (
@@ -32,14 +32,14 @@ const (
 
 // A SnapshotIterator represents iteration over a slice of Stripe data.
 type SnapshotIterator struct {
-	stripeSvc stripe.Stripe
+	stripeSvc Stripe
 	position  position.Position
-	response  *stripe.Response
+	response  *models.StripeResponse
 	index     int
 }
 
 // NewSnapshotIterator returns SnapshotIterator.
-func NewSnapshotIterator(stripeSvc stripe.Stripe, pos position.Position) *SnapshotIterator {
+func NewSnapshotIterator(stripeSvc Stripe, pos position.Position) *SnapshotIterator {
 	return &SnapshotIterator{
 		stripeSvc: stripeSvc,
 		position:  pos,
