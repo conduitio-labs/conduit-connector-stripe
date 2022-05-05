@@ -25,7 +25,10 @@ import (
 	"github.com/conduitio/conduit-connector-stripe/source/position"
 )
 
-const actionInsert = "insert"
+const (
+	actionKey    = "action"
+	actionInsert = "insert"
+)
 
 // A SnapshotIterator represents iteration over a slice of Stripe data.
 type SnapshotIterator struct {
@@ -50,8 +53,8 @@ func (i *SnapshotIterator) Next() (sdk.Record, error) {
 			return sdk.Record{}, nil
 		}
 
-		if err := i.getResources(); err != nil {
-			return sdk.Record{}, fmt.Errorf("get response data: %w", err)
+		if err := i.populateWithResource(); err != nil {
+			return sdk.Record{}, fmt.Errorf("populate with the resource: %w", err)
 		}
 	}
 
@@ -63,7 +66,7 @@ func (i *SnapshotIterator) Next() (sdk.Record, error) {
 	output := sdk.Record{
 		Position: i.position.FormatSDKPosition(),
 		Metadata: map[string]string{
-			"action": actionInsert,
+			actionKey: actionInsert,
 		},
 		CreatedAt: time.Unix(int64(i.response.Data[i.index]["created"].(float64)), 0),
 		Key:       sdk.RawData(i.response.Data[i.index]["id"].(string)),
@@ -76,7 +79,7 @@ func (i *SnapshotIterator) Next() (sdk.Record, error) {
 	return output, nil
 }
 
-func (i *SnapshotIterator) getResources() error {
+func (i *SnapshotIterator) populateWithResource() error {
 	resp, err := i.httpClientSvc.GetResources(i.position.StartingAfter)
 	if err != nil {
 		return fmt.Errorf("get stripe resources: %w", err)

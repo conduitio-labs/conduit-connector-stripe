@@ -9,3 +9,5 @@ test:
 lint:
 	golangci-lint run -c .golangci.yml --go=1.18
 
+mockgen:
+	mockgen -package mock -source clients/http/interface.go -destination clients/http/mock/http.go

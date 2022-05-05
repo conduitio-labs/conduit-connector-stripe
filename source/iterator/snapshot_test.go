@@ -16,10 +16,17 @@ package iterator
 
 import (
 	"encoding/json"
+	"reflect"
 	"testing"
+
+	"github.com/golang/mock/gomock"
+
+	"github.com/conduitio/conduit-connector-stripe/clients/http"
+	"github.com/conduitio/conduit-connector-stripe/clients/http/mock"
+	"github.com/conduitio/conduit-connector-stripe/source/position"
 )
 
-func TestNext(t *testing.T) {
+func TestIterator_Next(t *testing.T) {
 	underTestSnapshot := SnapshotIterator{}
 
 	type wantData struct {
@@ -132,4 +139,66 @@ func TestNext(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestIterator_Integration_Next(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+
+		result := http.StripeResponse{
+			Data: []map[string]interface{}{
+				{
+					"id":      "cus_LY6gsj",
+					"object":  "customer",
+					"created": float64(1651153903),
+				},
+				{
+					"id":      "prod_LajCFS",
+					"object":  "product",
+					"created": float64(1651153850),
+				},
+			},
+			HasMore: false,
+		}
+
+		pos := position.Position{}
+
+		m := mock.NewMockHTTP(ctrl)
+		m.EXPECT().GetResources(pos.StartingAfter).Return(result, nil)
+
+		iter := NewSnapshotIterator(m, pos)
+
+		for i := 0; i < len(result.Data); i++ {
+			record, err := iter.Next()
+			if err != nil {
+				t.Errorf("next error = \"%s\"", err.Error())
+			}
+
+			payload, err := json.Marshal(result.Data[i])
+			if err != nil {
+				t.Errorf("marshal payload error = \"%s\"", err.Error())
+			}
+
+			if !reflect.DeepEqual(record.Payload.Bytes(), payload) {
+				t.Errorf("got = %v, want %v", string(record.Payload.Bytes()), string(payload))
+			}
+
+			if string(record.Key.Bytes()) != result.Data[i]["id"] {
+				t.Errorf("got = %v, want %v", string(record.Key.Bytes()), result.Data[i]["id"])
+			}
+
+			if record.CreatedAt.Unix() != int64(result.Data[i]["created"].(float64)) {
+				t.Errorf("got = %v, want %v", record.CreatedAt.Unix(), result.Data[i]["created"])
+			}
+
+			if record.Metadata[actionKey] != actionInsert {
+				t.Errorf("got = %v, want %v", record.Metadata[actionKey], actionInsert)
+			}
+
+			if !reflect.DeepEqual(record.Position, pos.FormatSDKPosition()) {
+				t.Errorf("got = %v, want %v", string(record.Position), string(pos.FormatSDKPosition()))
+			}
+			pos.StartingAfter = result.Data[i]["id"].(string)
+		}
+	})
 }
