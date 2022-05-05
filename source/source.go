@@ -29,7 +29,7 @@ import (
 type Source struct {
 	sdk.UnimplementedSource
 	cfg      *config.Config
-	iterator *iterator.SnapshotIterator
+	iterator iterator.Iterator
 }
 
 // NewSource initialises a new source.
