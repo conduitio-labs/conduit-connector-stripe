@@ -12,9 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package http
+package models
 
-// An HTTP defines the interface to request methods.
-type HTTP interface {
-	GetResources(startingAfter string) (StripeResponse, error)
+// A StripeResponse represents a response data from Stripe.
+type StripeResponse struct {
+	Data    []map[string]interface{} `json:"data"`
+	HasMore bool                     `json:"has_more"`
 }

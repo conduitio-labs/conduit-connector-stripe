@@ -25,23 +25,23 @@ import (
 
 const methodGet = "GET"
 
-type http struct {
-	cfg        *config.Config
-	httpClient *retryablehttp.Client
+// A Client represents retryable http client.
+type Client struct {
+	HTTPClient *retryablehttp.Client
 }
 
 // NewClient returns a new retryable http client.
-func NewClient(cfg *config.Config) HTTP {
+func NewClient(cfg *config.Config) Client {
 	retryClient := retryablehttp.NewClient()
 	retryClient.RetryMax = cfg.HTTPClientRetryMax
 
-	return http{
-		cfg:        cfg,
-		httpClient: retryClient,
+	return Client{
+		HTTPClient: retryClient,
 	}
 }
 
-func (h http) get(url string, header ...map[string]string) ([]byte, error) {
+// Get makes a GET http-request to the URL with headers.
+func (cli Client) Get(url string, header ...map[string]string) ([]byte, error) {
 	req, err := retryablehttp.NewRequest(methodGet, url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("new request: %w", err)
@@ -53,7 +53,7 @@ func (h http) get(url string, header ...map[string]string) ([]byte, error) {
 		}
 	}
 
-	r, err := h.httpClient.Do(req)
+	r, err := cli.HTTPClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("do request: %w", err)
 	}
