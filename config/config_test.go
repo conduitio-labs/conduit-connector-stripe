@@ -38,14 +38,12 @@ func TestParse(t *testing.T) {
 				ResourceName:       "subscription",
 				HTTPClientRetryMax: "5",
 				Limit:              "10",
-				PollingPeriod:      "2s",
 			},
 			want: Config{
 				SecretKey:          "sk_51JB",
 				ResourceName:       "subscription",
 				HTTPClientRetryMax: 5,
 				Limit:              10,
-				PollingPeriod:      2000000000,
 			},
 		},
 		{
@@ -59,7 +57,6 @@ func TestParse(t *testing.T) {
 				ResourceName:       "subscription",
 				HTTPClientRetryMax: RetryMaxDefault,
 				Limit:              LimitDefault,
-				PollingPeriod:      PollingPeriodDefault,
 			},
 		},
 		{
@@ -145,46 +142,6 @@ func TestParse(t *testing.T) {
 			},
 			wantErr:     true,
 			expectedErr: underTestConfig.WrongResourceNameConfigErr(ResourceName).Error(),
-		},
-		{
-			name: "wrong polling period",
-			in: map[string]string{
-				SecretKey:     "sk_51JB",
-				ResourceName:  "subscription",
-				PollingPeriod: "test",
-			},
-			wantErr:     true,
-			expectedErr: underTestConfig.PollingPeriodIsNotDurationErr(PollingPeriod).Error(),
-		},
-		{
-			name: "not positive polling period",
-			in: map[string]string{
-				SecretKey:     "sk_51JB",
-				ResourceName:  "subscription",
-				PollingPeriod: "0",
-			},
-			wantErr:     true,
-			expectedErr: underTestConfig.PollingPeriodPositiveErr(PollingPeriod).Error(),
-		},
-		{
-			name: "polling period more then an hour",
-			in: map[string]string{
-				SecretKey:     "sk_51JB",
-				ResourceName:  "subscription",
-				PollingPeriod: "1h0m1s",
-			},
-			wantErr:     true,
-			expectedErr: underTestConfig.OutOfRangeConfigErr(PollingPeriod).Error(),
-		},
-		{
-			name: "polling period less then a second",
-			in: map[string]string{
-				SecretKey:     "sk_51JB",
-				ResourceName:  "subscription",
-				PollingPeriod: "1ms",
-			},
-			wantErr:     true,
-			expectedErr: underTestConfig.OutOfRangeConfigErr(PollingPeriod).Error(),
 		},
 	}
 

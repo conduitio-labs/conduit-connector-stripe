@@ -56,7 +56,7 @@ func (s *Source) Open(ctx context.Context, rp sdk.Position) error {
 		return err
 	}
 
-	s.iterator = iterator.New(stripe.New(s.cfg), &pos, s.cfg.PollingPeriod)
+	s.iterator = iterator.New(stripe.New(s.cfg), &pos)
 
 	return nil
 }
@@ -71,12 +71,12 @@ func (s *Source) Read(ctx context.Context) (sdk.Record, error) {
 	return r, nil
 }
 
-// Teardown stops the CDC iterator from running.
+// Teardown does nothing.
 func (s *Source) Teardown(ctx context.Context) error {
-	return s.iterator.Stop()
+	return nil
 }
 
-// Ack ...
+// Ack does nothing.
 func (s *Source) Ack(ctx context.Context, position sdk.Position) error {
 	return nil
 }

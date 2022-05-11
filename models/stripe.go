@@ -14,29 +14,6 @@
 
 package models
 
-const (
-	ActionKey = "action"
-
-	InsertAction = "insert"
-	UpdateAction = "update"
-	DeleteAction = "delete"
-
-	SubscriptionResource                  = "subscription"
-	SubscriptionsList                     = "subscriptions"
-	SubscriptionCreatedEvent              = "customer.subscription.created"
-	SubscriptionDeletedEvent              = "customer.subscription.deleted"
-	SubscriptionPendingUpdateAppliedEvent = "customer.subscription.pending_update_applied"
-	SubscriptionPendingUpdateExpiredEvent = "customer.subscription.pending_update_expired"
-	SubscriptionTrialWillEndEvent         = "customer.subscription.trial_will_end"
-	SubscriptionUpdatedEvent              = "customer.subscription.updated"
-
-	PlanResource     = "plan"
-	PlanList         = "plans"
-	PlanCreatedEvent = "plan.created"
-	PlanDeletedEvent = "plan.deleted"
-	PlanUpdatedEvent = "plan.updated"
-)
-
 // A ResourceResponse represents a response resource data from Stripe.
 type ResourceResponse struct {
 	Data    []map[string]interface{} `json:"data"`

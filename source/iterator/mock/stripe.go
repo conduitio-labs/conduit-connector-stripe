@@ -51,20 +51,6 @@ func (mr *MockIteratorMockRecorder) Next() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Next", reflect.TypeOf((*MockIterator)(nil).Next))
 }
 
-// Stop mocks base method.
-func (m *MockIterator) Stop() error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Stop")
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// Stop indicates an expected call of Stop.
-func (mr *MockIteratorMockRecorder) Stop() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Stop", reflect.TypeOf((*MockIterator)(nil).Stop))
-}
-
 // MockStripe is a mock of Stripe interface.
 type MockStripe struct {
 	ctrl     *gomock.Controller
@@ -89,18 +75,18 @@ func (m *MockStripe) EXPECT() *MockStripeMockRecorder {
 }
 
 // GetEvent mocks base method.
-func (m *MockStripe) GetEvent(arg0 *position.Position) (models.EventResponse, error) {
+func (m *MockStripe) GetEvent(pos *position.Position) (models.EventResponse, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetEvent", arg0)
+	ret := m.ctrl.Call(m, "GetEvent", pos)
 	ret0, _ := ret[0].(models.EventResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetEvent indicates an expected call of GetEvent.
-func (mr *MockStripeMockRecorder) GetEvent(arg0 interface{}) *gomock.Call {
+func (mr *MockStripeMockRecorder) GetEvent(pos interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEvent", reflect.TypeOf((*MockStripe)(nil).GetEvent), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEvent", reflect.TypeOf((*MockStripe)(nil).GetEvent), pos)
 }
 
 // GetResource mocks base method.

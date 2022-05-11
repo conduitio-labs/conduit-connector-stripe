@@ -47,7 +47,6 @@ func TestSource_Configure(t *testing.T) {
 					ResourceName:       "subscription",
 					HTTPClientRetryMax: config.RetryMaxDefault,
 					Limit:              config.LimitDefault,
-					PollingPeriod:      config.PollingPeriodDefault,
 				},
 			},
 		},

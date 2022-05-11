@@ -44,12 +44,15 @@ func NewSnapshot(stripeSvc Stripe, pos *position.Position) *Snapshot {
 // Next returns the next record.
 func (iter *Snapshot) Next() (sdk.Record, error) {
 	if iter.response == nil || len(iter.response.Data) == iter.index {
-		if iter.response != nil && !iter.position.HasMore {
-			return sdk.Record{}, nil
-		}
-
 		if err := iter.populateWithResource(); err != nil {
 			return sdk.Record{}, fmt.Errorf("populate with the resource: %w", err)
+		}
+
+		if len(iter.response.Data) == 0 {
+			iter.position.IteratorType = position.CDCType
+			iter.position.Cursor = ""
+
+			return sdk.Record{}, sdk.ErrBackoffRetry
 		}
 	}
 
@@ -76,11 +79,6 @@ func (iter *Snapshot) Next() (sdk.Record, error) {
 	return output, nil
 }
 
-// Stop does nothing.
-func (iter *Snapshot) Stop() error {
-	return nil
-}
-
 func (iter *Snapshot) populateWithResource() error {
 	resp, err := iter.stripeSvc.GetResource(iter.position.Cursor)
 	if err != nil {
@@ -88,7 +86,6 @@ func (iter *Snapshot) populateWithResource() error {
 	}
 
 	iter.response = &resp
-	iter.position.HasMore = iter.response.HasMore
 	iter.index = 0
 
 	return nil

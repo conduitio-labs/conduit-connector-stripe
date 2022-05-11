@@ -50,11 +50,6 @@ func Specification() sdk.Specification {
 				Required:    false,
 				Description: "Number of objects returned by the query to Stripe.",
 			},
-			config.PollingPeriod: {
-				Default:     config.PollingPeriodDefault.String(),
-				Required:    false,
-				Description: "The period between requests to Stripe in the CDC iterator.",
-			},
 		},
 	}
 }

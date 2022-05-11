@@ -25,10 +25,7 @@ import (
 	sdk "github.com/conduitio/conduit-connector-sdk"
 )
 
-var (
-	errParseHasMore   = errors.New("the first part of position must be a bool")
-	errParseCreatedAt = errors.New("the fourth part of position must be an int64")
-)
+var errParseCreatedAt = errors.New("the fourth part of position must be an int64")
 
 const (
 	SnapshotType = "s"
@@ -37,9 +34,8 @@ const (
 
 // A Position represents a Stripe position.
 type Position struct {
-	HasMore      bool
-	Cursor       string
 	IteratorType string
+	Cursor       string
 	CreatedAt    int64
 }
 
@@ -59,25 +55,19 @@ func ParseSDKPosition(p sdk.Position) (Position, error) {
 			reflect.TypeOf(Position{}).NumField(), len(parts))
 	}
 
-	hasMore, err := strconv.ParseBool(parts[0])
-	if err != nil {
-		return Position{}, errParseHasMore
-	}
-
-	started, err := strconv.ParseInt(parts[3], 10, 64)
+	started, err := strconv.ParseInt(parts[2], 10, 64)
 	if err != nil {
 		return Position{}, errParseCreatedAt
 	}
 
 	return Position{
-		HasMore:      hasMore,
+		IteratorType: parts[0],
 		Cursor:       parts[1],
-		IteratorType: parts[2],
 		CreatedAt:    started,
 	}, nil
 }
 
 // FormatSDKPosition formats and returns sdk.Position.
 func (p Position) FormatSDKPosition() sdk.Position {
-	return sdk.Position(fmt.Sprintf("%t.%s.%s.%d", p.HasMore, p.Cursor, p.IteratorType, p.CreatedAt))
+	return sdk.Position(fmt.Sprintf("%s.%s.%d", p.IteratorType, p.Cursor, p.CreatedAt))
 }

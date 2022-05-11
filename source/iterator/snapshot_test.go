@@ -72,7 +72,7 @@ func TestIterator_Next(t *testing.T) {
 			len: 3,
 			want: []wantData{
 				{
-					position: "false..s.0",
+					position: "s..0",
 					action:   "insert",
 					key: sdk.StructuredData{
 						idKey: "prod_La50",
@@ -80,7 +80,7 @@ func TestIterator_Next(t *testing.T) {
 					payload: `{"created":1651153850,"id":"prod_La50"}`,
 				},
 				{
-					position: "false.prod_La50.s.0",
+					position: "s.prod_La50.0",
 					action:   "insert",
 					key: sdk.StructuredData{
 						idKey: "prod_La49",
@@ -88,7 +88,7 @@ func TestIterator_Next(t *testing.T) {
 					payload: `{"created":1651153849,"id":"prod_La49"}`,
 				},
 				{
-					position: "false.prod_La49.s.0",
+					position: "s.prod_La49.0",
 					action:   "insert",
 					key: sdk.StructuredData{
 						idKey: "prod_La48",

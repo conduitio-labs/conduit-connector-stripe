@@ -27,29 +27,29 @@ import (
 
 // A CDC represents a struct of cdc iterator.
 type CDC struct {
-	stripeSvc     Stripe
-	position      *position.Position
-	eventData     []models.EventData
-	index         int
-	stopCh        chan bool
-	pollingPeriod time.Duration
+	stripeSvc Stripe
+	position  *position.Position
+	eventData []models.EventData
+	index     int
 }
 
 // NewCDC initializes cdc iterator.
-func NewCDC(stripeSvc Stripe, pos *position.Position, pollingPeriod time.Duration) *CDC {
+func NewCDC(stripeSvc Stripe, pos *position.Position) *CDC {
 	return &CDC{
-		stripeSvc:     stripeSvc,
-		position:      pos,
-		stopCh:        make(chan bool, 1),
-		pollingPeriod: pollingPeriod,
+		stripeSvc: stripeSvc,
+		position:  pos,
 	}
 }
 
 // Next returns the next record.
 func (iter *CDC) Next() (sdk.Record, error) {
 	if iter.eventData == nil || len(iter.eventData) == iter.index {
-		if err := iter.getData(); err != nil {
+		if err := iter.getEventData(); err != nil {
 			return sdk.Record{}, fmt.Errorf("get event data: %w", err)
+		}
+
+		if len(iter.eventData) == 0 {
+			return sdk.Record{}, sdk.ErrBackoffRetry
 		}
 	}
 
@@ -73,33 +73,6 @@ func (iter *CDC) Next() (sdk.Record, error) {
 	iter.index++
 
 	return output, nil
-}
-
-// Stop stops the CDC iterator.
-func (iter *CDC) Stop() error {
-	iter.stopCh <- true
-
-	return nil
-}
-
-func (iter *CDC) getData() error {
-	ticker := time.NewTicker(iter.pollingPeriod)
-
-	for {
-		select {
-		case <-iter.stopCh:
-			return nil
-		case <-ticker.C:
-			err := iter.getEventData()
-			if err != nil {
-				return err
-			}
-
-			if iter.eventData != nil {
-				return nil
-			}
-		}
-	}
 }
 
 func (iter *CDC) getEventData() error {

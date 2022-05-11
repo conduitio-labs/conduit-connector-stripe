@@ -15,8 +15,6 @@
 package iterator
 
 import (
-	"time"
-
 	sdk "github.com/conduitio/conduit-connector-sdk"
 
 	"github.com/conduitio/conduit-connector-stripe/source/position"
@@ -32,10 +30,10 @@ type Combined struct {
 }
 
 // New initializes a combined iterator.
-func New(stripeSvc Stripe, pos *position.Position, pollingPeriod time.Duration) *Combined {
+func New(stripeSvc Stripe, pos *position.Position) *Combined {
 	combined := &Combined{
 		snapshot: NewSnapshot(stripeSvc, pos),
-		cdc:      NewCDC(stripeSvc, pos, pollingPeriod),
+		cdc:      NewCDC(stripeSvc, pos),
 		position: pos,
 	}
 
@@ -46,31 +44,10 @@ func New(stripeSvc Stripe, pos *position.Position, pollingPeriod time.Duration) 
 func (iter *Combined) Next() (sdk.Record, error) {
 	switch iter.position.IteratorType {
 	case position.SnapshotType:
-		r, err := iter.snapshot.Next()
-		if err != nil {
-			return sdk.Record{}, err
-		}
-
-		if r.Payload == nil {
-			iter.position.IteratorType = position.CDCType
-			iter.position.Cursor = ""
-
-			r, err = iter.cdc.Next()
-		}
-
-		return r, err
+		return iter.snapshot.Next()
 	case position.CDCType:
 		return iter.cdc.Next()
 	}
 
 	return sdk.Record{}, nil
-}
-
-// Stop stops the iterator.
-func (iter *Combined) Stop() error {
-	if iter.position.IteratorType == position.CDCType {
-		return iter.cdc.Stop()
-	}
-
-	return nil
 }

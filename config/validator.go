@@ -70,16 +70,6 @@ func (c Config) IntegerTypeConfigErr(name string) error {
 	return fmt.Errorf("%q config value must be an integer", name)
 }
 
-// PollingPeriodIsNotDurationErr returns the formatted polling period duration error.
-func (c Config) PollingPeriodIsNotDurationErr(name string) error {
-	return fmt.Errorf("%q config value must be a valid duration", name)
-}
-
-// PollingPeriodPositiveErr returns the formatted negative polling period error.
-func (c Config) PollingPeriodPositiveErr(name string) error {
-	return fmt.Errorf("%q config value must be a positive", name)
-}
-
 // WrongResourceNameConfigErr returns the formatted wrong resource name error.
 func (c Config) WrongResourceNameConfigErr(name string) error {
 	return fmt.Errorf("%q wrong resource name", name)
@@ -91,7 +81,6 @@ func (c Config) configName(fieldName string) string {
 		"ResourceName":       ResourceName,
 		"HTTPClientRetryMax": HTTPClientRetryMax,
 		"Limit":              Limit,
-		"PollingPeriod":      PollingPeriod,
 	}[fieldName]
 }
 

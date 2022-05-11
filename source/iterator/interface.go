@@ -24,7 +24,6 @@ import (
 // An Iterator defines the interface to iterator methods.
 type Iterator interface {
 	Next() (sdk.Record, error)
-	Stop() error
 }
 
 // A Stripe defines the interface of methods.
