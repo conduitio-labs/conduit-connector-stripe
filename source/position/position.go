@@ -20,22 +20,36 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"time"
 
 	sdk "github.com/conduitio/conduit-connector-sdk"
 )
 
-var errParseHasMore = errors.New("the first part of position must be a bool")
+var (
+	errParseHasMore   = errors.New("the first part of position must be a bool")
+	errParseCreatedAt = errors.New("the fourth part of position must be an int64")
+)
+
+const (
+	SnapshotType = "s"
+	CDCType      = "c"
+)
 
 // A Position represents a Stripe position.
 type Position struct {
-	HasMore       bool
-	StartingAfter string
+	HasMore      bool
+	Cursor       string
+	IteratorType string
+	CreatedAt    int64
 }
 
 // ParseSDKPosition parses SDK position and returns Position.
 func ParseSDKPosition(p sdk.Position) (Position, error) {
 	if p == nil {
-		return Position{}, nil
+		return Position{
+			IteratorType: SnapshotType,
+			CreatedAt:    time.Now().Unix(),
+		}, nil
 	}
 
 	parts := strings.Split(string(p), ".")
@@ -50,13 +64,20 @@ func ParseSDKPosition(p sdk.Position) (Position, error) {
 		return Position{}, errParseHasMore
 	}
 
+	started, err := strconv.ParseInt(parts[3], 10, 64)
+	if err != nil {
+		return Position{}, errParseCreatedAt
+	}
+
 	return Position{
-		HasMore:       hasMore,
-		StartingAfter: parts[1],
+		HasMore:      hasMore,
+		Cursor:       parts[1],
+		IteratorType: parts[2],
+		CreatedAt:    started,
 	}, nil
 }
 
 // FormatSDKPosition formats and returns sdk.Position.
 func (p Position) FormatSDKPosition() sdk.Position {
-	return sdk.Position(fmt.Sprintf("%t.%s", p.HasMore, p.StartingAfter))
+	return sdk.Position(fmt.Sprintf("%t.%s.%s.%d", p.HasMore, p.Cursor, p.IteratorType, p.CreatedAt))
 }

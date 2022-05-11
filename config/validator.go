@@ -19,16 +19,9 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"go.uber.org/multierr"
-)
 
-// ResourceNamesMap is a dictionary with valid resources,
-// where the key is the object type and the value is the name
-// of the API endpoints of that object type.
-var ResourceNamesMap = map[string]string{
-	"plan":         "plans",
-	"product":      "products",
-	"subscription": "subscriptions",
-}
+	"github.com/conduitio/conduit-connector-stripe/models"
+)
 
 // Validate validates configuration fields.
 func (c Config) Validate() error {
@@ -77,6 +70,16 @@ func (c Config) IntegerTypeConfigErr(name string) error {
 	return fmt.Errorf("%q config value must be an integer", name)
 }
 
+// PollingPeriodIsNotDurationErr returns the formatted polling period duration error.
+func (c Config) PollingPeriodIsNotDurationErr(name string) error {
+	return fmt.Errorf("%q config value must be a valid duration", name)
+}
+
+// PollingPeriodPositiveErr returns the formatted negative polling period error.
+func (c Config) PollingPeriodPositiveErr(name string) error {
+	return fmt.Errorf("%q config value must be a positive", name)
+}
+
 // WrongResourceNameConfigErr returns the formatted wrong resource name error.
 func (c Config) WrongResourceNameConfigErr(name string) error {
 	return fmt.Errorf("%q wrong resource name", name)
@@ -88,11 +91,12 @@ func (c Config) configName(fieldName string) string {
 		"ResourceName":       ResourceName,
 		"HTTPClientRetryMax": HTTPClientRetryMax,
 		"Limit":              Limit,
+		"PollingPeriod":      PollingPeriod,
 	}[fieldName]
 }
 
 func (c Config) validateResourceName(fl validator.FieldLevel) bool {
-	_, ok := ResourceNamesMap[fl.Field().String()]
+	_, ok := models.ResourcesMap[fl.Field().String()]
 
 	return ok
 }

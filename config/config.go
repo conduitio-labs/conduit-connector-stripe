@@ -16,11 +16,13 @@ package config
 
 import (
 	"strconv"
+	"time"
 )
 
 const (
-	RetryMaxDefault = 3
-	LimitDefault    = 50
+	RetryMaxDefault                    = 3
+	LimitDefault                       = 50
+	PollingPeriodDefault time.Duration = 1000000000 // 1 second in nanoseconds
 )
 
 const (
@@ -33,16 +35,20 @@ const (
 	// HTTPClientRetryMax is the configuration name for the maximum number of retries in the HTTP client.
 	HTTPClientRetryMax = "stripe.http_client_retry_max"
 
-	// Limit is a parameter that specifies the number of objects returned by the query to Stripe.
+	// Limit is the configuration name for the number of objects returned by the query to Stripe.
 	Limit = "stripe.limit"
+
+	// PollingPeriod is the configuration name for the period between requests to Stripe in the CDC iterator.
+	PollingPeriod = "stripe.polling_period"
 )
 
 // A Config represents the configuration needed for Stripe.
 type Config struct {
-	SecretKey          string `validate:"required"`
-	ResourceName       string `validate:"required,resource_name"`
-	HTTPClientRetryMax int    `validate:"gte=1,lte=10"`
-	Limit              int    `validate:"gte=1,lte=100"`
+	SecretKey          string        `validate:"required"`
+	ResourceName       string        `validate:"required,resource_name"`
+	HTTPClientRetryMax int           `validate:"gte=1,lte=10"`
+	Limit              int           `validate:"gte=1,lte=100"`
+	PollingPeriod      time.Duration `validate:"gte=1s,lte=1h"`
 }
 
 // Parse parses Stripe configuration into a Config struct.
@@ -70,6 +76,20 @@ func Parse(cfg map[string]string) (Config, error) {
 		}
 
 		config.Limit = limit
+	}
+
+	config.PollingPeriod = PollingPeriodDefault
+	if cfg[PollingPeriod] != "" {
+		pollingPeriod, err := time.ParseDuration(cfg[PollingPeriod])
+		if err != nil {
+			return Config{}, config.PollingPeriodIsNotDurationErr(PollingPeriod)
+		}
+
+		if pollingPeriod <= 0 {
+			return Config{}, config.PollingPeriodPositiveErr(PollingPeriod)
+		}
+
+		config.PollingPeriod = pollingPeriod
 	}
 
 	return config, config.Validate()

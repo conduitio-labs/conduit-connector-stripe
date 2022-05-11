@@ -32,22 +32,24 @@ func TestParseSDKPosition(t *testing.T) {
 	}{
 		{
 			name: "valid sdk position",
-			in:   sdk.Position("true.sub_1KtXkmJit567F2YtZzGSIrsh"),
+			in:   sdk.Position("true.sub_1KtXkmJit567F2YtZzGSIrsh.s.0"),
 			want: Position{
-				HasMore:       true,
-				StartingAfter: "sub_1KtXkmJit567F2YtZzGSIrsh",
+				HasMore:      true,
+				Cursor:       "sub_1KtXkmJit567F2YtZzGSIrsh",
+				IteratorType: SnapshotType,
+				CreatedAt:    0,
 			},
 		},
 		{
 			name:    "wrong the number of position elements",
-			in:      sdk.Position("sub_1KtXkmJit567F2YtZzGSIrsh"),
+			in:      sdk.Position("true.sub_1KtXkmJit567F2YtZzGSIrsh.s"),
 			wantErr: true,
-			expectedErr: fmt.Sprintf("the number of position elements must be equal to %d, now it is 1",
+			expectedErr: fmt.Sprintf("the number of position elements must be equal to %d, now it is 3",
 				reflect.TypeOf(Position{}).NumField()),
 		},
 		{
 			name:        "wrong type of the first part",
-			in:          sdk.Position("test.sub_1KtXkmJit567F2YtZzGSIrsh"),
+			in:          sdk.Position("test.sub_1KtXkmJit567F2YtZzGSIrsh.s.0"),
 			wantErr:     true,
 			expectedErr: "the first part of position must be a bool",
 		},
@@ -81,11 +83,13 @@ func TestParseSDKPosition(t *testing.T) {
 
 func TestFormatSDKPosition(t *testing.T) {
 	underTestPosition := Position{
-		HasMore:       false,
-		StartingAfter: "sub_1KtXkmJit567F2YtZzGSIrsh",
+		HasMore:      false,
+		Cursor:       "sub_1KtXkmJit567F2YtZzGSIrsh",
+		IteratorType: SnapshotType,
+		CreatedAt:    1652279623,
 	}
 
-	want := sdk.Position("false.sub_1KtXkmJit567F2YtZzGSIrsh")
+	want := sdk.Position("false.sub_1KtXkmJit567F2YtZzGSIrsh.s.1652279623")
 
 	t.Run("format valid sdk position", func(t *testing.T) {
 		got := underTestPosition.FormatSDKPosition()

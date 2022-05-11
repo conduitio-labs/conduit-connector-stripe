@@ -25,69 +25,71 @@ import (
 	"github.com/conduitio/conduit-connector-stripe/source/position"
 )
 
-const (
-	actionKey    = "action"
-	actionInsert = "insert"
-)
-
-// A SnapshotIterator represents iteration over a slice of Stripe data.
-type SnapshotIterator struct {
+// A Snapshot represents a struct of snapshot iterator.
+type Snapshot struct {
 	stripeSvc Stripe
-	position  position.Position
-	response  *models.StripeResponse
+	position  *position.Position
+	response  *models.ResourceResponse
 	index     int
 }
 
-// NewSnapshotIterator returns SnapshotIterator.
-func NewSnapshotIterator(stripeSvc Stripe, pos position.Position) *SnapshotIterator {
-	return &SnapshotIterator{
+// NewSnapshot initializes snapshot iterator.
+func NewSnapshot(stripeSvc Stripe, pos *position.Position) *Snapshot {
+	return &Snapshot{
 		stripeSvc: stripeSvc,
 		position:  pos,
 	}
 }
 
 // Next returns the next record.
-func (i *SnapshotIterator) Next() (sdk.Record, error) {
-	if i.response == nil || len(i.response.Data) == i.index {
-		if i.response != nil && !i.position.HasMore {
+func (iter *Snapshot) Next() (sdk.Record, error) {
+	if iter.response == nil || len(iter.response.Data) == iter.index {
+		if iter.response != nil && !iter.position.HasMore {
 			return sdk.Record{}, nil
 		}
 
-		if err := i.populateWithResource(); err != nil {
+		if err := iter.populateWithResource(); err != nil {
 			return sdk.Record{}, fmt.Errorf("populate with the resource: %w", err)
 		}
 	}
 
-	payload, err := json.Marshal(i.response.Data[i.index])
+	payload, err := json.Marshal(iter.response.Data[iter.index])
 	if err != nil {
 		return sdk.Record{}, fmt.Errorf("marshal payload: %w", err)
 	}
 
 	output := sdk.Record{
-		Position: i.position.FormatSDKPosition(),
+		Position: iter.position.FormatSDKPosition(),
 		Metadata: map[string]string{
-			actionKey: actionInsert,
+			models.ActionKey: models.InsertAction,
 		},
-		CreatedAt: time.Unix(int64(i.response.Data[i.index]["created"].(float64)), 0),
-		Key:       sdk.RawData(i.response.Data[i.index]["id"].(string)),
-		Payload:   sdk.RawData(payload),
+		CreatedAt: time.Unix(int64(iter.response.Data[iter.index]["created"].(float64)), 0),
+		Key: sdk.StructuredData{
+			idKey: iter.response.Data[iter.index][idKey].(string),
+		},
+		Payload: sdk.RawData(payload),
 	}
 
-	i.position.StartingAfter = i.response.Data[i.index]["id"].(string)
-	i.index++
+	iter.position.Cursor = iter.response.Data[iter.index][idKey].(string)
+	iter.index++
 
 	return output, nil
 }
 
-func (i *SnapshotIterator) populateWithResource() error {
-	resp, err := i.stripeSvc.GetResource(i.position.StartingAfter)
+// Stop does nothing.
+func (iter *Snapshot) Stop() error {
+	return nil
+}
+
+func (iter *Snapshot) populateWithResource() error {
+	resp, err := iter.stripeSvc.GetResource(iter.position.Cursor)
 	if err != nil {
-		return fmt.Errorf("get stripe resources: %w", err)
+		return fmt.Errorf("get list of resource objects: %w", err)
 	}
 
-	i.response = &resp
-	i.position.HasMore = i.response.HasMore
-	i.index = 0
+	iter.response = &resp
+	iter.position.HasMore = iter.response.HasMore
+	iter.index = 0
 
 	return nil
 }

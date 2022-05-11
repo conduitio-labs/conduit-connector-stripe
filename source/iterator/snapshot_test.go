@@ -19,6 +19,7 @@ import (
 	"reflect"
 	"testing"
 
+	sdk "github.com/conduitio/conduit-connector-sdk"
 	"github.com/golang/mock/gomock"
 
 	"github.com/conduitio/conduit-connector-stripe/models"
@@ -27,12 +28,17 @@ import (
 )
 
 func TestIterator_Next(t *testing.T) {
-	underTestSnapshot := SnapshotIterator{}
+	pos := position.Position{
+		IteratorType: position.SnapshotType,
+	}
+	underTestSnapshot := Snapshot{
+		position: &pos,
+	}
 
 	type wantData struct {
 		position string
 		action   string
-		key      string
+		key      sdk.StructuredData
 		payload  string
 	}
 
@@ -66,22 +72,28 @@ func TestIterator_Next(t *testing.T) {
 			len: 3,
 			want: []wantData{
 				{
-					position: "false.",
+					position: "false..s.0",
 					action:   "insert",
-					key:      "prod_La50",
-					payload:  `{"created":1651153850,"id":"prod_La50"}`,
+					key: sdk.StructuredData{
+						idKey: "prod_La50",
+					},
+					payload: `{"created":1651153850,"id":"prod_La50"}`,
 				},
 				{
-					position: "false.prod_La50",
+					position: "false.prod_La50.s.0",
 					action:   "insert",
-					key:      "prod_La49",
-					payload:  `{"created":1651153849,"id":"prod_La49"}`,
+					key: sdk.StructuredData{
+						idKey: "prod_La49",
+					},
+					payload: `{"created":1651153849,"id":"prod_La49"}`,
 				},
 				{
-					position: "false.prod_La49",
+					position: "false.prod_La49.s.0",
 					action:   "insert",
-					key:      "prod_La48",
-					payload:  `{"created":1651153848,"id":"prod_La48"}`,
+					key: sdk.StructuredData{
+						idKey: "prod_La48",
+					},
+					payload: `{"created":1651153848,"id":"prod_La48"}`,
 				},
 			},
 		},
@@ -125,7 +137,7 @@ func TestIterator_Next(t *testing.T) {
 					return
 				}
 
-				if string(got.Key.Bytes()) != tt.want[i].key {
+				if !reflect.DeepEqual(got.Key, tt.want[i].key) {
 					t.Errorf("key: got \"%s\", want \"%s\"", got.Key.Bytes(), tt.want[i].key)
 
 					return
@@ -145,7 +157,7 @@ func TestIterator_Integration_Next(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 
-		result := models.StripeResponse{
+		result := models.ResourceResponse{
 			Data: []map[string]interface{}{
 				{
 					"id":      "cus_LY6gsj",
@@ -161,14 +173,18 @@ func TestIterator_Integration_Next(t *testing.T) {
 			HasMore: false,
 		}
 
-		pos := position.Position{}
+		pos := position.Position{
+			IteratorType: position.SnapshotType,
+		}
 
 		m := mock.NewMockStripe(ctrl)
-		m.EXPECT().GetResource(pos.StartingAfter).Return(result, nil)
+		m.EXPECT().GetResource(pos.Cursor).Return(result, nil)
 
-		iter := NewSnapshotIterator(m, pos)
+		iter := NewSnapshot(m, &pos)
 
 		for i := 0; i < len(result.Data); i++ {
+			positionForCheck := pos.FormatSDKPosition()
+
 			record, err := iter.Next()
 			if err != nil {
 				t.Errorf("next error = \"%s\"", err.Error())
@@ -180,25 +196,24 @@ func TestIterator_Integration_Next(t *testing.T) {
 			}
 
 			if !reflect.DeepEqual(record.Payload.Bytes(), payload) {
-				t.Errorf("got = %v, want %v", string(record.Payload.Bytes()), string(payload))
+				t.Errorf("payload: got = %v, want %v", string(record.Payload.Bytes()), string(payload))
 			}
 
-			if string(record.Key.Bytes()) != result.Data[i]["id"] {
-				t.Errorf("got = %v, want %v", string(record.Key.Bytes()), result.Data[i]["id"])
+			if !reflect.DeepEqual(record.Key, sdk.StructuredData{idKey: result.Data[i]["id"]}) {
+				t.Errorf("key: got = %v, want %v", string(record.Key.Bytes()), result.Data[i]["id"])
 			}
 
 			if record.CreatedAt.Unix() != int64(result.Data[i]["created"].(float64)) {
-				t.Errorf("got = %v, want %v", record.CreatedAt.Unix(), result.Data[i]["created"])
+				t.Errorf("created: got = %v, want %v", record.CreatedAt.Unix(), result.Data[i]["created"])
 			}
 
-			if record.Metadata[actionKey] != actionInsert {
-				t.Errorf("got = %v, want %v", record.Metadata[actionKey], actionInsert)
+			if record.Metadata[models.ActionKey] != models.InsertAction {
+				t.Errorf("action: got = %v, want %v", record.Metadata[models.ActionKey], models.InsertAction)
 			}
 
-			if !reflect.DeepEqual(record.Position, pos.FormatSDKPosition()) {
-				t.Errorf("got = %v, want %v", string(record.Position), string(pos.FormatSDKPosition()))
+			if !reflect.DeepEqual(record.Position, positionForCheck) {
+				t.Errorf("position: got = %v, want %v", string(record.Position), string(pos.FormatSDKPosition()))
 			}
-			pos.StartingAfter = result.Data[i]["id"].(string)
 		}
 	})
 }

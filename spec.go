@@ -22,8 +22,6 @@ import (
 	"github.com/conduitio/conduit-connector-stripe/config"
 )
 
-type Spec struct{}
-
 // Specification returns the connector's specification.
 func Specification() sdk.Specification {
 	return sdk.Specification{
@@ -51,6 +49,11 @@ func Specification() sdk.Specification {
 				Default:     strconv.Itoa(config.LimitDefault),
 				Required:    false,
 				Description: "Number of objects returned by the query to Stripe.",
+			},
+			config.PollingPeriod: {
+				Default:     config.PollingPeriodDefault.String(),
+				Required:    false,
+				Description: "The period between requests to Stripe in the CDC iterator.",
 			},
 		},
 	}
