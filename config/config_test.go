@@ -135,7 +135,7 @@ func TestParse(t *testing.T) {
 			expectedErr: underTestConfig.IntegerTypeConfigErr(HTTPClientRetryMax).Error(),
 		},
 		{
-			name: "Wrong resource name",
+			name: "wrong resource name",
 			in: map[string]string{
 				SecretKey:    "sk_51JB",
 				ResourceName: "test",

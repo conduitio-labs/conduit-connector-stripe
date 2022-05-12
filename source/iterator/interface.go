@@ -27,5 +27,6 @@ type Iterator interface {
 
 // A Stripe defines the interface of methods.
 type Stripe interface {
-	GetResource(startingAfter string) (models.StripeResponse, error)
+	GetResource(string) (models.ResourceResponse, error)
+	GetEvent(createdAt int64, startingAfter, endingBefore string) (models.EventResponse, error)
 }
