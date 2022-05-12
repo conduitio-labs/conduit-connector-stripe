@@ -25,7 +25,10 @@ import (
 	sdk "github.com/conduitio/conduit-connector-sdk"
 )
 
-var errParseCreatedAt = errors.New("the fourth part of position must be an int64")
+var (
+	errParseCreatedAt = errors.New("the third part of position must be an int64")
+	errParseIndex     = errors.New("the fourth part of position must be an int")
+)
 
 const (
 	SnapshotType = "s"
@@ -37,6 +40,7 @@ type Position struct {
 	IteratorType string
 	Cursor       string
 	CreatedAt    int64
+	Index        int
 }
 
 // ParseSDKPosition parses SDK position and returns Position.
@@ -60,14 +64,20 @@ func ParseSDKPosition(p sdk.Position) (Position, error) {
 		return Position{}, errParseCreatedAt
 	}
 
+	index, err := strconv.Atoi(parts[3])
+	if err != nil {
+		return Position{}, errParseIndex
+	}
+
 	return Position{
 		IteratorType: parts[0],
 		Cursor:       parts[1],
 		CreatedAt:    started,
+		Index:        index,
 	}, nil
 }
 
 // FormatSDKPosition formats and returns sdk.Position.
 func (p Position) FormatSDKPosition() sdk.Position {
-	return sdk.Position(fmt.Sprintf("%s.%s.%d", p.IteratorType, p.Cursor, p.CreatedAt))
+	return sdk.Position(fmt.Sprintf("%s.%s.%d.%d", p.IteratorType, p.Cursor, p.CreatedAt, p.Index))
 }

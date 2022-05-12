@@ -22,7 +22,6 @@ import (
 	"github.com/conduitio/conduit-connector-stripe/clients/http"
 	"github.com/conduitio/conduit-connector-stripe/config"
 	"github.com/conduitio/conduit-connector-stripe/models"
-	"github.com/conduitio/conduit-connector-stripe/source/position"
 )
 
 const stripeAPIURL = "https://api.stripe.com/v1"
@@ -69,28 +68,27 @@ func (s Stripe) GetResource(startingAfter string) (models.ResourceResponse, erro
 }
 
 // GetEvent returns a list of event objects.
-func (s Stripe) GetEvent(pos *position.Position) (models.EventResponse, error) {
+func (s Stripe) GetEvent(createdAt int64, startingAfter, endingBefore string) (models.EventResponse, error) {
 	var (
 		resp models.EventResponse
 
-		types        string
-		created      string
-		endingBefore string
+		types string
 	)
 
 	if events, ok := models.EventsMap[s.cfg.ResourceName]; ok {
 		types = fmt.Sprintf("types[]=%s", strings.Join(events, "&types[]="))
 	}
 
-	if pos.CreatedAt != 0 {
-		created = fmt.Sprintf("&created[gte]=%d", pos.CreatedAt)
+	if startingAfter != "" {
+		startingAfter = fmt.Sprintf("&starting_after=%s", startingAfter)
 	}
 
-	if pos.Cursor != "" {
-		endingBefore = fmt.Sprintf("&ending_before=%s", pos.Cursor)
+	if endingBefore != "" {
+		endingBefore = fmt.Sprintf("&ending_before=%s", endingBefore)
 	}
 
-	url := fmt.Sprintf("%s/events?%s&limit=%d%s%s", stripeAPIURL, types, s.cfg.Limit, created, endingBefore)
+	url := fmt.Sprintf("%s/events?%s&limit=%d&created[gte]=%d%s%s",
+		stripeAPIURL, types, s.cfg.Limit, createdAt, startingAfter, endingBefore)
 
 	header := make(map[string]string, 1)
 	header["Authorization"] = fmt.Sprintf("Bearer %s", s.cfg.SecretKey)

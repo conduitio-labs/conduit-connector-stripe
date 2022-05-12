@@ -18,7 +18,6 @@ import (
 	sdk "github.com/conduitio/conduit-connector-sdk"
 
 	"github.com/conduitio/conduit-connector-stripe/models"
-	"github.com/conduitio/conduit-connector-stripe/source/position"
 )
 
 // An Iterator defines the interface to iterator methods.
@@ -29,5 +28,5 @@ type Iterator interface {
 // A Stripe defines the interface of methods.
 type Stripe interface {
 	GetResource(string) (models.ResourceResponse, error)
-	GetEvent(pos *position.Position) (models.EventResponse, error)
+	GetEvent(createdAt int64, startingAfter, endingBefore string) (models.EventResponse, error)
 }

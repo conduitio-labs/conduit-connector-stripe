@@ -9,7 +9,6 @@ import (
 
 	sdk "github.com/conduitio/conduit-connector-sdk"
 	models "github.com/conduitio/conduit-connector-stripe/models"
-	position "github.com/conduitio/conduit-connector-stripe/source/position"
 	gomock "github.com/golang/mock/gomock"
 )
 
@@ -75,18 +74,18 @@ func (m *MockStripe) EXPECT() *MockStripeMockRecorder {
 }
 
 // GetEvent mocks base method.
-func (m *MockStripe) GetEvent(pos *position.Position) (models.EventResponse, error) {
+func (m *MockStripe) GetEvent(createdAt int64, startingAfter, endingBefore string) (models.EventResponse, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetEvent", pos)
+	ret := m.ctrl.Call(m, "GetEvent", createdAt, startingAfter, endingBefore)
 	ret0, _ := ret[0].(models.EventResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetEvent indicates an expected call of GetEvent.
-func (mr *MockStripeMockRecorder) GetEvent(pos interface{}) *gomock.Call {
+func (mr *MockStripeMockRecorder) GetEvent(createdAt, startingAfter, endingBefore interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEvent", reflect.TypeOf((*MockStripe)(nil).GetEvent), pos)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEvent", reflect.TypeOf((*MockStripe)(nil).GetEvent), createdAt, startingAfter, endingBefore)
 }
 
 // GetResource mocks base method.

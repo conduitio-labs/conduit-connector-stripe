@@ -15,6 +15,8 @@
 package iterator
 
 import (
+	"errors"
+
 	sdk "github.com/conduitio/conduit-connector-sdk"
 
 	"github.com/conduitio/conduit-connector-stripe/source/position"
@@ -32,9 +34,12 @@ type Combined struct {
 // New initializes a combined iterator.
 func New(stripeSvc Stripe, pos *position.Position) *Combined {
 	combined := &Combined{
-		snapshot: NewSnapshot(stripeSvc, pos),
-		cdc:      NewCDC(stripeSvc, pos),
 		position: pos,
+		cdc:      NewCDC(stripeSvc, pos),
+	}
+
+	if pos.IteratorType == position.SnapshotType {
+		combined.snapshot = NewSnapshot(stripeSvc, pos)
 	}
 
 	return combined
@@ -49,5 +54,5 @@ func (iter *Combined) Next() (sdk.Record, error) {
 		return iter.cdc.Next()
 	}
 
-	return sdk.Record{}, nil
+	return sdk.Record{}, errors.New("the iterator type is wrong")
 }

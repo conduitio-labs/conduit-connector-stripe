@@ -30,7 +30,6 @@ type CDC struct {
 	stripeSvc Stripe
 	position  *position.Position
 	eventData []models.EventData
-	index     int
 }
 
 // NewCDC initializes cdc iterator.
@@ -43,17 +42,18 @@ func NewCDC(stripeSvc Stripe, pos *position.Position) *CDC {
 
 // Next returns the next record.
 func (iter *CDC) Next() (sdk.Record, error) {
-	if iter.eventData == nil || len(iter.eventData) == iter.index {
-		if err := iter.getEventData(); err != nil {
+	if iter.eventData == nil || len(iter.eventData) == iter.position.Index {
+		if err := iter.getData(); err != nil {
 			return sdk.Record{}, fmt.Errorf("get event data: %w", err)
 		}
+		iter.position.Index = 0
 
 		if len(iter.eventData) == 0 {
 			return sdk.Record{}, sdk.ErrBackoffRetry
 		}
 	}
 
-	payload, err := json.Marshal(iter.eventData[iter.index].Data.Object)
+	payload, err := json.Marshal(iter.eventData[iter.position.Index].Data.Object)
 	if err != nil {
 		return sdk.Record{}, fmt.Errorf("marshal payload: %w", err)
 	}
@@ -61,46 +61,52 @@ func (iter *CDC) Next() (sdk.Record, error) {
 	output := sdk.Record{
 		Position: iter.position.FormatSDKPosition(),
 		Metadata: map[string]string{
-			models.ActionKey: models.EventsAction[iter.eventData[iter.index].Type],
+			models.ActionKey: models.EventsAction[iter.eventData[iter.position.Index].Type],
 		},
-		CreatedAt: time.Unix(iter.eventData[iter.index].Created, 0),
+		CreatedAt: time.Unix(iter.eventData[iter.position.Index].Created, 0),
 		Key: sdk.StructuredData{
-			idKey: iter.eventData[iter.index].Data.Object[idKey].(string),
+			idKey: iter.eventData[iter.position.Index].Data.Object[idKey].(string),
 		},
 		Payload: sdk.RawData(payload),
 	}
 
-	iter.index++
+	iter.position.Index++
+
+	if len(iter.eventData) == iter.position.Index {
+		iter.position.Cursor = iter.eventData[len(iter.eventData)-1].ID
+	}
 
 	return output, nil
 }
 
-func (iter *CDC) getEventData() error {
+func (iter *CDC) getData() error {
+	if iter.position.Cursor == "" {
+		return iter.getDataWithStartingAfter()
+	}
+
+	return iter.getDataWithEndingBefore()
+}
+
+func (iter *CDC) getDataWithStartingAfter() error {
 	var (
 		eventData []models.EventData
 
-		hasMore = true
+		startingAfter string
 	)
 
-	iter.index = 0
-
-	for hasMore {
-		resp, err := iter.stripeSvc.GetEvent(iter.position)
+	for {
+		resp, err := iter.stripeSvc.GetEvent(iter.position.CreatedAt, startingAfter, "")
 		if err != nil {
 			return fmt.Errorf("get list of event objects: %w", err)
 		}
 
-		hasMore = resp.HasMore
-
 		if len(resp.Data) > 0 {
-			if iter.position.CreatedAt != 0 {
-				iter.position.CreatedAt = 0
-			}
-
-			iter.position.Cursor = resp.Data[len(resp.Data)-1].ID
+			startingAfter = resp.Data[len(resp.Data)-1].ID
 
 			eventData = append(eventData, resp.Data...)
+		}
 
+		if !resp.HasMore {
 			break
 		}
 	}
@@ -108,6 +114,39 @@ func (iter *CDC) getEventData() error {
 	if len(eventData) > 0 {
 		for i, j := 0, len(eventData)-1; i < j; i, j = i+1, j-1 {
 			eventData[i], eventData[j] = eventData[j], eventData[i]
+		}
+	}
+
+	iter.eventData = eventData
+
+	return nil
+}
+
+func (iter *CDC) getDataWithEndingBefore() error {
+	var (
+		eventData []models.EventData
+
+		endingBefore = iter.position.Cursor
+	)
+
+	for {
+		resp, err := iter.stripeSvc.GetEvent(iter.position.CreatedAt, "", endingBefore)
+		if err != nil {
+			return fmt.Errorf("get list of event objects: %w", err)
+		}
+
+		if len(resp.Data) > 0 {
+			endingBefore = resp.Data[0].ID
+
+			for i, j := 0, len(resp.Data)-1; i < j; i, j = i+1, j-1 {
+				resp.Data[i], resp.Data[j] = resp.Data[j], resp.Data[i]
+			}
+
+			eventData = append(eventData, resp.Data...)
+		}
+
+		if !resp.HasMore {
+			break
 		}
 	}
 

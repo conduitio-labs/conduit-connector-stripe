@@ -27,10 +27,11 @@ import (
 	"github.com/conduitio/conduit-connector-stripe/source/position"
 )
 
-func TestIterator_Next(t *testing.T) {
+func TestSnapshot_Next(t *testing.T) {
 	pos := position.Position{
 		IteratorType: position.SnapshotType,
 	}
+
 	underTestSnapshot := Snapshot{
 		position: &pos,
 	}
@@ -72,7 +73,7 @@ func TestIterator_Next(t *testing.T) {
 			len: 3,
 			want: []wantData{
 				{
-					position: "s..0",
+					position: "s..0.0",
 					action:   "insert",
 					key: sdk.StructuredData{
 						idKey: "prod_La50",
@@ -80,7 +81,7 @@ func TestIterator_Next(t *testing.T) {
 					payload: `{"created":1651153850,"id":"prod_La50"}`,
 				},
 				{
-					position: "s.prod_La50.0",
+					position: "s.prod_La50.0.0",
 					action:   "insert",
 					key: sdk.StructuredData{
 						idKey: "prod_La49",
@@ -88,7 +89,7 @@ func TestIterator_Next(t *testing.T) {
 					payload: `{"created":1651153849,"id":"prod_La49"}`,
 				},
 				{
-					position: "s.prod_La49.0",
+					position: "s.prod_La49.0.0",
 					action:   "insert",
 					key: sdk.StructuredData{
 						idKey: "prod_La48",
@@ -153,7 +154,7 @@ func TestIterator_Next(t *testing.T) {
 	}
 }
 
-func TestIterator_Integration_Next(t *testing.T) {
+func TestSnapshot_Integration_Next(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 
