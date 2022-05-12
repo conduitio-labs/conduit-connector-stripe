@@ -46,6 +46,7 @@ func (iter *CDC) Next() (sdk.Record, error) {
 		if err := iter.getData(); err != nil {
 			return sdk.Record{}, fmt.Errorf("get event data: %w", err)
 		}
+
 		iter.position.Index = 0
 
 		if len(iter.eventData) == 0 {
@@ -112,6 +113,7 @@ func (iter *CDC) getDataWithStartingAfter() error {
 	}
 
 	if len(eventData) > 0 {
+		// do the reverse after all requests, because Stripe receives data ordered by DESC always
 		for i, j := 0, len(eventData)-1; i < j; i, j = i+1, j-1 {
 			eventData[i], eventData[j] = eventData[j], eventData[i]
 		}
@@ -138,6 +140,7 @@ func (iter *CDC) getDataWithEndingBefore() error {
 		if len(resp.Data) > 0 {
 			endingBefore = resp.Data[0].ID
 
+			// do the reverse after each request, because we get the data from the last page of Stripe events
 			for i, j := 0, len(resp.Data)-1; i < j; i, j = i+1, j-1 {
 				resp.Data[i], resp.Data[j] = resp.Data[j], resp.Data[i]
 			}
