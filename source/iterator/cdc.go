@@ -59,6 +59,11 @@ func (iter *CDC) Next() (sdk.Record, error) {
 		return sdk.Record{}, fmt.Errorf("marshal payload: %w", err)
 	}
 
+	// update the cursor before formatting the last cached data record
+	if len(iter.eventData) == iter.position.Index+1 {
+		iter.position.Cursor = iter.eventData[len(iter.eventData)-1].ID
+	}
+
 	output := sdk.Record{
 		Position: iter.position.FormatSDKPosition(),
 		Metadata: map[string]string{
@@ -72,10 +77,6 @@ func (iter *CDC) Next() (sdk.Record, error) {
 	}
 
 	iter.position.Index++
-
-	if len(iter.eventData) == iter.position.Index {
-		iter.position.Cursor = iter.eventData[len(iter.eventData)-1].ID
-	}
 
 	return output, nil
 }
