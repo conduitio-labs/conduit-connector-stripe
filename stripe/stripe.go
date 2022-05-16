@@ -24,7 +24,18 @@ import (
 	"github.com/conduitio/conduit-connector-stripe/models"
 )
 
-const stripeAPIURL = "https://api.stripe.com/v1"
+const (
+	stripeAPIURL = "https://api.stripe.com/v1"
+
+	authHeaderFormat = "Bearer %s"
+
+	startingAfterFormat = "&starting_after=%s"
+	endingBeforeFormat  = "&ending_before=%s"
+	typesFormat         = "types[]=%s"
+
+	resourceURLFormat = "%s/%s?limit=%d%s"
+	eventURLFormat    = "%s/events?%s&limit=%d&created[gte]=%d%s%s"
+)
 
 // A Stripe represents Stripe client struct.
 type Stripe struct {
@@ -45,14 +56,14 @@ func (s Stripe) GetResource(startingAfter string) (models.ResourceResponse, erro
 	var resp models.ResourceResponse
 
 	if startingAfter != "" {
-		startingAfter = fmt.Sprintf("&starting_after=%s", startingAfter)
+		startingAfter = fmt.Sprintf(startingAfterFormat, startingAfter)
 	}
 
-	url := fmt.Sprintf("%s/%s?limit=%d%s",
+	url := fmt.Sprintf(resourceURLFormat,
 		stripeAPIURL, models.ResourcesMap[s.cfg.ResourceName], s.cfg.Limit, startingAfter)
 
 	header := make(map[string]string, 1)
-	header["Authorization"] = fmt.Sprintf("Bearer %s", s.cfg.SecretKey)
+	header["Authorization"] = fmt.Sprintf(authHeaderFormat, s.cfg.SecretKey)
 
 	data, err := s.httpCli.Get(url, header)
 	if err != nil {
@@ -76,22 +87,21 @@ func (s Stripe) GetEvent(createdAt int64, startingAfter, endingBefore string) (m
 	)
 
 	if events, ok := models.EventsMap[s.cfg.ResourceName]; ok {
-		types = fmt.Sprintf("types[]=%s", strings.Join(events, "&types[]="))
+		types = fmt.Sprintf(typesFormat, strings.Join(events, "&types[]="))
 	}
 
 	if startingAfter != "" {
-		startingAfter = fmt.Sprintf("&starting_after=%s", startingAfter)
+		startingAfter = fmt.Sprintf(startingAfterFormat, startingAfter)
 	}
 
 	if endingBefore != "" {
-		endingBefore = fmt.Sprintf("&ending_before=%s", endingBefore)
+		endingBefore = fmt.Sprintf(endingBeforeFormat, endingBefore)
 	}
 
-	url := fmt.Sprintf("%s/events?%s&limit=%d&created[gte]=%d%s%s",
-		stripeAPIURL, types, s.cfg.Limit, createdAt, startingAfter, endingBefore)
+	url := fmt.Sprintf(eventURLFormat, stripeAPIURL, types, s.cfg.Limit, createdAt, startingAfter, endingBefore)
 
 	header := make(map[string]string, 1)
-	header["Authorization"] = fmt.Sprintf("Bearer %s", s.cfg.SecretKey)
+	header["Authorization"] = fmt.Sprintf(authHeaderFormat, s.cfg.SecretKey)
 
 	data, err := s.httpCli.Get(url, header)
 	if err != nil {
