@@ -19,16 +19,9 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"go.uber.org/multierr"
-)
 
-// ResourceNamesMap is a dictionary with valid resources,
-// where the key is the object type and the value is the name
-// of the API endpoints of that object type.
-var ResourceNamesMap = map[string]string{
-	"plan":         "plans",
-	"product":      "products",
-	"subscription": "subscriptions",
-}
+	"github.com/conduitio/conduit-connector-stripe/models"
+)
 
 // Validate validates configuration fields.
 func (c Config) Validate() error {
@@ -92,7 +85,7 @@ func (c Config) configName(fieldName string) string {
 }
 
 func (c Config) validateResourceName(fl validator.FieldLevel) bool {
-	_, ok := ResourceNamesMap[fl.Field().String()]
+	_, ok := models.ResourcesMap[fl.Field().String()]
 
 	return ok
 }

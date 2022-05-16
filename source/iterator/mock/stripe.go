@@ -73,17 +73,32 @@ func (m *MockStripe) EXPECT() *MockStripeMockRecorder {
 	return m.recorder
 }
 
-// GetResource mocks base method.
-func (m *MockStripe) GetResource(startingAfter string) (models.StripeResponse, error) {
+// GetEvent mocks base method.
+func (m *MockStripe) GetEvent(createdAt int64, startingAfter, endingBefore string) (models.EventResponse, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetResource", startingAfter)
-	ret0, _ := ret[0].(models.StripeResponse)
+	ret := m.ctrl.Call(m, "GetEvent", createdAt, startingAfter, endingBefore)
+	ret0, _ := ret[0].(models.EventResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetEvent indicates an expected call of GetEvent.
+func (mr *MockStripeMockRecorder) GetEvent(createdAt, startingAfter, endingBefore interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEvent", reflect.TypeOf((*MockStripe)(nil).GetEvent), createdAt, startingAfter, endingBefore)
+}
+
+// GetResource mocks base method.
+func (m *MockStripe) GetResource(arg0 string) (models.ResourceResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetResource", arg0)
+	ret0, _ := ret[0].(models.ResourceResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetResource indicates an expected call of GetResource.
-func (mr *MockStripeMockRecorder) GetResource(startingAfter interface{}) *gomock.Call {
+func (mr *MockStripeMockRecorder) GetResource(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetResource", reflect.TypeOf((*MockStripe)(nil).GetResource), startingAfter)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetResource", reflect.TypeOf((*MockStripe)(nil).GetResource), arg0)
 }

@@ -51,12 +51,12 @@ func (s *Source) Configure(ctx context.Context, cfgRaw map[string]string) error 
 
 // Open parses sdk.Position and initializes a Snapshot iterator.
 func (s *Source) Open(ctx context.Context, rp sdk.Position) error {
-	p, err := position.ParseSDKPosition(rp)
+	pos, err := position.ParseSDKPosition(rp)
 	if err != nil {
 		return err
 	}
 
-	s.iterator = iterator.NewSnapshotIterator(stripe.New(s.cfg), p)
+	s.iterator = iterator.New(stripe.New(s.cfg), &pos)
 
 	return nil
 }
@@ -71,12 +71,12 @@ func (s *Source) Read(ctx context.Context) (sdk.Record, error) {
 	return r, nil
 }
 
-// Teardown stops the CDC iterator from running.
+// Teardown does nothing.
 func (s *Source) Teardown(ctx context.Context) error {
 	return nil
 }
 
-// Ack ...
+// Ack does nothing.
 func (s *Source) Ack(ctx context.Context, position sdk.Position) error {
 	return nil
 }

@@ -25,16 +25,16 @@ const (
 
 const (
 	// SecretKey is the configuration name for Stripe secret key.
-	SecretKey = "stripe.secretKey"
+	SecretKey = "key"
 
 	// ResourceName is the configuration name for Stripe resource.
-	ResourceName = "stripe.resourceName"
+	ResourceName = "resource"
 
 	// HTTPClientRetryMax is the configuration name for the maximum number of retries in the HTTP client.
-	HTTPClientRetryMax = "stripe.http_client_retry_max"
+	HTTPClientRetryMax = "retry_max"
 
-	// Limit is a parameter that specifies the number of objects returned by the query to Stripe.
-	Limit = "stripe.limit"
+	// Limit is the configuration name for the number of objects returned by the query to Stripe.
+	Limit = "limit"
 )
 
 // A Config represents the configuration needed for Stripe.

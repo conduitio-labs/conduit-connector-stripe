@@ -22,8 +22,6 @@ import (
 	"github.com/conduitio/conduit-connector-stripe/config"
 )
 
-type Spec struct{}
-
 // Specification returns the connector's specification.
 func Specification() sdk.Specification {
 	return sdk.Specification{
