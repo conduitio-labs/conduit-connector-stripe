@@ -12,15 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package models
+package resources
 
 const (
-	ActionKey = "action"
-
-	InsertAction = "insert"
-	UpdateAction = "update"
-	DeleteAction = "delete"
-
-	eventKeyCreated = "created"
-	eventKeyDeleted = "deleted"
+	PaymentMethodResource                  = "payment_method"
+	PaymentMethodsList                     = "payment_methods"
+	PaymentMethodAttachedEvent             = "payment_method.attached"
+	PaymentMethodAutomaticallyUpdatedEvent = "payment_method.automatically_updated"
+	PaymentMethodDetachedEvent             = "payment_method.detached"
+	PaymentMethodUpdatedEvent              = "payment_method.updated"
 )

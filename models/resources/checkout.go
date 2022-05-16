@@ -12,15 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package models
+package resources
 
 const (
-	ActionKey = "action"
-
-	InsertAction = "insert"
-	UpdateAction = "update"
-	DeleteAction = "delete"
-
-	eventKeyCreated = "created"
-	eventKeyDeleted = "deleted"
+	CheckoutSessionResource                   = "checkout.session"
+	CheckoutSessionsList                      = "checkout/sessions"
+	CheckoutSessionAsyncPaymentFailedEvent    = "checkout.session.async_payment_failed"
+	CheckoutSessionAsyncPaymentSucceededEvent = "checkout.session.async_payment_succeeded"
+	CheckoutSessionCompletedEvent             = "checkout.session.completed"
+	CheckoutSessionExpiredEvent               = "checkout.session.expired"
 )

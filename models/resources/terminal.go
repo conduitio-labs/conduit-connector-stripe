@@ -12,15 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package models
+package resources
 
 const (
-	ActionKey = "action"
+	TerminalLocationResource = "terminal.location"
+	TerminalLocationsList    = "terminal/locations"
 
-	InsertAction = "insert"
-	UpdateAction = "update"
-	DeleteAction = "delete"
+	TerminalReaderResource             = "terminal.reader"
+	TerminalReadersList                = "terminal/readers"
+	TerminalReaderActionFailedEvent    = "terminal.reader.action_failed"
+	TerminalReaderActionSucceededEvent = "terminal.reader.action_succeeded"
 
-	eventKeyCreated = "created"
-	eventKeyDeleted = "deleted"
+	TerminalConfigurationResource = "terminal.configuration"
+	TerminalConfigurationsList    = "terminal/configurations"
 )

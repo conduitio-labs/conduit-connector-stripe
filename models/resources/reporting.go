@@ -12,15 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package models
+package resources
 
 const (
-	ActionKey = "action"
+	ReportingReportRunResource       = "reporting.report_run"
+	ReportingReportRunsList          = "reporting/report_runs"
+	ReportingReportRunFailedEvent    = "reporting.report_run.failed"
+	ReportingReportRunSucceededEvent = "reporting.report_run.succeeded"
 
-	InsertAction = "insert"
-	UpdateAction = "update"
-	DeleteAction = "delete"
-
-	eventKeyCreated = "created"
-	eventKeyDeleted = "deleted"
+	ReportingReportTypeResource     = "reporting.report_type"
+	ReportingReportTypesList        = "reporting/report_types"
+	ReportingReportTypeUpdatedEvent = "reporting.report_type.updated"
 )

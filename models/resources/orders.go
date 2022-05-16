@@ -12,15 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package models
+package resources
 
 const (
-	ActionKey = "action"
-
-	InsertAction = "insert"
-	UpdateAction = "update"
-	DeleteAction = "delete"
-
-	eventKeyCreated = "created"
-	eventKeyDeleted = "deleted"
+	OrderResource              = "order"
+	OrdersList                 = "orders"
+	OrderCreatedEvent          = "order.created"
+	OrderPaymentFailedEvent    = "order.payment_failed"
+	OrderPaymentSucceededEvent = "order.payment_succeeded"
+	OrderUpdatedEvent          = "order.updated"
 )
