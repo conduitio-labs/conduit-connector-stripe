@@ -35,6 +35,8 @@ const (
 	CDCType      = "c"
 )
 
+const positionFormat = "%s.%s.%d.%d"
+
 // A Position represents a Stripe position.
 type Position struct {
 	IteratorType string
@@ -79,5 +81,5 @@ func ParseSDKPosition(p sdk.Position) (Position, error) {
 
 // FormatSDKPosition formats and returns sdk.Position.
 func (p Position) FormatSDKPosition() sdk.Position {
-	return sdk.Position(fmt.Sprintf("%s.%s.%d.%d", p.IteratorType, p.Cursor, p.CreatedAt, p.Index))
+	return sdk.Position(fmt.Sprintf(positionFormat, p.IteratorType, p.Cursor, p.CreatedAt, p.Index))
 }
