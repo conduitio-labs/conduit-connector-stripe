@@ -61,6 +61,8 @@ func (iter *Snapshot) Next() (sdk.Record, error) {
 		return sdk.Record{}, fmt.Errorf("marshal payload: %w", err)
 	}
 
+	iter.position.Cursor = iter.response.Data[iter.index][idKey].(string)
+
 	output := sdk.Record{
 		Position: iter.position.FormatSDKPosition(),
 		Metadata: map[string]string{
@@ -73,7 +75,6 @@ func (iter *Snapshot) Next() (sdk.Record, error) {
 		Payload: sdk.RawData(payload),
 	}
 
-	iter.position.Cursor = iter.response.Data[iter.index][idKey].(string)
 	iter.index++
 
 	return output, nil
