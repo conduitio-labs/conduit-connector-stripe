@@ -83,3 +83,70 @@ const (
 	SubscriptionScheduleReleasedEvent  = "subscription_schedule.released"
 	SubscriptionScheduleUpdatedEvent   = "subscription_schedule.updated"
 )
+
+var (
+	CreditNoteEvents = []string{
+		CreditNoteCreatedEvent,
+		CreditNoteUpdatedEvent,
+		CreditNoteVoidedEvent,
+	}
+
+	BillingPortalConfigurationEvents = []string{
+		BillingPortalConfigurationCreatedEvent,
+		BillingPortalConfigurationUpdatedEvent,
+	}
+
+	InvoiceEvents = []string{
+		InvoiceCreatedEvent,
+		InvoiceDeletedEvent,
+		InvoiceFinalizationFailedEvent,
+		InvoiceFinalizedEvent,
+		InvoiceMarkedUncollectibleEvent,
+		InvoicePaidEvent,
+		InvoicePaymentActionRequiredEvent,
+		InvoicePaymentFailedEvent,
+		InvoicePaymentSucceededEvent,
+		InvoiceSentEvent,
+		InvoiceUpcomingEvent,
+		InvoiceUpdatedEvent,
+		InvoiceVoidedEvent,
+	}
+
+	InvoiceItemEvents = []string{
+		InvoiceItemCreatedEvent,
+		InvoiceItemDeletedEvent,
+		InvoiceItemUpdatedEvent,
+	}
+
+	PlanEvents = []string{
+		PlanCreatedEvent,
+		PlanDeletedEvent,
+		PlanUpdatedEvent,
+	}
+
+	QuoteEvents = []string{
+		QuoteAcceptedEvent,
+		QuoteCanceledEvent,
+		QuoteCreatedEvent,
+		QuoteFinalizedEvent,
+	}
+
+	SubscriptionEvents = []string{
+		SubscriptionCreatedEvent,
+		SubscriptionDeletedEvent,
+		SubscriptionPendingUpdateAppliedEvent,
+		SubscriptionPendingUpdateExpiredEvent,
+		SubscriptionTrialWillEndEvent,
+		SubscriptionUpdatedEvent,
+	}
+
+	SubscriptionScheduleEvents = []string{
+		SubscriptionScheduleAbortedEvent,
+		SubscriptionScheduleCanceledEvent,
+		SubscriptionScheduleCompletedEvent,
+		SubscriptionScheduleCreatedEvent,
+		SubscriptionScheduleExpiringEvent,
+		SubscriptionScheduleReleasedEvent,
+		SubscriptionScheduleUpdatedEvent,
+	}
+)

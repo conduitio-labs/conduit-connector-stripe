@@ -27,3 +27,14 @@ const (
 	IdentityVerificationReportResource = "identity.verification_report"
 	IdentityVerificationReportsList    = "identity/verification_reports"
 )
+
+var (
+	IdentityVerificationSessionEvents = []string{
+		IdentityVerificationSessionCanceledEvent,
+		IdentityVerificationSessionCreatedEvent,
+		IdentityVerificationSessionProcessingEvent,
+		IdentityVerificationSessionRedactedEvent,
+		IdentityVerificationSessionRequiresInputEvent,
+		IdentityVerificationSessionVerifiedEvent,
+	}
+)

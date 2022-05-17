@@ -26,3 +26,10 @@ const (
 	TerminalConfigurationResource = "terminal.configuration"
 	TerminalConfigurationsList    = "terminal/configurations"
 )
+
+var (
+	TerminalReaderEvents = []string{
+		TerminalReaderActionFailedEvent,
+		TerminalReaderActionSucceededEvent,
+	}
+)

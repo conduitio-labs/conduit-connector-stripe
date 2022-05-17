@@ -24,3 +24,14 @@ const (
 	ReportingReportTypesList        = "reporting/report_types"
 	ReportingReportTypeUpdatedEvent = "reporting.report_type.updated"
 )
+
+var (
+	ReportingReportRunEvents = []string{
+		ReportingReportRunFailedEvent,
+		ReportingReportRunSucceededEvent,
+	}
+
+	ReportingReportTypeEvents = []string{
+		ReportingReportTypeUpdatedEvent,
+	}
+)

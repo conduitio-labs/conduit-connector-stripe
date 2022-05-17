@@ -22,3 +22,12 @@ const (
 	PaymentMethodDetachedEvent             = "payment_method.detached"
 	PaymentMethodUpdatedEvent              = "payment_method.updated"
 )
+
+var (
+	PaymentMethodEvents = []string{
+		PaymentMethodAttachedEvent,
+		PaymentMethodAutomaticallyUpdatedEvent,
+		PaymentMethodDetachedEvent,
+		PaymentMethodUpdatedEvent,
+	}
+)

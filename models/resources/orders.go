@@ -22,3 +22,12 @@ const (
 	OrderPaymentSucceededEvent = "order.payment_succeeded"
 	OrderUpdatedEvent          = "order.updated"
 )
+
+var (
+	OrderEvents = []string{
+		OrderCreatedEvent,
+		OrderPaymentFailedEvent,
+		OrderPaymentSucceededEvent,
+		OrderUpdatedEvent,
+	}
+)

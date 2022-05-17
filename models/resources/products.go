@@ -33,7 +33,7 @@ const (
 	CouponDeletedEvent = "coupon.deleted"
 	CouponUpdatedEvent = "coupon.updated"
 
-	PromotionCode             = "promotion_code"
+	PromotionCodeResource     = "promotion_code"
 	PromotionCodesList        = "promotion_codes"
 	PromotionCodeCreatedEvent = "promotion_code.created"
 	PromotionCodeUpdatedEvent = "promotion_code.updated"
@@ -48,4 +48,34 @@ const (
 
 	ShippingRateResource = "shipping_rate"
 	ShippingRatesList    = "shipping_rates"
+)
+
+var (
+	ProductEvents = []string{
+		ProductCreatedEvent,
+		ProductDeletedEvent,
+		ProductUpdatedEvent,
+	}
+
+	PriceEvents = []string{
+		PriceCreatedEvent,
+		PriceDeletedEvent,
+		PriceUpdatedEvent,
+	}
+
+	CouponEvents = []string{
+		CouponCreatedEvent,
+		CouponDeletedEvent,
+		CouponUpdatedEvent,
+	}
+
+	PromotionCodeEvents = []string{
+		PromotionCodeCreatedEvent,
+		PromotionCodeUpdatedEvent,
+	}
+
+	TaxRateEvents = []string{
+		TaxRateCreatedEvent,
+		TaxRateUpdatedEvent,
+	}
 )

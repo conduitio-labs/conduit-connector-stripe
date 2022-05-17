@@ -20,3 +20,10 @@ const (
 	PaymentLinkCreatedEvent = "payment_link.created"
 	PaymentLinkUpdatedEvent = "payment_link.updated"
 )
+
+var (
+	PaymentLinkEvents = []string{
+		PaymentLinkCreatedEvent,
+		PaymentLinkUpdatedEvent,
+	}
+)

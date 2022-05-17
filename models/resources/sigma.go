@@ -19,3 +19,9 @@ const (
 	ScheduledQueryRunsList        = "scheduled_query_runs"
 	ScheduledQueryRunCreatedEvent = "sigma.scheduled_query_run.created"
 )
+
+var (
+	ScheduledQueryRunEvents = []string{
+		ScheduledQueryRunCreatedEvent,
+	}
+)

@@ -47,3 +47,34 @@ const (
 	IssuingTransactionCreatedEvent = "issuing_transaction.created"
 	IssuingTransactionUpdatedEvent = "issuing_transaction.updated"
 )
+
+var (
+	IssuingAuthorizationEvents = []string{
+		IssuingAuthorizationCreatedEvent,
+		IssuingAuthorizationRequestEvent,
+		IssuingAuthorizationUpdatedEvent,
+	}
+
+	IssuingCardholderEvents = []string{
+		IssuingCardholderCreatedEvent,
+		IssuingCardholderUpdatedEvent,
+	}
+
+	IssuingCardEvents = []string{
+		IssuingCardCreatedEvent,
+		IssuingCardUpdatedEvent,
+	}
+
+	IssuingDisputeEvents = []string{
+		IssuingDisputeClosedEvent,
+		IssuingDisputeCreatedEvent,
+		IssuingDisputeFundsReinstatedEvent,
+		IssuingDisputeSubmittedEvent,
+		IssuingDisputeUpdatedEvent,
+	}
+
+	IssuingTransactionEvents = []string{
+		IssuingTransactionCreatedEvent,
+		IssuingTransactionUpdatedEvent,
+	}
+)

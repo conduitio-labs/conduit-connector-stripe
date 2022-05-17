@@ -74,15 +74,76 @@ const (
 	SetupAttemptResource = "setup_attempt"
 	SetupAttemptsList    = "setup_attempts"
 
-	PayoutResource       = "payout"
-	PayoutsList          = "payouts"
-	PayoutsCanceledEvent = "payout.canceled"
-	PayoutsCreatedEvent  = "payout.created"
-	PayoutsFailedEvent   = "payout.failed"
-	PayoutsPaidEvent     = "payout.paid"
-	PayoutsUpdatedEvent  = "payout.updated"
+	PayoutResource      = "payout"
+	PayoutsList         = "payouts"
+	PayoutCanceledEvent = "payout.canceled"
+	PayoutCreatedEvent  = "payout.created"
+	PayoutFailedEvent   = "payout.failed"
+	PayoutPaidEvent     = "payout.paid"
+	PayoutUpdatedEvent  = "payout.updated"
 
 	RefundResource     = "refund"
 	RefundsList        = "refunds"
 	RefundUpdatedEvent = "charge.refund.updated"
+)
+
+var (
+	ChargeEvents = []string{
+		ChargeCapturedEvent,
+		ChargeExpiredEvent,
+		ChargeFailedEvent,
+		ChargePendingEvent,
+		ChargeRefundedEvent,
+		ChargeSucceededEvent,
+		ChargeUpdatedEvent,
+	}
+
+	CustomerEvents = []string{
+		CustomerCreatedEvent,
+		CustomerDeletedEvent,
+		CustomerUpdatedEvent,
+	}
+
+	DisputeEvents = []string{
+		DisputeClosedEvent,
+		DisputeCreatedEvent,
+		DisputeFundsReinstatedEvent,
+		DisputeFundsWithdrawnEvent,
+		DisputeupdatedEvent,
+	}
+
+	FileEvents = []string{
+		FileCreatedEvent,
+	}
+
+	PaymentIntentEvents = []string{
+		PaymentIntentAmountCapturableUpdatedEvent,
+		PaymentIntentCanceledEvent,
+		PaymentIntentCreatedEvent,
+		PaymentIntentPartiallyFundedEvent,
+		PaymentIntentPaymentFailedEvent,
+		PaymentIntentProcessingEvent,
+		PaymentIntentRequiresActionEvent,
+		PaymentIntentSucceededEvent,
+	}
+
+	SetupIntentEvents = []string{
+		SetupIntentCanceledEvent,
+		SetupIntentCreatedEvent,
+		SetupIntentRequiresActionEvent,
+		SetupIntentSetupFailedEvent,
+		SetupIntentSucceededEvent,
+	}
+
+	PayoutEvents = []string{
+		PayoutCanceledEvent,
+		PayoutCreatedEvent,
+		PayoutFailedEvent,
+		PayoutPaidEvent,
+		PayoutUpdatedEvent,
+	}
+
+	RefundEvents = []string{
+		RefundUpdatedEvent,
+	}
 )

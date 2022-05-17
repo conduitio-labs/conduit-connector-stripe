@@ -31,3 +31,15 @@ const (
 	RadarValueListItemResource = "radar.value_list_item"
 	RadarValueListItemsList    = "radar/value_list_items"
 )
+
+var (
+	RadarEarlyFraudWarningEvents = []string{
+		RadarEarlyFraudWarningCreatedEvent,
+		RadarEarlyFraudWarningUpdatedEvent,
+	}
+
+	ReviewEvents = []string{
+		ReviewClosedEvent,
+		ReviewOpenedEvent,
+	}
+)

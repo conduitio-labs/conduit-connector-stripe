@@ -22,3 +22,12 @@ const (
 	CheckoutSessionCompletedEvent             = "checkout.session.completed"
 	CheckoutSessionExpiredEvent               = "checkout.session.expired"
 )
+
+var (
+	CheckoutSessionEvents = []string{
+		CheckoutSessionAsyncPaymentFailedEvent,
+		CheckoutSessionAsyncPaymentSucceededEvent,
+		CheckoutSessionCompletedEvent,
+		CheckoutSessionExpiredEvent,
+	}
+)

@@ -43,3 +43,30 @@ const (
 	TransferReversedEvent = "transfer.reversed"
 	TransferUpdatedEvent  = "transfer.updated"
 )
+
+var (
+	AccountEvents = []string{
+		AccountUpdatedEvent,
+	}
+
+	ApplicationFeeEvents = []string{
+		ApplicationFeeCreatedEvent,
+		ApplicationFeeRefundedEvent,
+	}
+
+	TopUpEvents = []string{
+		TopupCanceledEvent,
+		TopupCreatedEvent,
+		TopupFailedEvent,
+		TopupReversedEvent,
+		TopupSucceededEvent,
+	}
+
+	TransferEvents = []string{
+		TransferCreatedEvent,
+		TransferFailedEvent,
+		TransferPaidEvent,
+		TransferReversedEvent,
+		TransferUpdatedEvent,
+	}
+)
