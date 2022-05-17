@@ -92,6 +92,5 @@ Position has the following fields:
 | `Index`         | int     | iteration position for cached data     |
 
 
-### A list of supported resources
-- [subscription](https://stripe.com/docs/api/subscriptions)
-- [plan](https://stripe.com/docs/api/plans)
+### Supported resources
+A list of supported resources is available [here](models/resources/README.md).
