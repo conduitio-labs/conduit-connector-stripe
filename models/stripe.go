@@ -26,20 +26,23 @@ type ResourceResponse struct {
 	HasMore bool                     `json:"has_more"`
 }
 
-// A EventData represents a data of event response.
-type EventData struct {
-	ID      string `json:"id"`
-	Created int64  `json:"created"`
-	Data    struct {
-		Object map[string]interface{} `json:"object"`
-	} `json:"data"`
-	Type string `json:"type"`
-}
-
 // A EventResponse represents a response event data from Stripe.
 type EventResponse struct {
 	Data    []EventData `json:"data"`
 	HasMore bool        `json:"has_more"`
+}
+
+// A EventData represents a data of event response.
+type EventData struct {
+	ID      string          `json:"id"`
+	Created int64           `json:"created"`
+	Data    EventDataObject `json:"data"`
+	Type    string          `json:"type"`
+}
+
+// An EventDataObject represents an object of event's data.
+type EventDataObject struct {
+	Object map[string]interface{} `json:"object"`
 }
 
 // ResourcesMap represents a dictionary with valid resources,

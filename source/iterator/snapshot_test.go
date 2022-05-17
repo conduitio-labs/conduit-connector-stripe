@@ -30,6 +30,7 @@ import (
 func TestSnapshot_Next(t *testing.T) {
 	pos := position.Position{
 		IteratorType: position.SnapshotType,
+		CreatedAt:    1652790765,
 	}
 
 	underTestSnapshot := Snapshot{
@@ -73,7 +74,7 @@ func TestSnapshot_Next(t *testing.T) {
 			len: 3,
 			want: []wantData{
 				{
-					position: "s.prod_La50.0.0",
+					position: "s.prod_La50.1652790765.0",
 					action:   "insert",
 					key: sdk.StructuredData{
 						idKey: "prod_La50",
@@ -81,7 +82,7 @@ func TestSnapshot_Next(t *testing.T) {
 					payload: `{"created":1651153850,"id":"prod_La50"}`,
 				},
 				{
-					position: "s.prod_La49.0.0",
+					position: "s.prod_La49.1652790765.0",
 					action:   "insert",
 					key: sdk.StructuredData{
 						idKey: "prod_La49",
@@ -89,7 +90,7 @@ func TestSnapshot_Next(t *testing.T) {
 					payload: `{"created":1651153849,"id":"prod_La49"}`,
 				},
 				{
-					position: "s.prod_La48.0.0",
+					position: "s.prod_La48.1652790765.0",
 					action:   "insert",
 					key: sdk.StructuredData{
 						idKey: "prod_La48",
@@ -176,6 +177,7 @@ func TestSnapshot_Integration_Next(t *testing.T) {
 
 		pos := position.Position{
 			IteratorType: position.SnapshotType,
+			CreatedAt:    1652790765,
 		}
 
 		m := mock.NewMockStripe(ctrl)
@@ -203,7 +205,8 @@ func TestSnapshot_Integration_Next(t *testing.T) {
 			}
 
 			if record.CreatedAt.Unix() != int64(result.Data[i]["created"].(float64)) {
-				t.Errorf("created: got = %v, want %v", record.CreatedAt.Unix(), result.Data[i]["created"])
+				t.Errorf("created: got = %v, want %v",
+					record.CreatedAt.Unix(), int64(result.Data[i]["created"].(float64)))
 			}
 
 			if record.Metadata[models.ActionKey] != models.InsertAction {
