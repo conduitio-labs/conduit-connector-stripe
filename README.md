@@ -14,7 +14,7 @@ The config passed to `Configure` can contain the following fields:
 | name        | description                                                                                                      | required | example                      |
 |-------------|------------------------------------------------------------------------------------------------------------------|----------|------------------------------|
 | `key`       | Stripe [secret key](https://dashboard.stripe.com/apikeys).                                                       | yes      | "sk_51Kr0QrJit566F2YtZAwMlh" |
-| `resource`  | The name of Stripe resource. A list of supported resources can be found [below](#a-list-of-supported-resources). | yes      | "plan"                       |
+| `resource`  | The name of Stripe resource. A list of supported resources can be found [here](models/resources/README.md). | yes      | "plan"                       |
 | `retry_max` | The maximum number of requests to Stripe in case of failure. By default is 3. The maximum is 10.                 | no       | "5"                          |                                                                                           | yes      | "id"                                            |
 | `limit`     | Count of records in one butch. By default is 50. The maximum is 100.                                             | no       | "70"                         |
 
@@ -90,7 +90,3 @@ Position has the following fields:
 | `Cursor`        | string  | `id` of the resource or event          |
 | `CreatedAt`     | int64   | UTC timestamp                          |
 | `Index`         | int     | iteration position for cached data     |
-
-
-### Supported resources
-A list of supported resources is available [here](models/resources/README.md).
