@@ -9,6 +9,7 @@
 | [`plan`](https://stripe.com/docs/api/plans) | `plan.created`, `plan.deleted`, `plan.updated` |
 | [`quote`](https://stripe.com/docs/api/quotes) | `quote.accepted`, `quote.canceled`, `quote.created`, `quote.finalized` |
 | [`subscription`](https://stripe.com/docs/api/subscriptions) | `customer.subscription.created`, `customer.subscription.deleted`, `customer.subscription.pending_update_applied`, `customer.subscription.pending_update_expired`, `customer.subscription.trial_will_end`, `customer.subscription.updated` |
+| [`subscription_item`](https://stripe.com/docs/api/subscription_items) | |
 | [`subscription_schedule`](https://stripe.com/docs/api/subscription_schedules) | `subscription_schedule.aborted`, `subscription_schedule.canceled`, `subscription_schedule.completed`, `subscription_schedule.created`, `subscription_schedule.expiring`, `subscription_schedule.released`, `subscription_schedule.updated` |
 | [`checkout.session`](https://stripe.com/docs/api/checkout/sessions) | `checkout.session.async_payment_failed`, `checkout.session.async_payment_succeeded`, `checkout.session.completed`, `checkout.session.expired` |
 | [`account`](https://stripe.com/docs/api/accounts) | `account.updated` |
