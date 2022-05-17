@@ -73,7 +73,7 @@ func TestSnapshot_Next(t *testing.T) {
 			len: 3,
 			want: []wantData{
 				{
-					position: "s..0.0",
+					position: "s.prod_La50.0.0",
 					action:   "insert",
 					key: sdk.StructuredData{
 						idKey: "prod_La50",
@@ -81,7 +81,7 @@ func TestSnapshot_Next(t *testing.T) {
 					payload: `{"created":1651153850,"id":"prod_La50"}`,
 				},
 				{
-					position: "s.prod_La50.0.0",
+					position: "s.prod_La49.0.0",
 					action:   "insert",
 					key: sdk.StructuredData{
 						idKey: "prod_La49",
@@ -89,7 +89,7 @@ func TestSnapshot_Next(t *testing.T) {
 					payload: `{"created":1651153849,"id":"prod_La49"}`,
 				},
 				{
-					position: "s.prod_La49.0.0",
+					position: "s.prod_La48.0.0",
 					action:   "insert",
 					key: sdk.StructuredData{
 						idKey: "prod_La48",
@@ -184,8 +184,6 @@ func TestSnapshot_Integration_Next(t *testing.T) {
 		iter := NewSnapshot(m, &pos)
 
 		for i := 0; i < len(result.Data); i++ {
-			positionForCheck := pos.FormatSDKPosition()
-
 			record, err := iter.Next()
 			if err != nil {
 				t.Errorf("next error = \"%s\"", err.Error())
@@ -212,7 +210,7 @@ func TestSnapshot_Integration_Next(t *testing.T) {
 				t.Errorf("action: got = %v, want %v", record.Metadata[models.ActionKey], models.InsertAction)
 			}
 
-			if !reflect.DeepEqual(record.Position, positionForCheck) {
+			if !reflect.DeepEqual(record.Position, pos.FormatSDKPosition()) {
 				t.Errorf("position: got = %v, want %v", string(record.Position), string(pos.FormatSDKPosition()))
 			}
 		}
