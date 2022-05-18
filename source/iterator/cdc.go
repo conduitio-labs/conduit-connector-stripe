@@ -42,41 +42,42 @@ func NewCDC(stripeSvc Stripe, pos *position.Position) *CDC {
 
 // Next returns the next record.
 func (iter *CDC) Next() (sdk.Record, error) {
-	if iter.eventData == nil || len(iter.eventData) == iter.position.Index {
+	if iter.eventData == nil || iter.position.Index == 0 {
 		if err := iter.getData(); err != nil {
 			return sdk.Record{}, fmt.Errorf("get event data: %w", err)
 		}
-
-		iter.position.Index = 0
 
 		if len(iter.eventData) == 0 {
 			return sdk.Record{}, sdk.ErrBackoffRetry
 		}
 	}
 
-	payload, err := json.Marshal(iter.eventData[iter.position.Index].Data.Object)
-	if err != nil {
-		return sdk.Record{}, fmt.Errorf("marshal payload: %w", err)
-	}
+	index := iter.position.Index
+
+	iter.position.Index++
 
 	// update the cursor before formatting the last cached data record
-	if len(iter.eventData) == iter.position.Index+1 {
+	if len(iter.eventData) == iter.position.Index {
+		iter.position.Index = 0
 		iter.position.Cursor = iter.eventData[len(iter.eventData)-1].ID
+	}
+
+	payload, err := json.Marshal(iter.eventData[index].Data.Object)
+	if err != nil {
+		return sdk.Record{}, fmt.Errorf("marshal payload: %w", err)
 	}
 
 	output := sdk.Record{
 		Position: iter.position.FormatSDKPosition(),
 		Metadata: map[string]string{
-			models.ActionKey: models.EventsAction[iter.eventData[iter.position.Index].Type],
+			models.ActionKey: models.EventsAction[iter.eventData[index].Type],
 		},
-		CreatedAt: time.Unix(iter.eventData[iter.position.Index].Created, 0),
+		CreatedAt: time.Unix(iter.eventData[index].Created, 0),
 		Key: sdk.StructuredData{
-			idKey: iter.eventData[iter.position.Index].Data.Object[idKey].(string),
+			idKey: iter.eventData[index].Data.Object[idKey].(string),
 		},
 		Payload: sdk.RawData(payload),
 	}
-
-	iter.position.Index++
 
 	return output, nil
 }
