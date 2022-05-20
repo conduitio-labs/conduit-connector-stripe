@@ -63,12 +63,17 @@ func (iter *Snapshot) Next() (sdk.Record, error) {
 
 	iter.position.Cursor = iter.response.Data[iter.index][idKey].(string)
 
+	created, ok := iter.response.Data[iter.index]["created"].(float64)
+	if !ok {
+		created = float64(time.Now().Unix())
+	}
+
 	output := sdk.Record{
 		Position: iter.position.FormatSDKPosition(),
 		Metadata: map[string]string{
 			models.ActionKey: models.InsertAction,
 		},
-		CreatedAt: time.Unix(int64(iter.response.Data[iter.index]["created"].(float64)), 0),
+		CreatedAt: time.Unix(int64(created), 0),
 		Key: sdk.StructuredData{
 			idKey: iter.response.Data[iter.index][idKey].(string),
 		},
