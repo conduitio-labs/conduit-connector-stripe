@@ -15,9 +15,6 @@
 package resources
 
 const (
-	BalanceTransactionResource = "balance_transaction"
-	BalanceTransactionsList    = "balance_transactions"
-
 	ChargeResource       = "charge"
 	ChargesList          = "charges"
 	ChargeCapturedEvent  = "charge.captured"
@@ -42,15 +39,9 @@ const (
 	DisputeFundsWithdrawnEvent  = "charge.dispute.funds_withdrawn"
 	DisputeupdatedEvent         = "charge.dispute.updated"
 
-	EventResource = "event"
-	EventsList    = "events"
-
 	FileResource     = "file"
 	FilesList        = "files"
 	FileCreatedEvent = "file.created"
-
-	FileLinkResource = "file_link"
-	FileLinksList    = "file_links"
 
 	PaymentIntentResource                     = "payment_intent"
 	PaymentIntentsList                        = "payment_intents"
@@ -70,9 +61,6 @@ const (
 	SetupIntentRequiresActionEvent = "setup_intent.requires_action"
 	SetupIntentSetupFailedEvent    = "setup_intent.setup_failed"
 	SetupIntentSucceededEvent      = "setup_intent.succeeded"
-
-	SetupAttemptResource = "setup_attempt"
-	SetupAttemptsList    = "setup_attempts"
 
 	PayoutResource      = "payout"
 	PayoutsList         = "payouts"

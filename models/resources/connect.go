@@ -24,9 +24,6 @@ const (
 	ApplicationFeeCreatedEvent  = "application_fee.created"
 	ApplicationFeeRefundedEvent = "application_fee.refunded"
 
-	CountrySpecResource = "country_spec"
-	CountrySpecsList    = "country_specs"
-
 	TopUpResource       = "topup"
 	TopUpsList          = "topups"
 	TopupCanceledEvent  = "topup.canceled"

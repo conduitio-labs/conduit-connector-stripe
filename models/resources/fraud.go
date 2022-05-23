@@ -24,12 +24,6 @@ const (
 	ReviewsList       = "reviews"
 	ReviewClosedEvent = "review.closed"
 	ReviewOpenedEvent = "review.opened"
-
-	RadarValueListResource = "radar.value_list"
-	RadarValueListsList    = "radar/value_lists"
-
-	RadarValueListItemResource = "radar.value_list_item"
-	RadarValueListItemsList    = "radar/value_list_items"
 )
 
 var (
