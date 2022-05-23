@@ -70,9 +70,6 @@ const (
 	SubscriptionTrialWillEndEvent         = "customer.subscription.trial_will_end"
 	SubscriptionUpdatedEvent              = "customer.subscription.updated"
 
-	SubscriptionItemResource = "subscription_item"
-	SubscriptionItemsList    = "subscription_items"
-
 	SubscriptionScheduleResource       = "subscription_schedule"
 	SubscriptionSchedulesList          = "subscription_schedules"
 	SubscriptionScheduleAbortedEvent   = "subscription_schedule.aborted"

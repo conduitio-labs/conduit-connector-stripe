@@ -23,9 +23,6 @@ const (
 	IdentityVerificationSessionRedactedEvent      = "identity.verification_session.redacted"
 	IdentityVerificationSessionRequiresInputEvent = "identity.verification_session.requires_input"
 	IdentityVerificationSessionVerifiedEvent      = "identity.verification_session.verified"
-
-	IdentityVerificationReportResource = "identity.verification_report"
-	IdentityVerificationReportsList    = "identity/verification_reports"
 )
 
 var (
