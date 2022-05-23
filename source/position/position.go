@@ -37,7 +37,15 @@ const (
 	CDCType      = "c"
 )
 
-const positionFormat = "%s.%s.%s.%d.%d"
+const (
+	positionFormat = "%s.%s.%s.%d.%d"
+
+	resourceSliceIndex     = 0
+	iteratorTypeSliceIndex = 1
+	cursorSliceIndex       = 2
+	createdAtSliceIndex    = 3
+	indexSliceIndex        = 4
+)
 
 // A Position represents a Stripe position.
 type Position struct {
@@ -65,7 +73,7 @@ func ParseSDKPosition(p sdk.Position, cfg *config.Config) (Position, error) {
 			reflect.TypeOf(Position{}).NumField(), len(parts))
 	}
 
-	if parts[0] != cfg.ResourceName {
+	if parts[resourceSliceIndex] != cfg.ResourceName {
 		return Position{
 			ResourceName: cfg.ResourceName,
 			IteratorType: SnapshotType,
@@ -73,21 +81,21 @@ func ParseSDKPosition(p sdk.Position, cfg *config.Config) (Position, error) {
 		}, nil
 	}
 
-	started, err := strconv.ParseInt(parts[3], 10, 64)
+	createdAt, err := strconv.ParseInt(parts[createdAtSliceIndex], 10, 64)
 	if err != nil {
 		return Position{}, errParseCreatedAt
 	}
 
-	index, err := strconv.Atoi(parts[4])
+	index, err := strconv.Atoi(parts[indexSliceIndex])
 	if err != nil {
 		return Position{}, errParseIndex
 	}
 
 	return Position{
-		ResourceName: parts[0],
-		IteratorType: parts[1],
-		Cursor:       parts[2],
-		CreatedAt:    started,
+		ResourceName: parts[resourceSliceIndex],
+		IteratorType: parts[iteratorTypeSliceIndex],
+		Cursor:       parts[cursorSliceIndex],
+		CreatedAt:    createdAt,
 		Index:        index,
 	}, nil
 }
