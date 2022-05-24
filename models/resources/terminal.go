@@ -15,16 +15,10 @@
 package resources
 
 const (
-	TerminalLocationResource = "terminal.location"
-	TerminalLocationsList    = "terminal/locations"
-
 	TerminalReaderResource             = "terminal.reader"
 	TerminalReadersList                = "terminal/readers"
 	TerminalReaderActionFailedEvent    = "terminal.reader.action_failed"
 	TerminalReaderActionSucceededEvent = "terminal.reader.action_succeeded"
-
-	TerminalConfigurationResource = "terminal.configuration"
-	TerminalConfigurationsList    = "terminal/configurations"
 )
 
 var (

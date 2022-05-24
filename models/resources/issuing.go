@@ -39,9 +39,6 @@ const (
 	IssuingDisputeSubmittedEvent       = "issuing_dispute.submitted"
 	IssuingDisputeUpdatedEvent         = "issuing_dispute.updated"
 
-	FundingInstructionResource = "funding_instruction"
-	FundingInstructionsList    = "issuing/funding_instructions"
-
 	IssuingTransactionResource     = "issuing.transaction"
 	IssuingTransactionsList        = "issuing/transactions"
 	IssuingTransactionCreatedEvent = "issuing_transaction.created"

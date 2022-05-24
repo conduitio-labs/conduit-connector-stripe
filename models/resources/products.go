@@ -38,16 +38,10 @@ const (
 	PromotionCodeCreatedEvent = "promotion_code.created"
 	PromotionCodeUpdatedEvent = "promotion_code.updated"
 
-	TaxCodeResource = "tax_code"
-	TaxCodesList    = "tax_codes"
-
 	TaxRateResource     = "tax_rate"
 	TaxRatesList        = "tax_rates"
 	TaxRateCreatedEvent = "tax_rate.created"
 	TaxRateUpdatedEvent = "tax_rate.updated"
-
-	ShippingRateResource = "shipping_rate"
-	ShippingRatesList    = "shipping_rates"
 )
 
 var (
