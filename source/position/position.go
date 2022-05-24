@@ -36,15 +36,14 @@ const (
 	SnapshotType = "s"
 	CDCType      = "c"
 )
+const positionFormat = "%s.%s.%s.%d.%d"
 
 const (
-	positionFormat = "%s.%s.%s.%d.%d"
-
-	resourceSliceIndex     = 0
-	iteratorTypeSliceIndex = 1
-	cursorSliceIndex       = 2
-	createdAtSliceIndex    = 3
-	indexSliceIndex        = 4
+	resourceSliceIndex = iota
+	iteratorTypeSliceIndex
+	cursorSliceIndex
+	createdAtSliceIndex
+	indexSliceIndex
 )
 
 // A Position represents a Stripe position.
