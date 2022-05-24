@@ -51,7 +51,7 @@ func (s *Source) Configure(ctx context.Context, cfgRaw map[string]string) error 
 
 // Open parses sdk.Position and initializes a Snapshot iterator.
 func (s *Source) Open(ctx context.Context, rp sdk.Position) error {
-	pos, err := position.ParseSDKPosition(rp, s.cfg)
+	pos, err := position.ParseSDKPosition(rp)
 	if err != nil {
 		return err
 	}

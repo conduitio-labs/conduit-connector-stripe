@@ -19,19 +19,16 @@ import (
 	"reflect"
 	"testing"
 
+	sdk "github.com/conduitio/conduit-connector-sdk"
 	"github.com/golang/mock/gomock"
 
-	sdk "github.com/conduitio/conduit-connector-sdk"
-
 	"github.com/conduitio/conduit-connector-stripe/models"
-	"github.com/conduitio/conduit-connector-stripe/models/resources"
 	"github.com/conduitio/conduit-connector-stripe/source/iterator/mock"
 	"github.com/conduitio/conduit-connector-stripe/source/position"
 )
 
 func TestSnapshot_Next(t *testing.T) {
 	pos := position.Position{
-		ResourceName: resources.PlanResource,
 		IteratorType: position.SnapshotType,
 		CreatedAt:    1652790765,
 	}
@@ -77,7 +74,7 @@ func TestSnapshot_Next(t *testing.T) {
 			len: 3,
 			want: []wantData{
 				{
-					position: "plan.s.prod_La50.1652790765.0",
+					position: "s.prod_La50.1652790765.0",
 					action:   "insert",
 					key: sdk.StructuredData{
 						idKey: "prod_La50",
@@ -85,7 +82,7 @@ func TestSnapshot_Next(t *testing.T) {
 					payload: `{"created":1651153850,"id":"prod_La50"}`,
 				},
 				{
-					position: "plan.s.prod_La49.1652790765.0",
+					position: "s.prod_La49.1652790765.0",
 					action:   "insert",
 					key: sdk.StructuredData{
 						idKey: "prod_La49",
@@ -93,7 +90,7 @@ func TestSnapshot_Next(t *testing.T) {
 					payload: `{"created":1651153849,"id":"prod_La49"}`,
 				},
 				{
-					position: "plan.s.prod_La48.1652790765.0",
+					position: "s.prod_La48.1652790765.0",
 					action:   "insert",
 					key: sdk.StructuredData{
 						idKey: "prod_La48",
