@@ -75,7 +75,6 @@ func (c Config) WrongResourceNameConfigErr(name string) error {
 }
 
 func (c Config) configName(fieldName string) string {
-	fmt.Println("fieldName:", fieldName)
 	return map[string]string{
 		"SecretKey":            SecretKey,
 		"ResourceName":         ResourceName,
