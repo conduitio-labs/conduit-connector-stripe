@@ -23,6 +23,8 @@ import (
 	"time"
 
 	sdk "github.com/conduitio/conduit-connector-sdk"
+
+	"github.com/conduitio/conduit-connector-stripe/config"
 )
 
 var (
@@ -34,11 +36,19 @@ const (
 	SnapshotType = "s"
 	CDCType      = "c"
 )
+const positionFormat = "%s.%s.%s.%d.%d"
 
-const positionFormat = "%s.%s.%d.%d"
+const (
+	resourceSliceIndex = iota
+	iteratorTypeSliceIndex
+	cursorSliceIndex
+	createdAtSliceIndex
+	indexSliceIndex
+)
 
 // A Position represents a Stripe position.
 type Position struct {
+	ResourceName string
 	IteratorType string
 	Cursor       string
 	CreatedAt    int64
@@ -46,9 +56,10 @@ type Position struct {
 }
 
 // ParseSDKPosition parses SDK position and returns Position.
-func ParseSDKPosition(p sdk.Position) (Position, error) {
+func ParseSDKPosition(p sdk.Position, cfg *config.Config) (Position, error) {
 	if p == nil {
 		return Position{
+			ResourceName: cfg.ResourceName,
 			IteratorType: SnapshotType,
 			CreatedAt:    time.Now().Unix(),
 		}, nil
@@ -61,25 +72,34 @@ func ParseSDKPosition(p sdk.Position) (Position, error) {
 			reflect.TypeOf(Position{}).NumField(), len(parts))
 	}
 
-	started, err := strconv.ParseInt(parts[2], 10, 64)
+	if parts[resourceSliceIndex] != cfg.ResourceName {
+		return Position{
+			ResourceName: cfg.ResourceName,
+			IteratorType: SnapshotType,
+			CreatedAt:    time.Now().Unix(),
+		}, nil
+	}
+
+	createdAt, err := strconv.ParseInt(parts[createdAtSliceIndex], 10, 64)
 	if err != nil {
 		return Position{}, errParseCreatedAt
 	}
 
-	index, err := strconv.Atoi(parts[3])
+	index, err := strconv.Atoi(parts[indexSliceIndex])
 	if err != nil {
 		return Position{}, errParseIndex
 	}
 
 	return Position{
-		IteratorType: parts[0],
-		Cursor:       parts[1],
-		CreatedAt:    started,
+		ResourceName: parts[resourceSliceIndex],
+		IteratorType: parts[iteratorTypeSliceIndex],
+		Cursor:       parts[cursorSliceIndex],
+		CreatedAt:    createdAt,
 		Index:        index,
 	}, nil
 }
 
 // FormatSDKPosition formats and returns sdk.Position.
 func (p Position) FormatSDKPosition() sdk.Position {
-	return sdk.Position(fmt.Sprintf(positionFormat, p.IteratorType, p.Cursor, p.CreatedAt, p.Index))
+	return sdk.Position(fmt.Sprintf(positionFormat, p.ResourceName, p.IteratorType, p.Cursor, p.CreatedAt, p.Index))
 }

@@ -20,20 +20,28 @@ import (
 	"testing"
 
 	sdk "github.com/conduitio/conduit-connector-sdk"
+
+	"github.com/conduitio/conduit-connector-stripe/config"
+	"github.com/conduitio/conduit-connector-stripe/models/resources"
 )
 
 func TestParseSDKPosition(t *testing.T) {
 	tests := []struct {
 		name        string
 		in          sdk.Position
+		cfg         *config.Config
 		want        Position
 		wantErr     bool
 		expectedErr string
 	}{
 		{
 			name: "valid sdk position",
-			in:   sdk.Position("s.sub_1KtXkmJit567F2YtZzGSIrsh.0.1"),
+			in:   sdk.Position("plan.s.sub_1KtXkmJit567F2YtZzGSIrsh.0.1"),
+			cfg: &config.Config{
+				ResourceName: resources.PlanResource,
+			},
 			want: Position{
+				ResourceName: resources.PlanResource,
 				IteratorType: SnapshotType,
 				Cursor:       "sub_1KtXkmJit567F2YtZzGSIrsh",
 				CreatedAt:    0,
@@ -42,16 +50,16 @@ func TestParseSDKPosition(t *testing.T) {
 		},
 		{
 			name:    "wrong the number of position elements",
-			in:      sdk.Position("s.sub_1KtXkmJit567F2YtZzGSIrsh.0"),
+			in:      sdk.Position("plan.s.sub_1KtXkmJit567F2YtZzGSIrsh.0"),
 			wantErr: true,
-			expectedErr: fmt.Sprintf("the number of position elements must be equal to %d, now it is 3",
+			expectedErr: fmt.Sprintf("the number of position elements must be equal to %d, now it is 4",
 				reflect.TypeOf(Position{}).NumField()),
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := ParseSDKPosition(tt.in)
+			got, err := ParseSDKPosition(tt.in, tt.cfg)
 			if err != nil {
 				if !tt.wantErr {
 					t.Errorf("parse error = \"%s\", wantErr %t", err.Error(), tt.wantErr)
@@ -77,13 +85,14 @@ func TestParseSDKPosition(t *testing.T) {
 
 func TestFormatSDKPosition(t *testing.T) {
 	underTestPosition := Position{
+		ResourceName: resources.PlanResource,
 		IteratorType: SnapshotType,
 		Cursor:       "sub_1KtXkmJit567F2YtZzGSIrsh",
 		CreatedAt:    1652279623,
 		Index:        3,
 	}
 
-	want := sdk.Position("s.sub_1KtXkmJit567F2YtZzGSIrsh.1652279623.3")
+	want := sdk.Position("plan.s.sub_1KtXkmJit567F2YtZzGSIrsh.1652279623.3")
 
 	t.Run("format valid sdk position", func(t *testing.T) {
 		got := underTestPosition.FormatSDKPosition()
