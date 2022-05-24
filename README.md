@@ -31,8 +31,6 @@ The `Open` method parses the current position, initializes an
 The `Read` method calls the method `Next` of the current iterator and returns the next record.
 The `Ack` method checks if the record with the position was recorded (under development).
 
-**Note:** Data from Stripe is sorted by creation date in descending order, with no manual sort option.
-
 ### Snapshot
 The system retrieves data from the list of objects of a defined Stripe resource (e.g. resource [plan](https://stripe.com/docs/api/plans/list)).
 
@@ -90,3 +88,7 @@ Position has the following fields:
 | `Cursor`        | string  | `id` of the resource or event          |
 | `CreatedAt`     | int64   | UTC timestamp                          |
 | `Index`         | int     | iteration position for cached data     |
+
+### Notes
+- Data from Stripe is sorted by creation date in descending order, with no manual sort option.
+- If the user changes the resource name when the connector was created and was already in use, the connector will start working with the new resource from the beginning.
