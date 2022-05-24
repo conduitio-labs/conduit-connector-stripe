@@ -18,9 +18,8 @@ import (
 	"fmt"
 	"io/ioutil"
 
-	"github.com/hashicorp/go-retryablehttp"
-
 	"github.com/conduitio/conduit-connector-stripe/config"
+	"github.com/hashicorp/go-retryablehttp"
 )
 
 const methodGet = "GET"
@@ -33,7 +32,7 @@ type Client struct {
 // NewClient returns a new retryable http client.
 func NewClient(cfg *config.Config) Client {
 	retryClient := retryablehttp.NewClient()
-	retryClient.RetryMax = cfg.HTTPClientRetryMax
+	retryClient.RetryMax = cfg.HTTPClientMaxRetries
 
 	return Client{
 		HTTPClient: retryClient,

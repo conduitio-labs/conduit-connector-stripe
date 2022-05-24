@@ -19,9 +19,8 @@ import (
 	"reflect"
 	"testing"
 
-	"go.uber.org/multierr"
-
 	"github.com/conduitio/conduit-connector-stripe/config"
+	"go.uber.org/multierr"
 )
 
 func TestSource_Configure(t *testing.T) {
@@ -43,10 +42,10 @@ func TestSource_Configure(t *testing.T) {
 			},
 			want: Source{
 				cfg: &config.Config{
-					SecretKey:          "sk_51JB",
-					ResourceName:       "subscription",
-					HTTPClientRetryMax: config.RetryMaxDefault,
-					Limit:              config.LimitDefault,
+					SecretKey:            "sk_51JB",
+					ResourceName:         "subscription",
+					HTTPClientMaxRetries: config.RetryMaxDefault,
+					Limit:                config.LimitDefault,
 				},
 			},
 		},

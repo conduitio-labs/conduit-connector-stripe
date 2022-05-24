@@ -17,10 +17,9 @@ package config
 import (
 	"fmt"
 
+	"github.com/conduitio/conduit-connector-stripe/models"
 	"github.com/go-playground/validator/v10"
 	"go.uber.org/multierr"
-
-	"github.com/conduitio/conduit-connector-stripe/models"
 )
 
 // Validate validates configuration fields.
@@ -76,11 +75,12 @@ func (c Config) WrongResourceNameConfigErr(name string) error {
 }
 
 func (c Config) configName(fieldName string) string {
+	fmt.Println("fieldName:", fieldName)
 	return map[string]string{
-		"SecretKey":          SecretKey,
-		"ResourceName":       ResourceName,
-		"HTTPClientRetryMax": HTTPClientRetryMax,
-		"Limit":              Limit,
+		"SecretKey":            SecretKey,
+		"ResourceName":         ResourceName,
+		"HTTPClientMaxRetries": HTTPClientMaxRetries,
+		"Limit":                Limit,
 	}[fieldName]
 }
 

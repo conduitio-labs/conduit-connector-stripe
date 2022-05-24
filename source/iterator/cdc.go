@@ -20,7 +20,6 @@ import (
 	"time"
 
 	sdk "github.com/conduitio/conduit-connector-sdk"
-
 	"github.com/conduitio/conduit-connector-stripe/models"
 	"github.com/conduitio/conduit-connector-stripe/source/position"
 )

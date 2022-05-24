@@ -18,7 +18,6 @@ import (
 	"errors"
 
 	sdk "github.com/conduitio/conduit-connector-sdk"
-
 	"github.com/conduitio/conduit-connector-stripe/source/position"
 )
 

@@ -11,12 +11,12 @@ The Stripe connector is one of [Conduit](https://github.com/ConduitIO/conduit) b
 ### Configuration
 The config passed to `Configure` can contain the following fields:
 
-| name        | description                                                                                                      | required | example                      |
-|-------------|------------------------------------------------------------------------------------------------------------------|----------|------------------------------|
-| `key`       | Stripe [secret key](https://dashboard.stripe.com/apikeys).                                                       | yes      | "sk_51Kr0QrJit566F2YtZAwMlh" |
-| `resource`  | The name of Stripe resource. A list of supported resources can be found [here](models/resources/README.md). | yes      | "plan"                       |
-| `retry_max` | The maximum number of requests to Stripe in case of failure. By default is 3. The maximum is 10.                 | no       | "5"                          |                                                                                           | yes      | "id"                                            |
-| `limit`     | Count of records in one butch. By default is 50. The maximum is 100.                                             | no       | "70"                         |
+| name            | description                                                                                                 | required | example                      |
+|-----------------|-------------------------------------------------------------------------------------------------------------|----------|------------------------------|
+| `secretKey`     | Stripe [secret key](https://dashboard.stripe.com/apikeys).                                                  | yes      | "sk_51Kr0QrJit566F2YtZAwMlh" |
+| `resourceName`  | The name of Stripe resource. A list of supported resources can be found [here](models/resources/README.md). | yes      | "plan"                       |
+| `maxRetries`    | The maximum number of requests to Stripe in case of failure. By default is 3. The maximum is 10.            | no       | "5"                          |                                                                                           | yes      | "id"                                            |
+| `limit`         | Count of records in one butch. By default is 50. The maximum is 100.                                        | no       | "70"                         |
 
 ### How to build it
 Run `make build`.
@@ -29,7 +29,6 @@ The `Configure` method parses the configuration and validates them.
 The `Open` method parses the current position, initializes an 
 [HTTP client](https://github.com/hashicorp/go-retryablehttp), and initializes Snapshot (only if in the position IteratorType equals Snapshot) and CDC iterators.
 The `Read` method calls the method `Next` of the current iterator and returns the next record.
-The `Ack` method checks if the record with the position was recorded (under development).
 
 ### Snapshot
 The system retrieves data from the list of objects of a defined Stripe resource (e.g. resource [plan](https://stripe.com/docs/api/plans/list)).
@@ -80,14 +79,14 @@ The data in the resulting slice is ready to be returned by the `Read` method rec
 All the following data are taken by the [ending_before](#ending_before) script.
 
 ### Position
-Position has the following fields:
+Position looks like `s.sub_1KtXkmJit567F2YtZzGSIrsh.1652279623.1` and has the following parts:
 
-| name            | type    | description                            |
-|-----------------|---------|----------------------------------------|
-| `IteratorType`  | string  | `s` - Snapshot (by default), `c` - CDC |
-| `Cursor`        | string  | `id` of the resource or event          |
-| `CreatedAt`     | int64   | UTC timestamp                          |
-| `Index`         | int     | iteration position for cached data     |
+| name            | type    | description                            | example                        |
+|-----------------|---------|----------------------------------------|--------------------------------|
+| `IteratorType`  | string  | `s` - Snapshot (by default), `c` - CDC | `s`                            |
+| `Cursor`        | string  | `id` of the resource or event          | `sub_1KtXkmJit567F2YtZzGSIrsh` |
+| `CreatedAt`     | int64   | UTC timestamp                          | `1652279623`                   |
+| `Index`         | int     | iteration position for cached data     | `1`                            |
 
 ### Notes
 - Data from Stripe is sorted by creation date in descending order, with no manual sort option.

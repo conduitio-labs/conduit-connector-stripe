@@ -18,7 +18,6 @@ import (
 	"context"
 
 	sdk "github.com/conduitio/conduit-connector-sdk"
-
 	"github.com/conduitio/conduit-connector-stripe/config"
 	"github.com/conduitio/conduit-connector-stripe/source/iterator"
 	"github.com/conduitio/conduit-connector-stripe/source/position"
@@ -71,12 +70,16 @@ func (s *Source) Read(ctx context.Context) (sdk.Record, error) {
 	return r, nil
 }
 
-// Teardown does nothing.
-func (s *Source) Teardown(ctx context.Context) error {
+// Ack does nothing.
+func (s *Source) Ack(ctx context.Context, rp sdk.Position) error {
+	sdk.Logger(ctx).Debug().Str("position", string(rp)).Msg("got ack")
+
 	return nil
 }
 
-// Ack does nothing.
-func (s *Source) Ack(ctx context.Context, position sdk.Position) error {
+// Teardown does nothing.
+func (s *Source) Teardown(ctx context.Context) error {
+	sdk.Logger(ctx).Debug().Msg("calling Teardown")
+
 	return nil
 }

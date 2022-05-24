@@ -20,11 +20,10 @@ import (
 	"testing"
 
 	sdk "github.com/conduitio/conduit-connector-sdk"
-	"github.com/golang/mock/gomock"
-
 	"github.com/conduitio/conduit-connector-stripe/models"
 	"github.com/conduitio/conduit-connector-stripe/source/iterator/mock"
 	"github.com/conduitio/conduit-connector-stripe/source/position"
+	"github.com/golang/mock/gomock"
 )
 
 func TestSnapshot_Next(t *testing.T) {

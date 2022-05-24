@@ -18,7 +18,6 @@ import (
 	"strconv"
 
 	sdk "github.com/conduitio/conduit-connector-sdk"
-
 	"github.com/conduitio/conduit-connector-stripe/config"
 )
 
@@ -40,7 +39,7 @@ func Specification() sdk.Specification {
 				Required:    true,
 				Description: "Stripe resource name.",
 			},
-			config.HTTPClientRetryMax: {
+			config.HTTPClientMaxRetries: {
 				Default:     strconv.Itoa(config.RetryMaxDefault),
 				Required:    false,
 				Description: "The maximum number of retries in the HTTP client.",

@@ -20,13 +20,11 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/golang/mock/gomock"
-
 	sdk "github.com/conduitio/conduit-connector-sdk"
-
 	"github.com/conduitio/conduit-connector-stripe/models"
 	"github.com/conduitio/conduit-connector-stripe/source/iterator/mock"
 	"github.com/conduitio/conduit-connector-stripe/source/position"
+	"github.com/golang/mock/gomock"
 )
 
 func TestCDC_Next(t *testing.T) {
