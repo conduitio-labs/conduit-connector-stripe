@@ -31,7 +31,7 @@ const (
 	ResourceName = "resource"
 
 	// HTTPClientRetryMax is the configuration name for the maximum number of retries in the HTTP client.
-	HTTPClientRetryMax = "retry_max"
+	HTTPClientRetryMax = "retryMax"
 
 	// Limit is the configuration name for the number of objects returned by the query to Stripe.
 	Limit = "limit"

@@ -25,10 +25,11 @@ import (
 // Specification returns the connector's specification.
 func Specification() sdk.Specification {
 	return sdk.Specification{
-		Name:    "stripe",
-		Summary: "A Stripe source plugin for Conduit, written in Go.",
-		Version: "v0.1.0",
-		Author:  "Meroxa, Inc.",
+		Name:        "stripe",
+		Summary:     "A Stripe source plugin for Conduit, written in Go.",
+		Description: "The Stripe connector is one of Conduit plugins. It provides a source Stripe connector.",
+		Version:     "v0.1.0",
+		Author:      "Meroxa, Inc.",
 		SourceParams: map[string]sdk.Parameter{
 			config.SecretKey: {
 				Default:     "",

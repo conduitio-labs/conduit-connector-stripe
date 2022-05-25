@@ -16,11 +16,14 @@ package main
 
 import (
 	sdk "github.com/conduitio/conduit-connector-sdk"
-
 	stripe "github.com/conduitio/conduit-connector-stripe"
 	"github.com/conduitio/conduit-connector-stripe/source"
 )
 
 func main() {
-	sdk.Serve(stripe.Specification, source.NewSource, nil)
+	sdk.Serve(sdk.Connector{
+		NewSpecification: stripe.Specification,
+		NewSource:        source.NewSource,
+		NewDestination:   nil,
+	})
 }
