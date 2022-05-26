@@ -12,20 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package iterator
+package models
 
-import (
-	sdk "github.com/conduitio/conduit-connector-sdk"
-	"github.com/conduitio/conduit-connector-stripe/models"
+// An IteratorType represents a type of iterators.
+type IteratorType string
+
+const (
+	// A SnapshotIterator represents a snapshot iterator type.
+	SnapshotIterator IteratorType = "snapshot"
+
+	// A CDCIterator represents a cdc iterator type.
+	CDCIterator IteratorType = "cdc"
 )
 
-// A Repository defines the interface to iterator methods.
-type Repository interface {
-	Next() (sdk.Record, error)
-}
-
-// A Stripe defines the interface of methods.
-type Stripe interface {
-	GetResource(string) (models.ResourceResponse, error)
-	GetEvent(createdAt int64, startingAfter, endingBefore string) (models.EventResponse, error)
+// IteratorTypeMap contains valid iterators.
+var IteratorTypeMap = map[IteratorType]struct{}{
+	SnapshotIterator: {},
+	CDCIterator:      {},
 }

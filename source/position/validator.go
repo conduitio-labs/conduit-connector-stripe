@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package config
+package position
 
 import (
 	"fmt"
@@ -22,11 +22,11 @@ import (
 	"go.uber.org/multierr"
 )
 
-// Validate validates configuration fields.
-func (c Config) Validate() error {
+// Validate validates position fields.
+func (p Position) Validate() error {
 	var err error
 
-	validationErr := validator.Get().Struct(c)
+	validationErr := validator.Get().Struct(p)
 	if validationErr != nil {
 		if _, ok := validationErr.(*v10.InvalidValidationError); ok {
 			return fmt.Errorf("validate config struct: %w", validationErr)
@@ -35,19 +35,12 @@ func (c Config) Validate() error {
 		for _, e := range validationErr.(v10.ValidationErrors) {
 			switch e.ActualTag() {
 			case "required":
-				err = multierr.Append(err, validator.RequiredErr(c.configName(e.Field())))
-			case "resource_name":
-				err = multierr.Append(err, validator.WrongResourceNameErr(c.configName(e.Field())))
+				err = multierr.Append(err, validator.RequiredErr(e.Field()))
+			case "iterator_type":
+				err = multierr.Append(err, validator.UnexpectedIteratorTypeErr())
 			}
 		}
 	}
 
 	return err
-}
-
-func (c Config) configName(fieldName string) string {
-	return map[string]string{
-		"SecretKey":    SecretKey,
-		"ResourceName": ResourceName,
-	}[fieldName]
 }

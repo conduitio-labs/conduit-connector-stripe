@@ -24,23 +24,25 @@ import (
 	"github.com/conduitio/conduit-connector-stripe/source/position"
 )
 
-// A CDC represents a struct of cdc iterator.
-type CDC struct {
+// A CDCIterator represents a struct of cdc iterator.
+type CDCIterator struct {
 	stripeSvc Stripe
 	position  *position.Position
+
+	// eventData is a slice of the event data from the Stripe response.
 	eventData []models.EventData
 }
 
-// NewCDC initializes cdc iterator.
-func NewCDC(stripeSvc Stripe, pos *position.Position) *CDC {
-	return &CDC{
+// NewCDCIterator initializes cdc iterator.
+func NewCDCIterator(stripeSvc Stripe, pos *position.Position) *CDCIterator {
+	return &CDCIterator{
 		stripeSvc: stripeSvc,
 		position:  pos,
 	}
 }
 
 // Next returns the next record.
-func (iter *CDC) Next() (sdk.Record, error) {
+func (iter *CDCIterator) Next() (sdk.Record, error) {
 	if iter.eventData == nil || iter.position.Index == 0 {
 		if err := iter.getData(); err != nil {
 			return sdk.Record{}, fmt.Errorf("get event data: %w", err)
@@ -66,8 +68,13 @@ func (iter *CDC) Next() (sdk.Record, error) {
 		return sdk.Record{}, fmt.Errorf("marshal payload: %w", err)
 	}
 
+	rp, err := iter.position.FormatSDKPosition()
+	if err != nil {
+		return sdk.Record{}, fmt.Errorf("format sdk position: %w", err)
+	}
+
 	output := sdk.Record{
-		Position: iter.position.FormatSDKPosition(),
+		Position: rp,
 		Metadata: map[string]string{
 			models.ActionKey: models.EventsAction[iter.eventData[index].Type],
 		},
@@ -81,7 +88,7 @@ func (iter *CDC) Next() (sdk.Record, error) {
 	return output, nil
 }
 
-func (iter *CDC) getData() error {
+func (iter *CDCIterator) getData() error {
 	if iter.position.Cursor == "" {
 		return iter.getDataWithStartingAfter()
 	}
@@ -89,7 +96,7 @@ func (iter *CDC) getData() error {
 	return iter.getDataWithEndingBefore()
 }
 
-func (iter *CDC) getDataWithStartingAfter() error {
+func (iter *CDCIterator) getDataWithStartingAfter() error {
 	var (
 		eventData []models.EventData
 
@@ -125,7 +132,7 @@ func (iter *CDC) getDataWithStartingAfter() error {
 	return nil
 }
 
-func (iter *CDC) getDataWithEndingBefore() error {
+func (iter *CDCIterator) getDataWithEndingBefore() error {
 	var (
 		eventData []models.EventData
 

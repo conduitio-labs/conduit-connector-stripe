@@ -40,7 +40,7 @@ type EventData struct {
 	Type    string          `json:"type"`
 }
 
-// An EventDataObject represents an object of event's data.
+// An EventDataObject represents a full object of event data.
 type EventDataObject struct {
 	Object map[string]interface{} `json:"object"`
 }

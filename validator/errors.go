@@ -12,20 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package iterator
+package validator
 
 import (
-	sdk "github.com/conduitio/conduit-connector-sdk"
-	"github.com/conduitio/conduit-connector-stripe/models"
+	"errors"
+	"fmt"
 )
 
-// A Repository defines the interface to iterator methods.
-type Repository interface {
-	Next() (sdk.Record, error)
+// WrongResourceNameErr returns the formatted wrong resource name error.
+func WrongResourceNameErr(name string) error {
+	return fmt.Errorf("%q wrong resource name", name)
 }
 
-// A Stripe defines the interface of methods.
-type Stripe interface {
-	GetResource(string) (models.ResourceResponse, error)
-	GetEvent(createdAt int64, startingAfter, endingBefore string) (models.EventResponse, error)
+// RequiredErr returns the formatted required field error.
+func RequiredErr(name string) error {
+	return fmt.Errorf("%q value must be set", name)
+}
+
+// UnexpectedIteratorTypeErr returns the unexpected iterator type error.
+func UnexpectedIteratorTypeErr() error {
+	return errors.New("unexpected iterator type")
 }

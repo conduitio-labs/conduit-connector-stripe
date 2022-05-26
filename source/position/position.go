@@ -15,71 +15,64 @@
 package position
 
 import (
-	"errors"
+	"encoding/json"
 	"fmt"
-	"reflect"
-	"strconv"
-	"strings"
 	"time"
 
 	sdk "github.com/conduitio/conduit-connector-sdk"
+	"github.com/conduitio/conduit-connector-stripe/models"
 )
-
-var (
-	errParseCreatedAt = errors.New("the third part of position must be an int64")
-	errParseIndex     = errors.New("the fourth part of position must be an int")
-)
-
-const (
-	SnapshotType = "s"
-	CDCType      = "c"
-)
-
-const positionFormat = "%s.%s.%d.%d"
 
 // A Position represents a Stripe position.
 type Position struct {
-	IteratorType string
-	Cursor       string
-	CreatedAt    int64
-	Index        int
+	// IteratorType is the type of the current iterator.
+	IteratorType models.IteratorType `json:"iterator_type" validate:"required,iterator_type"`
+
+	// CreatedAt is the Unix time from which the system should receive events of the resource in the CDC iterator.
+	CreatedAt int64 `json:"created_at" validate:"required"`
+
+	// Cursor is the resource or event identifier for receiving shifted data in the following requests.
+	Cursor string `json:"cursor"`
+
+	// Index is the current index of the returning record from the bunch of previously received resources.
+	Index int `json:"index"`
 }
 
-// ParseSDKPosition parses SDK position and returns Position.
-func ParseSDKPosition(p sdk.Position) (Position, error) {
-	if p == nil {
+// ParseSDKPosition unmarshal sdk.Position and returns Position.
+func ParseSDKPosition(rp sdk.Position) (Position, error) {
+	if rp == nil {
 		return Position{
-			IteratorType: SnapshotType,
+			IteratorType: models.SnapshotIterator,
 			CreatedAt:    time.Now().Unix(),
 		}, nil
 	}
 
-	parts := strings.Split(string(p), ".")
+	pos := Position{}
 
-	if len(parts) != reflect.TypeOf(Position{}).NumField() {
-		return Position{}, fmt.Errorf("the number of position elements must be equal to %d, now it is %d",
-			reflect.TypeOf(Position{}).NumField(), len(parts))
-	}
-
-	started, err := strconv.ParseInt(parts[2], 10, 64)
+	err := json.Unmarshal(rp, &pos)
 	if err != nil {
-		return Position{}, errParseCreatedAt
+		return Position{}, fmt.Errorf("failed to unmarshal position: %w", err)
 	}
 
-	index, err := strconv.Atoi(parts[3])
+	err = pos.Validate()
 	if err != nil {
-		return Position{}, errParseIndex
+		return Position{}, err
 	}
 
-	return Position{
-		IteratorType: parts[0],
-		Cursor:       parts[1],
-		CreatedAt:    started,
-		Index:        index,
-	}, nil
+	return pos, nil
 }
 
-// FormatSDKPosition formats and returns sdk.Position.
-func (p Position) FormatSDKPosition() sdk.Position {
-	return sdk.Position(fmt.Sprintf(positionFormat, p.IteratorType, p.Cursor, p.CreatedAt, p.Index))
+// FormatSDKPosition marshals Position and returns sdk.Position.
+func (p Position) FormatSDKPosition() (sdk.Position, error) {
+	err := p.Validate()
+	if err != nil {
+		return nil, err
+	}
+
+	rp, err := json.Marshal(p)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal position: %w", err)
+	}
+
+	return rp, nil
 }

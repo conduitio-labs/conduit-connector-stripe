@@ -18,12 +18,11 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/conduitio/conduit-connector-stripe/validator"
 	"go.uber.org/multierr"
 )
 
 func TestParse(t *testing.T) {
-	underTestConfig := Config{}
-
 	tests := []struct {
 		name        string
 		in          map[string]string
@@ -34,29 +33,12 @@ func TestParse(t *testing.T) {
 		{
 			name: "valid config",
 			in: map[string]string{
-				SecretKey:            "sk_51JB",
-				ResourceName:         "subscription",
-				HTTPClientMaxRetries: "5",
-				Limit:                "10",
-			},
-			want: Config{
-				SecretKey:            "sk_51JB",
-				ResourceName:         "subscription",
-				HTTPClientMaxRetries: 5,
-				Limit:                10,
-			},
-		},
-		{
-			name: "HTTPClientMaxRetries and Limit by default",
-			in: map[string]string{
 				SecretKey:    "sk_51JB",
 				ResourceName: "subscription",
 			},
 			want: Config{
-				SecretKey:            "sk_51JB",
-				ResourceName:         "subscription",
-				HTTPClientMaxRetries: RetryMaxDefault,
-				Limit:                LimitDefault,
+				SecretKey:    "sk_51JB",
+				ResourceName: "subscription",
 			},
 		},
 		{
@@ -65,7 +47,7 @@ func TestParse(t *testing.T) {
 				ResourceName: "subscription",
 			},
 			wantErr:     true,
-			expectedErr: underTestConfig.RequiredConfigErr(SecretKey).Error(),
+			expectedErr: validator.RequiredErr(SecretKey).Error(),
 		},
 		{
 			name: "resource name is empty",
@@ -73,44 +55,14 @@ func TestParse(t *testing.T) {
 				SecretKey: "sk_51JB",
 			},
 			wantErr:     true,
-			expectedErr: underTestConfig.RequiredConfigErr(ResourceName).Error(),
+			expectedErr: validator.RequiredErr(ResourceName).Error(),
 		},
 		{
 			name:    "secret key and resource name are empty",
 			in:      map[string]string{},
 			wantErr: true,
-			expectedErr: multierr.Combine(underTestConfig.RequiredConfigErr(SecretKey),
-				underTestConfig.RequiredConfigErr(ResourceName)).Error(),
-		},
-		{
-			name: "HTTPClientMaxRetries is greater than the value of lte tag",
-			in: map[string]string{
-				SecretKey:            "sk_51JB",
-				ResourceName:         "subscription",
-				HTTPClientMaxRetries: "12",
-			},
-			wantErr:     true,
-			expectedErr: underTestConfig.OutOfRangeConfigErr(HTTPClientMaxRetries).Error(),
-		},
-		{
-			name: "HTTPClientMaxRetries is more than the value of lte tag",
-			in: map[string]string{
-				SecretKey:            "sk_51JB",
-				ResourceName:         "subscription",
-				HTTPClientMaxRetries: "0",
-			},
-			wantErr:     true,
-			expectedErr: underTestConfig.OutOfRangeConfigErr(HTTPClientMaxRetries).Error(),
-		},
-		{
-			name: "invalid HTTPClientMaxRetries",
-			in: map[string]string{
-				SecretKey:            "sk_51JB",
-				ResourceName:         "subscription",
-				HTTPClientMaxRetries: "test",
-			},
-			wantErr:     true,
-			expectedErr: underTestConfig.IntegerTypeConfigErr(HTTPClientMaxRetries).Error(),
+			expectedErr: multierr.Combine(validator.RequiredErr(SecretKey),
+				validator.RequiredErr(ResourceName)).Error(),
 		},
 		{
 			name: "wrong resource name",
@@ -119,7 +71,7 @@ func TestParse(t *testing.T) {
 				ResourceName: "test",
 			},
 			wantErr:     true,
-			expectedErr: underTestConfig.WrongResourceNameConfigErr(ResourceName).Error(),
+			expectedErr: validator.WrongResourceNameErr(ResourceName).Error(),
 		},
 	}
 

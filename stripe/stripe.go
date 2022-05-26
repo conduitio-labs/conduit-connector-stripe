@@ -29,25 +29,25 @@ const (
 
 	authHeaderFormat = "Bearer %s"
 
-	startingAfterFormat = "&starting_after=%s"
-	endingBeforeFormat  = "&ending_before=%s"
+	startingAfterFormat = "starting_after=%s"
+	endingBeforeFormat  = "ending_before=%s"
 	typesFormat         = "types[]=%s"
 
-	resourceURLFormat = "%s/%s?limit=%d%s"
-	eventURLFormat    = "%s/events?%s&limit=%d&created[gte]=%d%s%s"
+	resourceURLFormat = "%s/%s?%s"
+	eventURLFormat    = "%s/events?%s&created[gte]=%d&%s&%s"
 )
 
 // A Stripe represents Stripe client struct.
 type Stripe struct {
-	cfg     *config.Config
+	cfg     config.Config
 	httpCli http.Client
 }
 
 // New initialises a new Stripe client.
-func New(cfg *config.Config) Stripe {
+func New(cfg config.Config, httpCli http.Client) Stripe {
 	return Stripe{
 		cfg:     cfg,
-		httpCli: http.NewClient(cfg),
+		httpCli: httpCli,
 	}
 }
 
@@ -59,8 +59,7 @@ func (s Stripe) GetResource(startingAfter string) (models.ResourceResponse, erro
 		startingAfter = fmt.Sprintf(startingAfterFormat, startingAfter)
 	}
 
-	url := fmt.Sprintf(resourceURLFormat,
-		stripeAPIURL, models.ResourcesMap[s.cfg.ResourceName], s.cfg.Limit, startingAfter)
+	url := fmt.Sprintf(resourceURLFormat, stripeAPIURL, models.ResourcesMap[s.cfg.ResourceName], startingAfter)
 
 	header := make(map[string]string, 1)
 	header["Authorization"] = fmt.Sprintf(authHeaderFormat, s.cfg.SecretKey)
@@ -98,14 +97,14 @@ func (s Stripe) GetEvent(createdAt int64, startingAfter, endingBefore string) (m
 		endingBefore = fmt.Sprintf(endingBeforeFormat, endingBefore)
 	}
 
-	url := fmt.Sprintf(eventURLFormat, stripeAPIURL, types, s.cfg.Limit, createdAt, startingAfter, endingBefore)
+	url := fmt.Sprintf(eventURLFormat, stripeAPIURL, types, createdAt, startingAfter, endingBefore)
 
 	header := make(map[string]string, 1)
 	header["Authorization"] = fmt.Sprintf(authHeaderFormat, s.cfg.SecretKey)
 
 	data, err := s.httpCli.Get(url, header)
 	if err != nil {
-		return resp, fmt.Errorf("get data from stripe, by url and header: %w", err)
+		return resp, fmt.Errorf("get data from stripe, by url %s and header: %w", url, err)
 	}
 
 	err = json.Unmarshal(data, &resp)

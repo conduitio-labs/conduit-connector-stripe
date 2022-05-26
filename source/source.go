@@ -18,6 +18,7 @@ import (
 	"context"
 
 	sdk "github.com/conduitio/conduit-connector-sdk"
+	"github.com/conduitio/conduit-connector-stripe/clients/http"
 	"github.com/conduitio/conduit-connector-stripe/config"
 	"github.com/conduitio/conduit-connector-stripe/source/iterator"
 	"github.com/conduitio/conduit-connector-stripe/source/position"
@@ -27,8 +28,9 @@ import (
 // A Source represents the source connector.
 type Source struct {
 	sdk.UnimplementedSource
-	cfg      *config.Config
-	iterator iterator.Iterator
+	cfg      config.Config
+	iterator iterator.Repository
+	httpCli  http.Client
 }
 
 // NewSource initialises a new source.
@@ -43,19 +45,21 @@ func (s *Source) Configure(ctx context.Context, cfgRaw map[string]string) error 
 		return err
 	}
 
-	s.cfg = &cfg
+	s.cfg = cfg
 
 	return nil
 }
 
-// Open parses sdk.Position and initializes a Snapshot iterator.
+// Open parses sdk.Position and initializes a SnapshotIterator iterator.
 func (s *Source) Open(ctx context.Context, rp sdk.Position) error {
 	pos, err := position.ParseSDKPosition(rp)
 	if err != nil {
 		return err
 	}
 
-	s.iterator = iterator.New(stripe.New(s.cfg), &pos)
+	s.httpCli = http.NewClient()
+
+	s.iterator = iterator.NewIterator(stripe.New(s.cfg, s.httpCli), &pos)
 
 	return nil
 }
@@ -79,7 +83,9 @@ func (s *Source) Ack(ctx context.Context, rp sdk.Position) error {
 
 // Teardown does nothing.
 func (s *Source) Teardown(ctx context.Context) error {
-	sdk.Logger(ctx).Debug().Msg("calling Teardown")
+	sdk.Logger(ctx).Info().Msg("tearing down a stripe source...")
+
+	s.httpCli.Close()
 
 	return nil
 }

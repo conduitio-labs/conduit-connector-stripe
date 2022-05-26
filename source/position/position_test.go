@@ -15,11 +15,14 @@
 package position
 
 import (
-	"fmt"
+	"bytes"
 	"reflect"
 	"testing"
 
 	sdk "github.com/conduitio/conduit-connector-sdk"
+	"github.com/conduitio/conduit-connector-stripe/models"
+	"github.com/conduitio/conduit-connector-stripe/validator"
+	"go.uber.org/multierr"
 )
 
 func TestParseSDKPosition(t *testing.T) {
@@ -31,21 +34,94 @@ func TestParseSDKPosition(t *testing.T) {
 		expectedErr string
 	}{
 		{
-			name: "valid sdk position",
-			in:   sdk.Position("s.sub_1KtXkmJit567F2YtZzGSIrsh.0.1"),
+			name: "valid sdk position of snapshot iterator",
+			in: sdk.Position(`
+{
+	"iterator_type":"snapshot",
+	"created_at":1652279623
+}
+`),
 			want: Position{
-				IteratorType: SnapshotType,
+				IteratorType: models.SnapshotIterator,
+				CreatedAt:    1652279623,
+				Cursor:       "",
+				Index:        0,
+			},
+		},
+		{
+			name: "valid sdk position of snapshot iterator with cursor",
+			in: sdk.Position(`
+{
+	"iterator_type":"snapshot",
+	"created_at":1652279623,
+	"cursor":"sub_1KtXkmJit567F2YtZzGSIrsh"
+}
+`),
+			want: Position{
+				IteratorType: models.SnapshotIterator,
+				CreatedAt:    1652279623,
 				Cursor:       "sub_1KtXkmJit567F2YtZzGSIrsh",
-				CreatedAt:    0,
+				Index:        0,
+			},
+		},
+		{
+			name: "valid sdk position of cdc iterator",
+			in: sdk.Position(`
+{
+	"iterator_type":"cdc",
+	"created_at":1652279623,
+	"cursor":"evt_1KtXkmJit567F2YtZzGSIrsh",
+	"index": 1
+}
+`),
+			want: Position{
+				IteratorType: models.CDCIterator,
+				CreatedAt:    1652279623,
+				Cursor:       "evt_1KtXkmJit567F2YtZzGSIrsh",
 				Index:        1,
 			},
 		},
 		{
-			name:    "wrong the number of position elements",
-			in:      sdk.Position("s.sub_1KtXkmJit567F2YtZzGSIrsh.0"),
+			name: "invalid input data",
+			in: sdk.Position(`
+{
+	"test":123
+}
+`),
 			wantErr: true,
-			expectedErr: fmt.Sprintf("the number of position elements must be equal to %d, now it is 3",
-				reflect.TypeOf(Position{}).NumField()),
+			expectedErr: multierr.Combine(validator.RequiredErr("IteratorType"),
+				validator.RequiredErr("CreatedAt")).Error(),
+		},
+		{
+			name: "IteratorType is required",
+			in: sdk.Position(`
+{
+	"created_at":1652279623
+}
+`),
+			wantErr:     true,
+			expectedErr: validator.RequiredErr("IteratorType").Error(),
+		},
+		{
+			name: "CreatedAt is required",
+			in: sdk.Position(`
+{
+	"iterator_type":"snapshot"
+}
+`),
+			wantErr:     true,
+			expectedErr: validator.RequiredErr("CreatedAt").Error(),
+		},
+		{
+			name: "unexpected iterator type",
+			in: sdk.Position(`
+{
+	"iterator_type":"test",
+	"created_at":1652279623
+}
+`),
+			wantErr:     true,
+			expectedErr: validator.UnexpectedIteratorTypeErr().Error(),
 		},
 	}
 
@@ -76,20 +152,91 @@ func TestParseSDKPosition(t *testing.T) {
 }
 
 func TestFormatSDKPosition(t *testing.T) {
-	underTestPosition := Position{
-		IteratorType: SnapshotType,
-		Cursor:       "sub_1KtXkmJit567F2YtZzGSIrsh",
-		CreatedAt:    1652279623,
-		Index:        3,
+	tests := []struct {
+		name        string
+		in          Position
+		want        sdk.Position
+		wantErr     bool
+		expectedErr string
+	}{
+		{
+			name: "valid position of snapshot iterator",
+			in: Position{
+				IteratorType: models.SnapshotIterator,
+				CreatedAt:    1652279623,
+			},
+			want: sdk.Position(`{"iterator_type":"snapshot","created_at":1652279623,"cursor":"","index":0}`),
+		},
+		{
+			name: "valid position of snapshot iterator with cursor",
+			in: Position{
+				IteratorType: models.SnapshotIterator,
+				CreatedAt:    1652279623,
+				Cursor:       "sub_1KtXkmJit567F2YtZzGSIrsh",
+			},
+			want: sdk.Position(
+				`{"iterator_type":"snapshot","created_at":1652279623,"cursor":"sub_1KtXkmJit567F2YtZzGSIrsh","index":0}`),
+		},
+		{
+			name: "valid sdk position of cdc iterator",
+			in: Position{
+				IteratorType: models.CDCIterator,
+				CreatedAt:    1652279623,
+				Cursor:       "evt_1KtXkmJit567F2YtZzGSIrsh",
+				Index:        1,
+			},
+			want: sdk.Position(
+				`{"iterator_type":"cdc","created_at":1652279623,"cursor":"evt_1KtXkmJit567F2YtZzGSIrsh","index":1}`),
+		},
+		{
+			name: "IteratorType is required",
+			in: Position{
+				CreatedAt: 1652279623,
+			},
+			wantErr:     true,
+			expectedErr: validator.RequiredErr("IteratorType").Error(),
+		},
+		{
+			name: "CreatedAt is required",
+			in: Position{
+				IteratorType: models.SnapshotIterator,
+			},
+			wantErr:     true,
+			expectedErr: validator.RequiredErr("CreatedAt").Error(),
+		},
+		{
+			name: "unexpected iterator type",
+			in: Position{
+				IteratorType: "test",
+				CreatedAt:    1652279623,
+			},
+			wantErr:     true,
+			expectedErr: validator.UnexpectedIteratorTypeErr().Error(),
+		},
 	}
 
-	want := sdk.Position("s.sub_1KtXkmJit567F2YtZzGSIrsh.1652279623.3")
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := tt.in.FormatSDKPosition()
+			if err != nil {
+				if !tt.wantErr {
+					t.Errorf("parse error = \"%s\", wantErr %t", err.Error(), tt.wantErr)
 
-	t.Run("format valid sdk position", func(t *testing.T) {
-		got := underTestPosition.FormatSDKPosition()
+					return
+				}
 
-		if !reflect.DeepEqual(got, want) {
-			t.Errorf("parse = %v, want %v", string(got), string(want))
-		}
-	})
+				if err.Error() != tt.expectedErr {
+					t.Errorf("expected error \"%s\", got \"%s\"", tt.expectedErr, err.Error())
+
+					return
+				}
+
+				return
+			}
+
+			if !bytes.Equal(got, tt.want) {
+				t.Errorf("parse = %v, want %v", string(got), string(tt.want))
+			}
+		})
+	}
 }
