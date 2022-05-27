@@ -22,8 +22,7 @@ import (
 
 // A ResourceResponse represents a response resource data from Stripe.
 type ResourceResponse struct {
-	Data    []map[string]interface{} `json:"data"`
-	HasMore bool                     `json:"has_more"`
+	Data []map[string]interface{} `json:"data"`
 }
 
 // A EventResponse represents a response event data from Stripe.

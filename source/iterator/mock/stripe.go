@@ -12,31 +12,31 @@ import (
 	gomock "github.com/golang/mock/gomock"
 )
 
-// MockIterator is a mock of Iterator interface.
-type MockIterator struct {
+// MockRepository is a mock of Repository interface.
+type MockRepository struct {
 	ctrl     *gomock.Controller
-	recorder *MockIteratorMockRecorder
+	recorder *MockRepositoryMockRecorder
 }
 
-// MockIteratorMockRecorder is the mock recorder for MockIterator.
-type MockIteratorMockRecorder struct {
-	mock *MockIterator
+// MockRepositoryMockRecorder is the mock recorder for MockRepository.
+type MockRepositoryMockRecorder struct {
+	mock *MockRepository
 }
 
-// NewMockIterator creates a new mock instance.
-func NewMockIterator(ctrl *gomock.Controller) *MockIterator {
-	mock := &MockIterator{ctrl: ctrl}
-	mock.recorder = &MockIteratorMockRecorder{mock}
+// NewMockRepository creates a new mock instance.
+func NewMockRepository(ctrl *gomock.Controller) *MockRepository {
+	mock := &MockRepository{ctrl: ctrl}
+	mock.recorder = &MockRepositoryMockRecorder{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockIterator) EXPECT() *MockIteratorMockRecorder {
+func (m *MockRepository) EXPECT() *MockRepositoryMockRecorder {
 	return m.recorder
 }
 
 // Next mocks base method.
-func (m *MockIterator) Next() (sdk.Record, error) {
+func (m *MockRepository) Next() (sdk.Record, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Next")
 	ret0, _ := ret[0].(sdk.Record)
@@ -45,9 +45,9 @@ func (m *MockIterator) Next() (sdk.Record, error) {
 }
 
 // Next indicates an expected call of Next.
-func (mr *MockIteratorMockRecorder) Next() *gomock.Call {
+func (mr *MockRepositoryMockRecorder) Next() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Next", reflect.TypeOf((*MockIterator)(nil).Next))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Next", reflect.TypeOf((*MockRepository)(nil).Next))
 }
 
 // MockStripe is a mock of Stripe interface.

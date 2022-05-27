@@ -43,7 +43,6 @@ func TestSnapshotIterator_Next(t *testing.T) {
 					"created": float64(1651153850),
 				},
 			},
-			HasMore: false,
 		}
 
 		pos := position.Position{

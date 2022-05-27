@@ -41,6 +41,18 @@ func NewSnapshotIterator(stripeSvc Stripe, pos *position.Position) *SnapshotIter
 }
 
 // Next returns the next record.
+//
+// This method makes the request to get a list of resource objects and appends the data to the resulting slice.
+// This method makes the first request without GET parameters, all following requests with the starting_after parameter,
+// which is the Cursor from the position.
+//
+// The data in the resulting slice is ready to be returned record by record.
+// Each time the method is called, the system updates the Cursor field in the position with the current record ID.
+//
+// The system stops making requests when there is no data in the response.
+// Then, the system updates IteratorType field in the position with "cdc" value and clears the Cursor field.
+//
+// Note: The Snapshot iterator creates a copy of the data, which is sorted by date of creation in descending order.
 func (iter *SnapshotIterator) Next() (sdk.Record, error) {
 	if iter.response == nil || len(iter.response.Data) == iter.index {
 		if err := iter.refreshData(); err != nil {
