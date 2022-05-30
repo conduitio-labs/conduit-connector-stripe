@@ -81,7 +81,7 @@ func (s *Source) Ack(ctx context.Context, rp sdk.Position) error {
 	return nil
 }
 
-// Teardown does nothing.
+// Teardown closes any connections which were previously connected from previous requests.
 func (s *Source) Teardown(ctx context.Context) error {
 	sdk.Logger(ctx).Info().Msg("tearing down a stripe source...")
 

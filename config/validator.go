@@ -18,7 +18,7 @@ import (
 	"fmt"
 
 	"github.com/conduitio/conduit-connector-stripe/validator"
-	v10 "github.com/go-playground/validator/v10"
+	v "github.com/go-playground/validator/v10"
 	"go.uber.org/multierr"
 )
 
@@ -28,11 +28,11 @@ func (c Config) Validate() error {
 
 	validationErr := validator.Get().Struct(c)
 	if validationErr != nil {
-		if _, ok := validationErr.(*v10.InvalidValidationError); ok {
+		if _, ok := validationErr.(*v.InvalidValidationError); ok {
 			return fmt.Errorf("validate config struct: %w", validationErr)
 		}
 
-		for _, e := range validationErr.(v10.ValidationErrors) {
+		for _, e := range validationErr.(v.ValidationErrors) {
 			switch e.ActualTag() {
 			case "required":
 				err = multierr.Append(err, validator.RequiredErr(c.configName(e.Field())))

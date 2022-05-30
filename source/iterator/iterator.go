@@ -50,8 +50,12 @@ func (iter *Iterator) Next() (sdk.Record, error) {
 	switch iter.position.IteratorType {
 	case models.SnapshotIterator:
 		record, err := iter.snapshot.Next()
-		if err != nil || record.Key != nil {
-			return record, err
+		if err != nil {
+			return sdk.Record{}, err
+		}
+
+		if record.Key != nil {
+			return record, nil
 		}
 
 		fallthrough

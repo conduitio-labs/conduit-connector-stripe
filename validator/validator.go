@@ -18,20 +18,20 @@ import (
 	"sync"
 
 	"github.com/conduitio/conduit-connector-stripe/models"
-	v10 "github.com/go-playground/validator/v10"
+	v "github.com/go-playground/validator/v10"
 )
 
 var (
-	validatorInstance *v10.Validate
+	validatorInstance *v.Validate
 
 	once sync.Once
 )
 
 // Get initializes and registers validation tags once,
 // and returns validator instance.
-func Get() *v10.Validate {
+func Get() *v.Validate {
 	once.Do(func() {
-		validatorInstance = v10.New()
+		validatorInstance = v.New()
 
 		err := validatorInstance.RegisterValidation("resource_name", validateResourceName)
 		if err != nil {
@@ -47,13 +47,13 @@ func Get() *v10.Validate {
 	return validatorInstance
 }
 
-func validateResourceName(fl v10.FieldLevel) bool {
+func validateResourceName(fl v.FieldLevel) bool {
 	_, ok := models.ResourcesMap[fl.Field().String()]
 
 	return ok
 }
 
-func validateIteratorType(fl v10.FieldLevel) bool {
+func validateIteratorType(fl v.FieldLevel) bool {
 	_, ok := models.IteratorTypeMap[models.IteratorType(fl.Field().String())]
 
 	return ok

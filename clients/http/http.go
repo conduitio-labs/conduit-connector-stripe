@@ -65,6 +65,7 @@ func (cli Client) Get(url string, header ...map[string]string) ([]byte, error) {
 	return data, nil
 }
 
+// Close closes any connections which were previously connected from previous requests.
 func (cli Client) Close() {
 	if cli.httpClient != nil {
 		cli.httpClient.HTTPClient.CloseIdleConnections()
