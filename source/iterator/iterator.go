@@ -49,7 +49,12 @@ func NewIterator(stripeSvc Stripe, pos *position.Position) *Iterator {
 func (iter *Iterator) Next() (sdk.Record, error) {
 	switch iter.position.IteratorType {
 	case models.SnapshotIterator:
-		return iter.snapshot.Next()
+		record, err := iter.snapshot.Next()
+		if err != nil || record.Key != nil {
+			return record, err
+		}
+
+		fallthrough
 	case models.CDCIterator:
 		return iter.cdc.Next()
 	}

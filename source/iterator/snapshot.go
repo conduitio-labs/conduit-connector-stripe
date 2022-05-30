@@ -63,7 +63,7 @@ func (iter *SnapshotIterator) Next() (sdk.Record, error) {
 			iter.position.IteratorType = models.CDCIterator
 			iter.position.Cursor = ""
 
-			return sdk.Record{}, sdk.ErrBackoffRetry
+			return sdk.Record{}, nil
 		}
 	}
 

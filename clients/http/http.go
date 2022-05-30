@@ -55,10 +55,7 @@ func (cli Client) Get(url string, header ...map[string]string) ([]byte, error) {
 		return nil, fmt.Errorf("do request: %w", err)
 	}
 
-	err = resp.Body.Close()
-	if err != nil {
-		return nil, fmt.Errorf("close responce body: %w", err)
-	}
+	defer resp.Body.Close()
 
 	data, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
