@@ -472,6 +472,37 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 			t.Errorf("teardown: %s", err.Error())
 		}
 	})
+
+	t.Run("teardown", func(t *testing.T) {
+		var (
+			ctx = context.Background()
+		)
+
+		source := NewSource()
+
+		err := source.Teardown(ctx)
+		if err != nil {
+			t.Errorf("teardown: %s", err.Error())
+		}
+
+		cfg, err := prepareConfig()
+		if err != nil {
+			t.Log(err)
+			t.Skip()
+		}
+
+		source = NewSource()
+
+		err = source.Configure(ctx, cfg)
+		if err != nil {
+			t.Errorf("configure: %s", err.Error())
+		}
+
+		err = source.Teardown(ctx)
+		if err != nil {
+			t.Errorf("teardown: %s", err.Error())
+		}
+	})
 }
 
 func prepareConfig() (map[string]string, error) {
