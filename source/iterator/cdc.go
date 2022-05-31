@@ -89,7 +89,6 @@ func (iter *CDCIterator) Next() (sdk.Record, error) {
 }
 
 // getData calls methods to assign Stripe event data to the iterator.
-// Two methods are used because the data sorted by date of creation in descending order and the `ending_before` shift is unknown.
 func (iter *CDCIterator) getData() error {
 	if iter.position.Cursor == "" {
 		// because the data is sorted by date of creation in descending order
