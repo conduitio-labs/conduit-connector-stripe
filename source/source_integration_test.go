@@ -28,6 +28,7 @@ import (
 	sdk "github.com/conduitio/conduit-connector-sdk"
 	"github.com/conduitio/conduit-connector-stripe/config"
 	"github.com/conduitio/conduit-connector-stripe/models"
+	"github.com/google/uuid"
 	"github.com/hashicorp/go-retryablehttp"
 )
 
@@ -45,7 +46,7 @@ const (
 	backoffRetryErr = "backoff retry"
 )
 
-var resources []map[string]interface{}
+var clients = make(map[string]interface{})
 
 func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 	// add resCount resources
@@ -55,11 +56,6 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 	// read rest resources
 	// read when there is no resources
 	t.Run("snapshot iterator", func(t *testing.T) {
-		const (
-			resCount = 12
-			stop     = 5
-		)
-
 		var (
 			ctx = context.Background()
 
@@ -81,16 +77,17 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 		}
 
 		defer func(ctx context.Context, cfg map[string]string) {
-			for i := len(resources) - 1; i >= 0; i-- {
-				err = deleteResource(ctx, cfg, i)
-				if err != nil {
-					t.Errorf("delete resource: %s", err.Error())
-				}
+			err = clearResources(ctx, cfg)
+			if err != nil {
+				t.Errorf("clear resources: %s", err.Error())
 			}
 		}(ctx, cfg)
 
 		// add resCount resources
-		err = prepareData(ctx, cfg, resCount)
+		genResCount := 12
+		stopReadIndex := 5
+
+		resources, err := generateResources(ctx, cfg, genResCount)
 		if err != nil {
 			t.Errorf("prepare data: %s", err.Error())
 		}
@@ -107,7 +104,7 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 			t.Errorf("open: %s", err.Error())
 		}
 
-		for i := resCount - 1; i >= stop; i-- {
+		for i := len(resources) - 1; i >= stopReadIndex; i-- {
 			record, err = source.Read(ctx)
 			if err != nil {
 				t.Errorf("read: %s", err.Error())
@@ -119,6 +116,11 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 			if err != nil {
 				t.Errorf(err.Error())
 			}
+		}
+
+		err = source.Teardown(ctx)
+		if err != nil {
+			t.Errorf("teardown: %s", err.Error())
 		}
 
 		source = NewSource()
@@ -133,7 +135,7 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 			t.Errorf("open: %s", err.Error())
 		}
 
-		for i := stop - 1; i >= 0; i-- {
+		for i := stopReadIndex - 1; i >= 0; i-- {
 			record, err = source.Read(ctx)
 			if err != nil {
 				t.Errorf("read: %s", err.Error())
@@ -150,18 +152,21 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 		if err != nil && err.Error() != backoffRetryErr {
 			t.Errorf("read: %s", err.Error())
 		}
+
+		err = source.Teardown(ctx)
+		if err != nil {
+			t.Errorf("teardown: %s", err.Error())
+		}
 	})
 
 	// add resCount resources
 	// initialize source
-	// read all resources by snapshot iterator
+	// read all resources by `Snapshot` iterator
 	// reinitialize source
 	// add resource
-	// read resource by cdc iterator
+	// read resource by `CDC` iterator
 	// read when there is no events
 	t.Run("reinitialize source between snapshot and cdc iterators", func(t *testing.T) {
-		const resCount = 3
-
 		var (
 			ctx = context.Background()
 
@@ -183,16 +188,16 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 		}
 
 		defer func(ctx context.Context, cfg map[string]string) {
-			for i := len(resources) - 1; i >= 0; i-- {
-				err = deleteResource(ctx, cfg, i)
-				if err != nil {
-					t.Errorf("delete resource: %s", err.Error())
-				}
+			err = clearResources(ctx, cfg)
+			if err != nil {
+				t.Errorf("clear resources: %s", err.Error())
 			}
 		}(ctx, cfg)
 
 		// add resCount resources
-		err = prepareData(ctx, cfg, resCount)
+		genResCount := 3
+
+		resources, err := generateResources(ctx, cfg, genResCount)
 		if err != nil {
 			t.Errorf("prepare data: %s", err.Error())
 		}
@@ -209,7 +214,7 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 			t.Errorf("open: %s", err.Error())
 		}
 
-		for i := resCount - 1; i >= 0; i-- {
+		for i := len(resources) - 1; i >= 0; i-- {
 			record, err = source.Read(ctx)
 			if err != nil {
 				t.Errorf("read: %s", err.Error())
@@ -221,6 +226,11 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 			if err != nil {
 				t.Errorf(err.Error())
 			}
+		}
+
+		err = source.Teardown(ctx)
+		if err != nil {
+			t.Errorf("teardown: %s", err.Error())
 		}
 
 		source = NewSource()
@@ -236,7 +246,7 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 		}
 
 		// add resource
-		err = addResource(ctx, cfg, map[string]string{
+		resource, err := addResource(ctx, cfg, map[string]string{
 			nameKey:        "inserted",
 			descriptionKey: "inserted description",
 		})
@@ -249,7 +259,7 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 			t.Errorf("read: %s", err.Error())
 		}
 
-		err = compareResult(record, resources[len(resources)-1], models.InsertAction)
+		err = compareResult(record, resource, models.InsertAction)
 		if err != nil {
 			t.Errorf(err.Error())
 		}
@@ -259,11 +269,16 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 		if err != nil && err.Error() != backoffRetryErr {
 			t.Errorf("read: %s", err.Error())
 		}
+
+		err = source.Teardown(ctx)
+		if err != nil {
+			t.Errorf("teardown: %s", err.Error())
+		}
 	})
 
 	// add resCount resources
 	// initialize source
-	// read all resources by snapshot iterator
+	// read all resources by `Snapshot` iterator
 	// read when there is no resources
 	// add resource
 	// update resource
@@ -271,8 +286,6 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 	// reinitialize source
 	// update resource
 	t.Run("reinitialize cdc", func(t *testing.T) {
-		const resCount = 3
-
 		var (
 			ctx = context.Background()
 
@@ -293,16 +306,19 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 		}
 
 		defer func(ctx context.Context, cfg map[string]string) {
-			for i := len(resources) - 1; i >= 0; i-- {
-				err = deleteResource(ctx, cfg, i)
-				if err != nil {
-					t.Errorf("delete resource: %s", err.Error())
-				}
+			err = clearResources(ctx, cfg)
+			if err != nil {
+				t.Errorf("clear resources: %s", err.Error())
 			}
 		}(ctx, cfg)
 
-		// add resCount resources
-		err = prepareData(ctx, cfg, resCount)
+		// generate resCount resources
+		genResCount := 5
+		updateIndex1 := 0
+		updateIndex2 := 2
+		deleteIndex := 1
+
+		resources, err := generateResources(ctx, cfg, genResCount)
 		if err != nil {
 			t.Errorf("prepare data: %s", err.Error())
 		}
@@ -319,7 +335,121 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 			t.Errorf("open: %s", err.Error())
 		}
 
-		for i := resCount - 1; i >= 0; i-- {
+		for i := len(resources) - 1; i >= 0; i-- {
+			record, err = source.Read(ctx)
+			if err != nil {
+				t.Errorf("read: %s", err.Error())
+			}
+
+			err = compareResult(record, resources[i], models.InsertAction)
+			if err != nil {
+				t.Errorf(err.Error())
+			}
+		}
+
+		updateID1 := resources[updateIndex1]["id"].(string)
+		updateID2 := resources[updateIndex2]["id"].(string)
+		deleteID := resources[deleteIndex]["id"].(string)
+
+		// read empty source
+		_, err = source.Read(ctx)
+		if err != nil && err.Error() != backoffRetryErr {
+			t.Errorf("read: %s", err.Error())
+		}
+
+		// add resource
+		addedResource, err := addResource(ctx, cfg, map[string]string{
+			nameKey:        "inserted",
+			descriptionKey: "inserted description",
+		})
+		if err != nil {
+			t.Errorf("add resource: %s", err.Error())
+		}
+
+		record, err = source.Read(ctx)
+		if err != nil {
+			t.Errorf("read: %s", err.Error())
+		}
+
+		err = compareResult(record, addedResource, models.InsertAction)
+		if err != nil {
+			t.Errorf(err.Error())
+		}
+
+		// update resource
+		updatedResource1, err := updateDescription(ctx, cfg, updateID1, "new description")
+		if err != nil {
+			t.Errorf("update resource: %s", err.Error())
+		}
+
+		record, err = source.Read(ctx)
+		if err != nil {
+			t.Errorf("read: %s", err.Error())
+		}
+
+		err = compareResult(record, updatedResource1, models.UpdateAction)
+		if err != nil {
+			t.Errorf(err.Error())
+		}
+
+		// delete resource
+		deletedResource, err := deleteResource(ctx, cfg, deleteID)
+		if err != nil {
+			t.Errorf("delete resource: %s", err.Error())
+		}
+
+		record, err = source.Read(ctx)
+		if err != nil {
+			t.Errorf("read: %s", err.Error())
+		}
+
+		err = compareResult(record, deletedResource, models.DeleteAction)
+		if err != nil {
+			t.Errorf(err.Error())
+		}
+
+		err = source.Teardown(ctx)
+		if err != nil {
+			t.Errorf("teardown: %s", err.Error())
+		}
+
+		source = NewSource()
+
+		err = source.Configure(ctx, cfg)
+		if err != nil {
+			t.Errorf("configure: %s", err.Error())
+		}
+
+		err = source.Open(ctx, record.Position)
+		if err != nil {
+			t.Errorf("open: %s", err.Error())
+		}
+
+		// update resource
+		updatedResource2, err := updateDescription(ctx, cfg, updateID2, "new description after stop")
+		if err != nil {
+			t.Errorf("update resource: %s", err.Error())
+		}
+
+		record, err = source.Read(ctx)
+		if err != nil {
+			t.Errorf("read: %s", err.Error())
+		}
+
+		err = compareResult(record, updatedResource2, models.UpdateAction)
+		if err != nil {
+			t.Errorf(err.Error())
+		}
+
+		// generate new clients for more than one page
+		genResCount = 23
+
+		resources, err = generateResources(ctx, cfg, genResCount)
+		if err != nil {
+			t.Errorf("prepare data: %s", err.Error())
+		}
+
+		for i := 0; i < genResCount; i++ {
 			record, err = source.Read(ctx)
 			if err != nil {
 				t.Errorf("read: %s", err.Error())
@@ -337,88 +467,9 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 			t.Errorf("read: %s", err.Error())
 		}
 
-		// add resource
-		err = addResource(ctx, cfg, map[string]string{
-			nameKey:        "inserted",
-			descriptionKey: "inserted description",
-		})
+		err = source.Teardown(ctx)
 		if err != nil {
-			t.Errorf("add resource: %s", err.Error())
-		}
-
-		record, err = source.Read(ctx)
-		if err != nil {
-			t.Errorf("read: %s", err.Error())
-		}
-
-		err = compareResult(record, resources[len(resources)-1], models.InsertAction)
-		if err != nil {
-			t.Errorf(err.Error())
-		}
-
-		// update resource
-		updateIndex := 1
-		err = updateResource(ctx, cfg, updateIndex, "new name", "new description")
-		if err != nil {
-			t.Errorf("update resource: %s", err.Error())
-		}
-
-		record, err = source.Read(ctx)
-		if err != nil {
-			t.Errorf("read: %s", err.Error())
-		}
-
-		err = compareResult(record, resources[updateIndex], models.UpdateAction)
-		if err != nil {
-			t.Errorf(err.Error())
-		}
-
-		// delete resource
-		deleteIndex := 2
-		deletedResource := resources[deleteIndex]
-
-		err = deleteResource(ctx, cfg, deleteIndex)
-		if err != nil {
-			t.Errorf("delete resource: %s", err.Error())
-		}
-
-		record, err = source.Read(ctx)
-		if err != nil {
-			t.Errorf("read: %s", err.Error())
-		}
-
-		err = compareResult(record, deletedResource, models.DeleteAction)
-		if err != nil {
-			t.Errorf(err.Error())
-		}
-
-		source = NewSource()
-
-		err = source.Configure(ctx, cfg)
-		if err != nil {
-			t.Errorf("configure: %s", err.Error())
-		}
-
-		err = source.Open(ctx, record.Position)
-		if err != nil {
-			t.Errorf("open: %s", err.Error())
-		}
-
-		// update resource
-		updateIndex = 0
-		err = updateResource(ctx, cfg, updateIndex, "new name after stop", "new description after stop")
-		if err != nil {
-			t.Errorf("update resource: %s", err.Error())
-		}
-
-		record, err = source.Read(ctx)
-		if err != nil {
-			t.Errorf("read: %s", err.Error())
-		}
-
-		err = compareResult(record, resources[updateIndex], models.UpdateAction)
-		if err != nil {
-			t.Errorf(err.Error())
+			t.Errorf("teardown: %s", err.Error())
 		}
 	})
 }
@@ -455,73 +506,113 @@ func isEmpty(ctx context.Context, cfg map[string]string) error {
 	return nil
 }
 
-func prepareData(ctx context.Context, cfg map[string]string, count int) error {
+func generateResources(ctx context.Context, cfg map[string]string, count int) ([]map[string]interface{}, error) {
 	const (
-		nameValue        = "client_%d"
-		descriptionValue = "info about the client_%d"
+		nameValue        = "client-%s"
+		descriptionValue = "info about the %s"
 	)
 
-	var err error
+	var (
+		resources []map[string]interface{}
+		resource  map[string]interface{}
+		err       error
+	)
 
 	for i := 0; i < count; i++ {
-		err = addResource(ctx, cfg, map[string]string{
-			nameKey:        fmt.Sprintf(nameValue, i),
-			descriptionKey: fmt.Sprintf(descriptionValue, i),
+		clientName := fmt.Sprintf(nameValue, uuid.New().String())
+
+		resource, err = addResource(ctx, cfg, map[string]string{
+			nameKey:        clientName,
+			descriptionKey: fmt.Sprintf(descriptionValue, clientName),
 		})
 		if err != nil {
-			return fmt.Errorf("add resource: %w", err)
+			return nil, fmt.Errorf("add resource: %w", err)
 		}
+
+		resources = append(resources, resource)
 	}
 
-	return nil
+	return resources, nil
 }
 
-func addResource(ctx context.Context, cfg, params map[string]string) error {
+func addResource(ctx context.Context, cfg, params map[string]string) (map[string]interface{}, error) {
 	var resource map[string]interface{}
 
 	data, err := makeRequest(ctx, methodPost, "", cfg, params)
 	if err != nil {
-		return fmt.Errorf("make post request: %w", err)
+		return nil, fmt.Errorf("make post request: %w", err)
 	}
 
 	err = json.Unmarshal(data, &resource)
 	if err != nil {
-		return fmt.Errorf("unmarshal response: %w", err)
+		return nil, fmt.Errorf("unmarshal response: %w", err)
 	}
 
 	if len(resource) == 0 {
-		return errors.New("response is empty")
+		return nil, errors.New("response is empty")
 	}
 
-	resources = append(resources, resource)
+	clients[resource["id"].(string)] = nil
 
-	return nil
+	return resource, nil
 }
 
-func updateResource(ctx context.Context, cfg map[string]string, index int, name, description string) error {
-	_, err := makeRequest(ctx, methodPost, resources[index]["id"].(string), cfg, map[string]string{
-		nameKey:        name,
+func updateDescription(ctx context.Context, cfg map[string]string, id, description string,
+) (map[string]interface{}, error) {
+	var resource map[string]interface{}
+
+	data, err := makeRequest(ctx, methodPost, id, cfg, map[string]string{
 		descriptionKey: description,
 	})
 	if err != nil {
-		return fmt.Errorf("make put request: %w", err)
+		return nil, fmt.Errorf("make put request: %w", err)
 	}
 
-	resources[index]["name"] = name
-	resources[index]["description"] = description
+	err = json.Unmarshal(data, &resource)
+	if err != nil {
+		return nil, fmt.Errorf("unmarshal response: %w", err)
+	}
 
-	return nil
+	if len(resource) == 0 {
+		return nil, errors.New("response is empty")
+	}
+
+	return resource, nil
 }
 
-func deleteResource(ctx context.Context, cfg map[string]string, index int) error {
-	id := resources[index]["id"].(string)
+func deleteResource(ctx context.Context, cfg map[string]string, id string) (map[string]interface{}, error) {
+	var resource map[string]interface{}
 
-	_, err := makeRequest(ctx, methodDelete, id, cfg, nil)
+	data, err := makeRequest(ctx, methodDelete, id, cfg, nil)
 	if err != nil {
-		return fmt.Errorf("make delete request: %w", err)
+		return nil, fmt.Errorf("make delete request: %w", err)
 	}
 
-	resources = append(resources[:index], resources[index+1:]...)
+	delete(clients, id)
+
+	err = json.Unmarshal(data, &resource)
+	if err != nil {
+		return nil, fmt.Errorf("unmarshal response: %w", err)
+	}
+
+	if len(resource) == 0 {
+		return nil, errors.New("response is empty")
+	}
+
+	return resource, nil
+}
+
+func clearResources(ctx context.Context, cfg map[string]string) error {
+	var err error
+
+	for k := range clients {
+		_, err = makeRequest(ctx, methodDelete, k, cfg, nil)
+		if err != nil {
+			return fmt.Errorf("make delete request: %w", err)
+		}
+	}
+
+	clients = make(map[string]interface{})
 
 	return nil
 }
@@ -577,6 +668,18 @@ func makeRequest(ctx context.Context, method, path string, cfg, params map[strin
 }
 
 func compareResult(record sdk.Record, resource map[string]interface{}, action string) error {
+	if !reflect.DeepEqual(record.Key, sdk.StructuredData{idKey: resource["id"].(string)}) {
+		return fmt.Errorf("key: got = %v, want %v", string(record.Key.Bytes()), resource["id"].(string))
+	}
+
+	if record.Metadata[models.ActionKey] != action {
+		return fmt.Errorf("action: got = %v, want %v", record.Metadata[models.ActionKey], action)
+	}
+
+	if action == models.DeleteAction {
+		return nil
+	}
+
 	payload, err := json.Marshal(resource)
 	if err != nil {
 		return fmt.Errorf("marshal payload error = \"%s\"", err)
@@ -584,14 +687,6 @@ func compareResult(record sdk.Record, resource map[string]interface{}, action st
 
 	if !reflect.DeepEqual(record.Payload.Bytes(), payload) {
 		return fmt.Errorf("payload: got = %v, want %v", string(record.Payload.Bytes()), string(payload))
-	}
-
-	if !reflect.DeepEqual(record.Key, sdk.StructuredData{idKey: resource["id"].(string)}) {
-		return fmt.Errorf("key: got = %v, want %v", string(record.Key.Bytes()), resource["id"].(string))
-	}
-
-	if record.Metadata[models.ActionKey] != action {
-		return fmt.Errorf("action: got = %v, want %v", record.Metadata[models.ActionKey], action)
 	}
 
 	return nil

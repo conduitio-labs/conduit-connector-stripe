@@ -19,8 +19,8 @@ import (
 	"github.com/conduitio/conduit-connector-stripe/models"
 )
 
-// A Repository defines the interface to iterator methods.
-type Repository interface {
+// An Interface defines the interface to iterator methods.
+type Interface interface {
 	Next() (sdk.Record, error)
 }
 

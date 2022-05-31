@@ -29,7 +29,7 @@ import (
 type Source struct {
 	sdk.UnimplementedSource
 	cfg      config.Config
-	iterator iterator.Repository
+	iterator iterator.Interface
 	httpCli  http.Client
 }
 

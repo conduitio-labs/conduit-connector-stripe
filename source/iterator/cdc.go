@@ -42,11 +42,6 @@ func NewCDCIterator(stripeSvc Stripe, pos *position.Position) *CDCIterator {
 }
 
 // Next returns the next record.
-//
-//
-// This method receives data from Stripe event, which is sorted by date of creation in descending order,
-// so for the first request the method gets all data with the starting_after parameter,
-// and all the following requests gets with the ending_before parameter.
 func (iter *CDCIterator) Next() (sdk.Record, error) {
 	if iter.eventData == nil || iter.position.Index == 0 {
 		if err := iter.getData(); err != nil {
@@ -62,7 +57,7 @@ func (iter *CDCIterator) Next() (sdk.Record, error) {
 
 	iter.position.Index++
 
-	// update the cursor before formatting the last cached data record
+	// update `Cursor` in the position if it is the last element of the resulting slice
 	if len(iter.eventData) == iter.position.Index {
 		iter.position.Index = 0
 		iter.position.Cursor = iter.eventData[len(iter.eventData)-1].ID
@@ -93,25 +88,20 @@ func (iter *CDCIterator) Next() (sdk.Record, error) {
 	return output, nil
 }
 
+// getData calls methods to assign Stripe event data to the iterator.
+// Two methods are used because the data sorted by date of creation in descending order and the `ending_before` shift is unknown.
 func (iter *CDCIterator) getData() error {
 	if iter.position.Cursor == "" {
+		// because the data is sorted by date of creation in descending order
+		// and the shift `ending_before` is not known, it takes all the data and reverses it
 		return iter.getDataWithStartingAfter()
 	}
 
 	return iter.getDataWithEndingBefore()
 }
 
-// getDataWithStartingAfter makes requests in the loop to get all the data,
-// since the time from the field CreatedAt in the position.
-//
-// Inside each iteration in the loop the data is received and added to the resulting slice,
-// the starting_after parameter is updated for the next iteration,
-// which is the event ID of the last element from the response.
-//
-// The loop is returned when the field has_next equals false.
-//
-// Then the whole resulting slice is reversed
-// and the field Cursor is updated with the ID of the "freshest" event.
+// getDataWithStartingAfter makes requests with `starting_after` parameter
+// to receive all the event data, and assigns Stripe event data to the iterator.
 func (iter *CDCIterator) getDataWithStartingAfter() error {
 	var (
 		eventData []models.EventData
@@ -119,25 +109,29 @@ func (iter *CDCIterator) getDataWithStartingAfter() error {
 		startingAfter string
 	)
 
+	// get all the event data
 	for {
+		// receive the data with `starting_after` parameter
 		resp, err := iter.stripeSvc.GetEvent(iter.position.CreatedAt, startingAfter, "")
 		if err != nil {
 			return fmt.Errorf("get list of event objects: %w", err)
 		}
 
 		if len(resp.Data) > 0 {
+			// update startingAfter parameter for the next request
 			startingAfter = resp.Data[len(resp.Data)-1].ID
 
 			eventData = append(eventData, resp.Data...)
 		}
 
+		// break the loop if there is no more data
 		if !resp.HasMore {
 			break
 		}
 	}
 
 	if len(eventData) > 0 {
-		// do the reverse after all requests, because Stripe receives data ordered by DESC always
+		// do reverse, because Stripe receives data sorted by date of creation in descending order
 		for i, j := 0, len(eventData)-1; i < j; i, j = i+1, j-1 {
 			eventData[i], eventData[j] = eventData[j], eventData[i]
 		}
@@ -148,41 +142,24 @@ func (iter *CDCIterator) getDataWithStartingAfter() error {
 	return nil
 }
 
-// getDataWithEndingBefore makes requests in the loop to get all the data,
-// with ending_before parameter from the Cursor in the position.
-//
-// Inside each iteration in the loop the data is received, reversed, and added to the resulting slice,
-// the Cursor parameter is updated for the next iteration,
-// which is the event ID of the first element from the response.
-//
-// The loop is returned when the field has_next equals false.
+// getDataWithEndingBefore makes requests with `ending_before` parameter
+// and assigns Stripe event data to the iterator.
 func (iter *CDCIterator) getDataWithEndingBefore() error {
-	var (
-		eventData []models.EventData
+	var eventData []models.EventData
 
-		endingBefore = iter.position.Cursor
-	)
+	// receive the data with `ending_before` parameter
+	resp, err := iter.stripeSvc.GetEvent(iter.position.CreatedAt, "", iter.position.Cursor)
+	if err != nil {
+		return fmt.Errorf("get list of event objects: %w", err)
+	}
 
-	for {
-		resp, err := iter.stripeSvc.GetEvent(iter.position.CreatedAt, "", endingBefore)
-		if err != nil {
-			return fmt.Errorf("get list of event objects: %w", err)
+	if len(resp.Data) > 0 {
+		// do reverse, because Stripe receives data sorted by date of creation in descending order
+		for i, j := 0, len(resp.Data)-1; i < j; i, j = i+1, j-1 {
+			resp.Data[i], resp.Data[j] = resp.Data[j], resp.Data[i]
 		}
 
-		if len(resp.Data) > 0 {
-			endingBefore = resp.Data[0].ID
-
-			// do the reverse after each request, because we get the data from the last page of Stripe events
-			for i, j := 0, len(resp.Data)-1; i < j; i, j = i+1, j-1 {
-				resp.Data[i], resp.Data[j] = resp.Data[j], resp.Data[i]
-			}
-
-			eventData = append(eventData, resp.Data...)
-		}
-
-		if !resp.HasMore {
-			break
-		}
+		eventData = append(eventData, resp.Data...)
 	}
 
 	iter.eventData = eventData
