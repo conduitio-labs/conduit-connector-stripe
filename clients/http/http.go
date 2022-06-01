@@ -15,13 +15,15 @@
 package http
 
 import (
+	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
+	"net/http"
 
+	"github.com/conduitio/conduit-connector-stripe/models"
 	"github.com/hashicorp/go-retryablehttp"
 )
-
-const methodGet = "GET"
 
 // A Client represents retryable http client.
 type Client struct {
@@ -39,7 +41,7 @@ func NewClient() Client {
 
 // Get makes a GET http-request to the URL with headers.
 func (cli Client) Get(url string, header ...map[string]string) ([]byte, error) {
-	req, err := retryablehttp.NewRequest(methodGet, url, nil)
+	req, err := retryablehttp.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("create new request: %w", err)
 	}
@@ -60,6 +62,21 @@ func (cli Client) Get(url string, header ...map[string]string) ([]byte, error) {
 	data, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("read all response body: %w", err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		errResp := models.ErrorResponse{}
+
+		err = json.Unmarshal(data, &errResp)
+		if err != nil {
+			return nil, fmt.Errorf("unmarshal response: %w", err)
+		}
+
+		if errResp.Error.Message != "" {
+			return nil, errors.New(errResp.Error.Message)
+		}
+
+		return nil, fmt.Errorf(models.UnexpectedErrorWithStatusCode, resp.StatusCode)
 	}
 
 	return data, nil

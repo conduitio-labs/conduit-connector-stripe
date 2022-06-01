@@ -26,18 +26,11 @@ import (
 )
 
 const (
-	apiURL = "https://api.stripe.com/v1"
-
-	pathFmt    = "/%s"
-	pathEvents = "/events"
-
+	pathEvents       = "/events"
 	startingAfterKey = "starting_after"
 	endingBeforeKey  = "ending_before"
 	typesKey         = "types[]"
 	createdKey       = "created[gt]"
-
-	headerAuthKey         = "Authorization"
-	headerAuthValueFormat = "Bearer %s"
 )
 
 // A Stripe represents Stripe client struct.
@@ -58,12 +51,12 @@ func New(cfg config.Config, httpCli http.Client) Stripe {
 func (s Stripe) GetResource(startingAfter string) (models.ResourceResponse, error) {
 	var resp models.ResourceResponse
 
-	reqURL, err := url.Parse(apiURL)
+	reqURL, err := url.Parse(models.APIURL)
 	if err != nil {
 		return resp, fmt.Errorf("parse api url: %w", err)
 	}
 
-	reqURL.Path += fmt.Sprintf(pathFmt, models.ResourcesMap[s.cfg.ResourceName])
+	reqURL.Path += fmt.Sprintf(models.PathFmt, models.ResourcesMap[s.cfg.ResourceName])
 
 	if startingAfter != "" {
 		values := reqURL.Query()
@@ -72,11 +65,11 @@ func (s Stripe) GetResource(startingAfter string) (models.ResourceResponse, erro
 	}
 
 	header := make(map[string]string, 1)
-	header[headerAuthKey] = fmt.Sprintf(headerAuthValueFormat, s.cfg.SecretKey)
+	header[models.HeaderAuthKey] = fmt.Sprintf(models.HeaderAuthValueFormat, s.cfg.SecretKey)
 
 	data, err := s.httpCli.Get(reqURL.String(), header)
 	if err != nil {
-		return resp, fmt.Errorf("get data from stripe, by url and header: %w", err)
+		return resp, fmt.Errorf("get data from stripe, by url %s and header: %w", reqURL.String(), err)
 	}
 
 	err = json.Unmarshal(data, &resp)
@@ -91,7 +84,7 @@ func (s Stripe) GetResource(startingAfter string) (models.ResourceResponse, erro
 func (s Stripe) GetEvent(createdAt int64, startingAfter, endingBefore string) (models.EventResponse, error) {
 	var resp models.EventResponse
 
-	reqURL, err := url.Parse(apiURL)
+	reqURL, err := url.Parse(models.APIURL)
 	if err != nil {
 		return resp, fmt.Errorf("parse api url: %w", err)
 	}
@@ -118,7 +111,7 @@ func (s Stripe) GetEvent(createdAt int64, startingAfter, endingBefore string) (m
 	reqURL.RawQuery = values.Encode()
 
 	header := make(map[string]string, 1)
-	header[headerAuthKey] = fmt.Sprintf(headerAuthValueFormat, s.cfg.SecretKey)
+	header[models.HeaderAuthKey] = fmt.Sprintf(models.HeaderAuthValueFormat, s.cfg.SecretKey)
 
 	data, err := s.httpCli.Get(reqURL.String(), header)
 	if err != nil {

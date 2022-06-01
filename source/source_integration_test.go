@@ -20,28 +20,27 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"net/http"
 	"net/url"
 	"os"
 	"reflect"
 	"testing"
 
 	sdk "github.com/conduitio/conduit-connector-sdk"
+	httpClient "github.com/conduitio/conduit-connector-stripe/clients/http"
 	"github.com/conduitio/conduit-connector-stripe/config"
 	"github.com/conduitio/conduit-connector-stripe/models"
+	r "github.com/conduitio/conduit-connector-stripe/models/resources"
 	"github.com/google/uuid"
 	"github.com/hashicorp/go-retryablehttp"
 )
 
 const (
-	resourceName = "customer"
+	resourceName = r.CustomerResource
 
 	idKey          = "id"
 	nameKey        = "name"
 	descriptionKey = "description"
-
-	methodGet    = "GET"
-	methodPost   = "POST"
-	methodDelete = "DELETE"
 
 	backoffRetryErr = "backoff retry"
 )
@@ -49,6 +48,34 @@ const (
 var clients = make(map[string]interface{})
 
 func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
+	t.Run("invalid secret key", func(t *testing.T) {
+		const (
+			invalidSecretKey = "invalid_secret_key"
+			expectedErr      = "Invalid API Key provided: invalid_******_key"
+		)
+
+		reqURL, err := url.Parse(models.APIURL)
+		if err != nil {
+			t.Errorf("parse api url: %s", err.Error())
+		}
+
+		reqURL.Path += fmt.Sprintf(models.PathFmt, models.ResourcesMap[resourceName])
+
+		httpCli := httpClient.NewClient()
+
+		header := make(map[string]string, 1)
+		header[models.HeaderAuthKey] = fmt.Sprintf(models.HeaderAuthValueFormat, invalidSecretKey)
+
+		_, err = httpCli.Get(reqURL.String(), header)
+		if err != nil {
+			if err.Error() != expectedErr {
+				t.Errorf("expected error \"%s\", got \"%s\"", expectedErr, err.Error())
+
+				return
+			}
+		}
+	})
+
 	// add resCount resources
 	// initialize source
 	// read resCount - stop resources
@@ -520,7 +547,7 @@ func prepareConfig() (map[string]string, error) {
 func isEmpty(ctx context.Context, cfg map[string]string) error {
 	var resource models.ResourceResponse
 
-	data, err := makeRequest(ctx, methodGet, "", cfg, nil)
+	data, err := makeRequest(ctx, http.MethodGet, "", cfg, nil)
 	if err != nil {
 		return fmt.Errorf("make get request: %w", err)
 	}
@@ -569,7 +596,7 @@ func generateResources(ctx context.Context, cfg map[string]string, count int) ([
 func addResource(ctx context.Context, cfg, params map[string]string) (map[string]interface{}, error) {
 	var resource map[string]interface{}
 
-	data, err := makeRequest(ctx, methodPost, "", cfg, params)
+	data, err := makeRequest(ctx, http.MethodPost, "", cfg, params)
 	if err != nil {
 		return nil, fmt.Errorf("make post request: %w", err)
 	}
@@ -592,7 +619,7 @@ func updateDescription(ctx context.Context, cfg map[string]string, id, descripti
 ) (map[string]interface{}, error) {
 	var resource map[string]interface{}
 
-	data, err := makeRequest(ctx, methodPost, id, cfg, map[string]string{
+	data, err := makeRequest(ctx, http.MethodPost, id, cfg, map[string]string{
 		descriptionKey: description,
 	})
 	if err != nil {
@@ -614,7 +641,7 @@ func updateDescription(ctx context.Context, cfg map[string]string, id, descripti
 func deleteResource(ctx context.Context, cfg map[string]string, id string) (map[string]interface{}, error) {
 	var resource map[string]interface{}
 
-	data, err := makeRequest(ctx, methodDelete, id, cfg, nil)
+	data, err := makeRequest(ctx, http.MethodDelete, id, cfg, nil)
 	if err != nil {
 		return nil, fmt.Errorf("make delete request: %w", err)
 	}
@@ -637,7 +664,7 @@ func clearResources(ctx context.Context, cfg map[string]string) error {
 	var err error
 
 	for k := range clients {
-		_, err = makeRequest(ctx, methodDelete, k, cfg, nil)
+		_, err = makeRequest(ctx, http.MethodDelete, k, cfg, nil)
 		if err != nil {
 			return fmt.Errorf("make delete request: %w", err)
 		}
@@ -649,23 +676,15 @@ func clearResources(ctx context.Context, cfg map[string]string) error {
 }
 
 func makeRequest(ctx context.Context, method, path string, cfg, params map[string]string) ([]byte, error) {
-	const (
-		apiURL  = "https://api.stripe.com/v1"
-		pathFmt = "/%s"
-
-		headerAuthKey         = "Authorization"
-		headerAuthValueFormat = "Bearer %s"
-	)
-
-	reqURL, err := url.Parse(apiURL)
+	reqURL, err := url.Parse(models.APIURL)
 	if err != nil {
 		return nil, fmt.Errorf("parse api url: %w", err)
 	}
 
-	reqURL.Path += fmt.Sprintf(pathFmt, models.ResourcesMap[cfg[config.ResourceName]])
+	reqURL.Path += fmt.Sprintf(models.PathFmt, models.ResourcesMap[cfg[config.ResourceName]])
 
 	if path != "" {
-		reqURL.Path += fmt.Sprintf(pathFmt, path)
+		reqURL.Path += fmt.Sprintf(models.PathFmt, path)
 	}
 
 	values := reqURL.Query()
@@ -681,7 +700,7 @@ func makeRequest(ctx context.Context, method, path string, cfg, params map[strin
 	if err != nil {
 		return nil, fmt.Errorf("create new request: %w", err)
 	}
-	req.Header.Add(headerAuthKey, fmt.Sprintf(headerAuthValueFormat, cfg[config.SecretKey]))
+	req.Header.Add(models.HeaderAuthKey, fmt.Sprintf(models.HeaderAuthValueFormat, cfg[config.SecretKey]))
 
 	resp, err := cli.Do(req)
 	if err != nil {

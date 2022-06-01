@@ -20,6 +20,15 @@ import (
 	"github.com/conduitio/conduit-connector-stripe/models/resources"
 )
 
+// An UnexpectedErrorWithStatusCode represents an unexpected error message with status code.
+const (
+	APIURL                        = "https://api.stripe.com/v1"
+	PathFmt                       = "/%s"
+	HeaderAuthKey                 = "Authorization"
+	HeaderAuthValueFormat         = "Bearer %s"
+	UnexpectedErrorWithStatusCode = "unexpected error with status code %d"
+)
+
 // A ResourceResponse represents a response resource data from Stripe.
 type ResourceResponse struct {
 	Data []map[string]interface{} `json:"data"`
@@ -42,6 +51,14 @@ type EventData struct {
 // An EventDataObject represents a full object of event data.
 type EventDataObject struct {
 	Object map[string]interface{} `json:"object"`
+}
+
+// An ErrorResponse represents a response error from Stripe.
+type ErrorResponse struct {
+	Error struct {
+		Message string `json:"message"`
+		Type    string `json:"type"`
+	} `json:"error"`
 }
 
 // ResourcesMap represents a dictionary with valid resources,
