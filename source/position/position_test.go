@@ -121,7 +121,7 @@ func TestParseSDKPosition(t *testing.T) {
 }
 `),
 			wantErr:     true,
-			expectedErr: validator.UnexpectedIteratorTypeErr().Error(),
+			expectedErr: validator.UnexpectedIteratorTypeErr,
 		},
 	}
 
@@ -211,7 +211,7 @@ func TestFormatSDKPosition(t *testing.T) {
 				CreatedAt:    1652279623,
 			},
 			wantErr:     true,
-			expectedErr: validator.UnexpectedIteratorTypeErr().Error(),
+			expectedErr: validator.UnexpectedIteratorTypeErr,
 		},
 	}
 

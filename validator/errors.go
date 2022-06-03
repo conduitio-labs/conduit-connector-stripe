@@ -15,9 +15,11 @@
 package validator
 
 import (
-	"errors"
 	"fmt"
 )
+
+// An UnexpectedIteratorTypeErr represents the message of unexpected iterator type error.
+const UnexpectedIteratorTypeErr = "unexpected iterator type"
 
 // WrongResourceNameErr returns the formatted wrong resource name error.
 func WrongResourceNameErr(name string) error {
@@ -27,9 +29,4 @@ func WrongResourceNameErr(name string) error {
 // RequiredErr returns the formatted required field error.
 func RequiredErr(name string) error {
 	return fmt.Errorf("%q value must be set", name)
-}
-
-// UnexpectedIteratorTypeErr returns the unexpected iterator type error.
-func UnexpectedIteratorTypeErr() error {
-	return errors.New("unexpected iterator type")
 }

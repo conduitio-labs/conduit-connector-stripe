@@ -15,6 +15,7 @@
 package position
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/conduitio/conduit-connector-stripe/validator"
@@ -37,7 +38,7 @@ func (p Position) Validate() error {
 			case "required":
 				err = multierr.Append(err, validator.RequiredErr(e.Field()))
 			case "iterator_type":
-				err = multierr.Append(err, validator.UnexpectedIteratorTypeErr())
+				err = multierr.Append(err, errors.New(validator.UnexpectedIteratorTypeErr))
 			}
 		}
 	}
