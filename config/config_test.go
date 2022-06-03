@@ -42,6 +42,19 @@ func TestParse(t *testing.T) {
 			},
 		},
 		{
+			name: "valid config",
+			in: map[string]string{
+				SecretKey:    "sk_51JB",
+				ResourceName: "subscription",
+				BatchSize:    "20",
+			},
+			want: Config{
+				SecretKey:    "sk_51JB",
+				ResourceName: "subscription",
+				BatchSize:    20,
+			},
+		},
+		{
 			name: "secret key is empty",
 			in: map[string]string{
 				ResourceName: "subscription",
@@ -72,6 +85,36 @@ func TestParse(t *testing.T) {
 			},
 			wantErr:     true,
 			expectedErr: validator.WrongResourceNameErr(ResourceName).Error(),
+		},
+		{
+			name: "invalid batch size",
+			in: map[string]string{
+				SecretKey:    "sk_51JB",
+				ResourceName: "subscription",
+				BatchSize:    "invalid",
+			},
+			wantErr:     true,
+			expectedErr: validator.IntegerTypeConfigErr(BatchSize).Error(),
+		},
+		{
+			name: "batch size is out of range (more than the maximum)",
+			in: map[string]string{
+				SecretKey:    "sk_51JB",
+				ResourceName: "subscription",
+				BatchSize:    "110",
+			},
+			wantErr:     true,
+			expectedErr: validator.OutOfRangeConfigErr(BatchSize).Error(),
+		},
+		{
+			name: "batch size is out of range (less than the minimum)",
+			in: map[string]string{
+				SecretKey:    "sk_51JB",
+				ResourceName: "subscription",
+				BatchSize:    "-1",
+			},
+			wantErr:     true,
+			expectedErr: validator.OutOfRangeConfigErr(BatchSize).Error(),
 		},
 	}
 

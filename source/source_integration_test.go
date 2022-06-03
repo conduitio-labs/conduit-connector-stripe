@@ -319,7 +319,7 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 			record sdk.Record
 		)
 
-		cfg, err := prepareConfig()
+		cfg, err := prepareConfigWithBatchSize("7")
 		if err != nil {
 			t.Log(err)
 			t.Skip()
@@ -533,6 +533,10 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 }
 
 func prepareConfig() (map[string]string, error) {
+	return prepareConfigWithBatchSize("")
+}
+
+func prepareConfigWithBatchSize(batchSize string) (map[string]string, error) {
 	secretKey := os.Getenv("STRIPE_SECRET_KEY")
 	if secretKey == "" {
 		return map[string]string{}, errors.New("STRIPE_SECRET_KEY env var must be set")
@@ -541,6 +545,7 @@ func prepareConfig() (map[string]string, error) {
 	return map[string]string{
 		config.SecretKey:    secretKey,
 		config.ResourceName: resourceName,
+		config.BatchSize:    batchSize,
 	}, nil
 }
 

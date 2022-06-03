@@ -14,18 +14,28 @@
 
 package config
 
+import (
+	"strconv"
+
+	"github.com/conduitio/conduit-connector-stripe/validator"
+)
+
 const (
 	// SecretKey is the configuration name for Stripe secret key.
 	SecretKey = "secretKey"
 
 	// ResourceName is the configuration name for Stripe resource.
 	ResourceName = "resourceName"
+
+	// BatchSize is the configuration name for the number of objects in the batch returned from Stripe.
+	BatchSize = "batchSize"
 )
 
 // A Config represents the configuration needed for Stripe.
 type Config struct {
 	SecretKey    string `validate:"required"`
 	ResourceName string `validate:"required,resource_name"`
+	BatchSize    int    `validate:"omitempty,gte=1,lte=100"`
 }
 
 // Parse parses Stripe configuration into a Config struct.
@@ -33,6 +43,15 @@ func Parse(cfg map[string]string) (Config, error) {
 	config := Config{
 		SecretKey:    cfg[SecretKey],
 		ResourceName: cfg[ResourceName],
+	}
+
+	if cfg[BatchSize] != "" {
+		batchSize, err := strconv.Atoi(cfg[BatchSize])
+		if err != nil {
+			return Config{}, validator.IntegerTypeConfigErr(BatchSize)
+		}
+
+		config.BatchSize = batchSize
 	}
 
 	err := config.Validate()
