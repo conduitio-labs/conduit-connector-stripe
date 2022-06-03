@@ -34,7 +34,7 @@ type Position struct {
 	// Cursor is the resource or event identifier for receiving shifted data in the following requests.
 	Cursor string `json:"cursor"`
 
-	// Index is the current index of the returning record from the bunch of previously received resources.
+	// Index is the current index of the returning record from the batch of previously received resources.
 	Index int `json:"index"`
 }
 

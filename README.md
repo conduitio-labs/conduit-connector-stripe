@@ -41,7 +41,7 @@ Position is a JSON object with the following fields:
 | `IteratorType`  | string  | type of iterator (`snapshot`, `cdc`)                                                                                                                                |
 | `CreatedAt`     | int64   | unix time from which the system should receive events of the resource in the CDC iterator (the parameter is set with the present time when the Position is created) |
 | `Cursor`        | string  | resource or event identifier for receiving shifted data in the following requests                                                                                   |
-| `Index`         | int     | current index of the returning record from the bunch of previously received resources                                                                               |
+| `Index`         | int     | current index of the returning record from the batch of previously received resources                                                                               |
 Example:
 ```json
 {

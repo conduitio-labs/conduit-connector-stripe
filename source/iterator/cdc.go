@@ -103,7 +103,7 @@ func (iter *CDCIterator) getData() error {
 // to receive all the event data, and assigns Stripe event data to the iterator.
 func (iter *CDCIterator) getDataWithStartingAfter() error {
 	var (
-		eventData []models.EventData
+		eventsData models.EventsData
 
 		startingAfter string
 	)
@@ -120,7 +120,7 @@ func (iter *CDCIterator) getDataWithStartingAfter() error {
 			// update startingAfter parameter for the next request
 			startingAfter = resp.Data[len(resp.Data)-1].ID
 
-			eventData = append(eventData, resp.Data...)
+			eventsData = append(eventsData, resp.Data...)
 		}
 
 		// break the loop if there is no more data
@@ -129,14 +129,12 @@ func (iter *CDCIterator) getDataWithStartingAfter() error {
 		}
 	}
 
-	if len(eventData) > 0 {
+	if len(eventsData) > 0 {
 		// do reverse, because Stripe receives data sorted by date of creation in descending order
-		for i, j := 0, len(eventData)-1; i < j; i, j = i+1, j-1 {
-			eventData[i], eventData[j] = eventData[j], eventData[i]
-		}
+		eventsData.Reverse()
 	}
 
-	iter.eventData = eventData
+	iter.eventData = eventsData
 
 	return nil
 }
@@ -144,7 +142,7 @@ func (iter *CDCIterator) getDataWithStartingAfter() error {
 // getDataWithEndingBefore makes requests with `ending_before` parameter
 // and assigns Stripe event data to the iterator.
 func (iter *CDCIterator) getDataWithEndingBefore() error {
-	var eventData []models.EventData
+	var eventsData models.EventsData
 
 	// receive the data with `ending_before` parameter
 	resp, err := iter.stripeSvc.GetEvent(iter.position.CreatedAt, "", iter.position.Cursor)
@@ -154,14 +152,12 @@ func (iter *CDCIterator) getDataWithEndingBefore() error {
 
 	if len(resp.Data) > 0 {
 		// do reverse, because Stripe receives data sorted by date of creation in descending order
-		for i, j := 0, len(resp.Data)-1; i < j; i, j = i+1, j-1 {
-			resp.Data[i], resp.Data[j] = resp.Data[j], resp.Data[i]
-		}
+		resp.Data.Reverse()
 
-		eventData = append(eventData, resp.Data...)
+		eventsData = append(eventsData, resp.Data...)
 	}
 
-	iter.eventData = eventData
+	iter.eventData = eventsData
 
 	return nil
 }

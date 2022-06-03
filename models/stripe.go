@@ -36,9 +36,12 @@ type ResourceResponse struct {
 
 // A EventResponse represents a response event data from Stripe.
 type EventResponse struct {
-	Data    []EventData `json:"data"`
-	HasMore bool        `json:"has_more"`
+	Data    EventsData `json:"data"`
+	HasMore bool       `json:"has_more"`
 }
+
+// An EventsData represents a slice of EventData.
+type EventsData []EventData
 
 // A EventData represents a data of event response.
 type EventData struct {
@@ -173,3 +176,10 @@ var EventsAction = (func() map[string]string {
 
 	return eventsAction
 })()
+
+// Reverse reverses an EventsData.
+func (e EventsData) Reverse() {
+	for i, j := 0, len(e)-1; i < j; i, j = i+1, j-1 {
+		e[i], e[j] = e[j], e[i]
+	}
+}
