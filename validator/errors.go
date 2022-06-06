@@ -30,3 +30,13 @@ func WrongResourceNameErr(name string) error {
 func RequiredErr(name string) error {
 	return fmt.Errorf("%q value must be set", name)
 }
+
+// IntegerTypeConfigErr returns the formatted integer type error.
+func IntegerTypeConfigErr(name string) error {
+	return fmt.Errorf("%q config value must be an integer", name)
+}
+
+// OutOfRangeConfigErr returns the formatted out of range error.
+func OutOfRangeConfigErr(name string) error {
+	return fmt.Errorf("%q is out of range", name)
+}

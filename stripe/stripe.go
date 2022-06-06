@@ -27,6 +27,7 @@ import (
 
 const (
 	pathEvents       = "/events"
+	batchSize        = "limit"
 	startingAfterKey = "starting_after"
 	endingBeforeKey  = "ending_before"
 	typesKey         = "types[]"
@@ -58,9 +59,17 @@ func (s Stripe) GetResource(startingAfter string) (models.ResourceResponse, erro
 
 	reqURL.Path += fmt.Sprintf(models.PathFmt, models.ResourcesMap[s.cfg.ResourceName])
 
-	if startingAfter != "" {
+	if startingAfter != "" || s.cfg.BatchSize != 0 {
 		values := reqURL.Query()
-		values.Add(startingAfterKey, startingAfter)
+
+		if startingAfter != "" {
+			values.Add(startingAfterKey, startingAfter)
+		}
+
+		if s.cfg.BatchSize != 0 {
+			values.Add(batchSize, strconv.Itoa(s.cfg.BatchSize))
+		}
+
 		reqURL.RawQuery = values.Encode()
 	}
 
@@ -106,6 +115,10 @@ func (s Stripe) GetEvent(createdAt int64, startingAfter, endingBefore string) (m
 
 	if endingBefore != "" {
 		values.Add(endingBeforeKey, endingBefore)
+	}
+
+	if s.cfg.BatchSize != 0 {
+		values.Add(batchSize, strconv.Itoa(s.cfg.BatchSize))
 	}
 
 	reqURL.RawQuery = values.Encode()

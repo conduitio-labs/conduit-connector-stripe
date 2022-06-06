@@ -11,10 +11,11 @@ The Stripe connector is one of [Conduit](https://github.com/ConduitIO/conduit) p
 ### Configuration
 The config passed to `Configure` can contain the following fields:
 
-| name            | description                                                                                                 | required | example                      |
-|-----------------|-------------------------------------------------------------------------------------------------------------|----------|------------------------------|
-| `secretKey`     | Stripe [secret key](https://dashboard.stripe.com/apikeys).                                                  | yes      | "sk_51Kr0QrJit566F2YtZAwMlh" |
-| `resourceName`  | The name of Stripe resource. A list of supported resources can be found [here](models/resources/README.md). | yes      | "plan"                       |
+| name           | description                                                                                                 | required | example                      |
+|----------------|-------------------------------------------------------------------------------------------------------------|----------|------------------------------|
+| `secretKey`    | Stripe [secret key](https://dashboard.stripe.com/apikeys).                                                  | yes      | "sk_51Kr0QrJit566F2YtZAwMlh" |
+| `resourceName` | The name of Stripe resource. A list of supported resources can be found [here](models/resources/README.md). | yes      | "plan"                       |
+| `batchSize`    | The number of objects in the batch returned from Stripe. Default is 10. Maximum is 100.                     | no       | "15"                         |
 
 ### How to build it
 Run `make build`.

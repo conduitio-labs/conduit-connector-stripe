@@ -38,6 +38,11 @@ func Specification() sdk.Specification {
 				Required:    true,
 				Description: "Stripe resource name.",
 			},
+			config.BatchSize: {
+				Default:     "",
+				Required:    false,
+				Description: "Number of Stripe objects in the batch.",
+			},
 		},
 	}
 }
