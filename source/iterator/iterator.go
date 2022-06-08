@@ -15,44 +15,53 @@
 package iterator
 
 import (
-	"errors"
+	"fmt"
 
 	sdk "github.com/conduitio/conduit-connector-sdk"
-
+	"github.com/conduitio/conduit-connector-stripe/models"
 	"github.com/conduitio/conduit-connector-stripe/source/position"
 )
 
 const idKey = "id"
 
-// A Combined represents a struct of combined iterator.
-type Combined struct {
-	snapshot *Snapshot
-	cdc      *CDC
+// An Iterator represents a struct of iterator.
+type Iterator struct {
+	snapshot *SnapshotIterator
+	cdc      *CDCIterator
 	position *position.Position
 }
 
-// New initializes a combined iterator.
-func New(stripeSvc Stripe, pos *position.Position) *Combined {
-	combined := &Combined{
+// NewIterator initializes an iterator.
+func NewIterator(stripeSvc Stripe, pos *position.Position) *Iterator {
+	iterator := &Iterator{
 		position: pos,
-		cdc:      NewCDC(stripeSvc, pos),
+		cdc:      NewCDCIterator(stripeSvc, pos),
 	}
 
-	if pos.IteratorType == position.SnapshotType {
-		combined.snapshot = NewSnapshot(stripeSvc, pos)
+	if pos.IteratorType == models.SnapshotIterator {
+		iterator.snapshot = NewSnapshotIterator(stripeSvc, pos)
 	}
 
-	return combined
+	return iterator
 }
 
 // Next returns the next record.
-func (iter *Combined) Next() (sdk.Record, error) {
+func (iter *Iterator) Next() (sdk.Record, error) {
 	switch iter.position.IteratorType {
-	case position.SnapshotType:
-		return iter.snapshot.Next()
-	case position.CDCType:
+	case models.SnapshotIterator:
+		record, err := iter.snapshot.Next()
+		if err != nil {
+			return sdk.Record{}, err
+		}
+
+		if record.Key != nil {
+			return record, nil
+		}
+
+		fallthrough
+	case models.CDCIterator:
 		return iter.cdc.Next()
 	}
 
-	return sdk.Record{}, errors.New("the iterator type is wrong")
+	return sdk.Record{}, fmt.Errorf("unexpected iterator type: %s", iter.position.IteratorType)
 }
