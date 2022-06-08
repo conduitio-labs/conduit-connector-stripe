@@ -12,14 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
+package models
 
-import (
-	sdk "github.com/conduitio/conduit-connector-sdk"
-	stripe "github.com/conduitio/conduit-connector-stripe"
-	"github.com/conduitio/conduit-connector-stripe/source"
+// An IteratorType represents a type of iterators.
+type IteratorType string
+
+const (
+	// A SnapshotIterator represents a snapshot iterator type.
+	SnapshotIterator IteratorType = "snapshot"
+
+	// A CDCIterator represents a cdc iterator type.
+	CDCIterator IteratorType = "cdc"
 )
 
-func main() {
-	sdk.Serve(stripe.Specification, source.NewSource, nil)
+// IteratorTypeMap contains valid iterators.
+var IteratorTypeMap = map[IteratorType]struct{}{
+	SnapshotIterator: {},
+	CDCIterator:      {},
 }

@@ -16,12 +16,11 @@ package iterator
 
 import (
 	sdk "github.com/conduitio/conduit-connector-sdk"
-
 	"github.com/conduitio/conduit-connector-stripe/models"
 )
 
-// An Iterator defines the interface to iterator methods.
-type Iterator interface {
+// An Interface defines the interface to iterator methods.
+type Interface interface {
 	Next() (sdk.Record, error)
 }
 

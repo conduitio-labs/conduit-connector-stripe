@@ -15,36 +15,35 @@
 package http
 
 import (
+	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
+	"net/http"
 
+	"github.com/conduitio/conduit-connector-stripe/models"
 	"github.com/hashicorp/go-retryablehttp"
-
-	"github.com/conduitio/conduit-connector-stripe/config"
 )
-
-const methodGet = "GET"
 
 // A Client represents retryable http client.
 type Client struct {
-	HTTPClient *retryablehttp.Client
+	httpClient *retryablehttp.Client
 }
 
 // NewClient returns a new retryable http client.
-func NewClient(cfg *config.Config) Client {
+func NewClient() Client {
 	retryClient := retryablehttp.NewClient()
-	retryClient.RetryMax = cfg.HTTPClientRetryMax
 
 	return Client{
-		HTTPClient: retryClient,
+		httpClient: retryClient,
 	}
 }
 
 // Get makes a GET http-request to the URL with headers.
 func (cli Client) Get(url string, header ...map[string]string) ([]byte, error) {
-	req, err := retryablehttp.NewRequest(methodGet, url, nil)
+	req, err := retryablehttp.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
-		return nil, fmt.Errorf("new request: %w", err)
+		return nil, fmt.Errorf("create new request: %w", err)
 	}
 
 	for i := range header {
@@ -53,15 +52,39 @@ func (cli Client) Get(url string, header ...map[string]string) ([]byte, error) {
 		}
 	}
 
-	r, err := cli.HTTPClient.Do(req)
+	resp, err := cli.httpClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("do request: %w", err)
 	}
 
-	data, err := ioutil.ReadAll(r.Body)
+	defer resp.Body.Close()
+
+	data, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("read all response body: %w", err)
 	}
 
-	return data, r.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		errResp := models.ErrorResponse{}
+
+		err = json.Unmarshal(data, &errResp)
+		if err != nil {
+			return nil, fmt.Errorf("unmarshal response: %w", err)
+		}
+
+		if errResp.Error.Message != "" {
+			return nil, errors.New(errResp.Error.Message)
+		}
+
+		return nil, fmt.Errorf(models.UnexpectedErrorWithStatusCode, resp.StatusCode)
+	}
+
+	return data, nil
+}
+
+// Close closes any connections which were previously connected from previous requests.
+func (cli Client) Close() {
+	if cli.httpClient != nil {
+		cli.httpClient.HTTPClient.CloseIdleConnections()
+	}
 }

@@ -20,142 +20,13 @@ import (
 	"testing"
 
 	sdk "github.com/conduitio/conduit-connector-sdk"
-	"github.com/golang/mock/gomock"
-
 	"github.com/conduitio/conduit-connector-stripe/models"
 	"github.com/conduitio/conduit-connector-stripe/source/iterator/mock"
 	"github.com/conduitio/conduit-connector-stripe/source/position"
+	"github.com/golang/mock/gomock"
 )
 
-func TestSnapshot_Next(t *testing.T) {
-	pos := position.Position{
-		IteratorType: position.SnapshotType,
-		CreatedAt:    1652790765,
-	}
-
-	underTestSnapshot := Snapshot{
-		position: &pos,
-	}
-
-	type wantData struct {
-		position string
-		action   string
-		key      sdk.StructuredData
-		payload  string
-	}
-
-	tests := []struct {
-		name        string
-		in          []byte
-		len         int
-		want        []wantData
-		wantErr     bool
-		expectedErr string
-	}{
-		{
-			name: "valid data",
-			in: []byte(`{
-    "data": [
-        {
-            "id": "prod_La50",
-            "created": 1651153850
-        },
-		{
-            "id": "prod_La49",
-            "created": 1651153849
-        },
-		{
-            "id": "prod_La48",
-            "created": 1651153848
-        }
-    ],
-    "has_more": false
-}`),
-			len: 3,
-			want: []wantData{
-				{
-					position: "s.prod_La50.1652790765.0",
-					action:   "insert",
-					key: sdk.StructuredData{
-						idKey: "prod_La50",
-					},
-					payload: `{"created":1651153850,"id":"prod_La50"}`,
-				},
-				{
-					position: "s.prod_La49.1652790765.0",
-					action:   "insert",
-					key: sdk.StructuredData{
-						idKey: "prod_La49",
-					},
-					payload: `{"created":1651153849,"id":"prod_La49"}`,
-				},
-				{
-					position: "s.prod_La48.1652790765.0",
-					action:   "insert",
-					key: sdk.StructuredData{
-						idKey: "prod_La48",
-					},
-					payload: `{"created":1651153848,"id":"prod_La48"}`,
-				},
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			underTestSnapshot.index = 0
-
-			if err := json.Unmarshal(tt.in, &underTestSnapshot.response); err != nil {
-				t.Fatalf("%s: %v", tt.in, err)
-			}
-
-			for i := 0; i < tt.len; i++ {
-				got, err := underTestSnapshot.Next()
-				if err != nil {
-					if !tt.wantErr {
-						t.Errorf("parse error = \"%s\", wantErr %t", err.Error(), tt.wantErr)
-
-						return
-					}
-
-					if err.Error() != tt.expectedErr {
-						t.Errorf("expected error \"%s\", got \"%s\"", tt.expectedErr, err.Error())
-
-						return
-					}
-
-					return
-				}
-
-				if string(got.Position) != tt.want[i].position {
-					t.Errorf("position: got \"%s\", want \"%s\"", got.Position, tt.want[i].position)
-
-					return
-				}
-
-				if got.Metadata["action"] != tt.want[i].action {
-					t.Errorf("action: got \"%s\", want \"%s\"", got.Metadata["action"], tt.want[i].action)
-
-					return
-				}
-
-				if !reflect.DeepEqual(got.Key, tt.want[i].key) {
-					t.Errorf("key: got \"%s\", want \"%s\"", got.Key.Bytes(), tt.want[i].key)
-
-					return
-				}
-
-				if string(got.Payload.Bytes()) != tt.want[i].payload {
-					t.Errorf("payload: got \"%s\", want \"%s\"", got.Payload.Bytes(), tt.want[i].payload)
-
-					return
-				}
-			}
-		})
-	}
-}
-
-func TestSnapshot_Integration_Next(t *testing.T) {
+func TestSnapshotIterator_Next(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 
@@ -172,18 +43,17 @@ func TestSnapshot_Integration_Next(t *testing.T) {
 					"created": float64(1651153850),
 				},
 			},
-			HasMore: false,
 		}
 
 		pos := position.Position{
-			IteratorType: position.SnapshotType,
+			IteratorType: models.SnapshotIterator,
 			CreatedAt:    1652790765,
 		}
 
 		m := mock.NewMockStripe(ctrl)
 		m.EXPECT().GetResource(pos.Cursor).Return(result, nil)
 
-		iter := NewSnapshot(m, &pos)
+		iter := NewSnapshotIterator(m, &pos)
 
 		for i := 0; i < len(result.Data); i++ {
 			record, err := iter.Next()
@@ -213,8 +83,13 @@ func TestSnapshot_Integration_Next(t *testing.T) {
 				t.Errorf("action: got = %v, want %v", record.Metadata[models.ActionKey], models.InsertAction)
 			}
 
-			if !reflect.DeepEqual(record.Position, pos.FormatSDKPosition()) {
-				t.Errorf("position: got = %v, want %v", string(record.Position), string(pos.FormatSDKPosition()))
+			rp, err := pos.FormatSDKPosition()
+			if err != nil {
+				t.Errorf("format sdk position error = \"%s\"", err.Error())
+			}
+
+			if !reflect.DeepEqual(record.Position, rp) {
+				t.Errorf("position: got = %v, want %v", string(record.Position), string(rp))
 			}
 		}
 	})

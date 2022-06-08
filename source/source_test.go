@@ -19,14 +19,13 @@ import (
 	"reflect"
 	"testing"
 
-	"go.uber.org/multierr"
-
 	"github.com/conduitio/conduit-connector-stripe/config"
+	"github.com/conduitio/conduit-connector-stripe/validator"
+	"go.uber.org/multierr"
 )
 
 func TestSource_Configure(t *testing.T) {
-	underTestConfig := config.Config{}
-	underTestSource := Source{}
+	source := Source{}
 
 	tests := []struct {
 		name        string
@@ -42,11 +41,9 @@ func TestSource_Configure(t *testing.T) {
 				config.ResourceName: "subscription",
 			},
 			want: Source{
-				cfg: &config.Config{
-					SecretKey:          "sk_51JB",
-					ResourceName:       "subscription",
-					HTTPClientRetryMax: config.RetryMaxDefault,
-					Limit:              config.LimitDefault,
+				cfg: config.Config{
+					SecretKey:    "sk_51JB",
+					ResourceName: "subscription",
 				},
 			},
 		},
@@ -57,14 +54,14 @@ func TestSource_Configure(t *testing.T) {
 				config.ResourceName: "",
 			},
 			wantErr: true,
-			expectedErr: multierr.Combine(underTestConfig.RequiredConfigErr(config.SecretKey),
-				underTestConfig.RequiredConfigErr(config.ResourceName)).Error(),
+			expectedErr: multierr.Combine(validator.RequiredErr(config.SecretKey),
+				validator.RequiredErr(config.ResourceName)).Error(),
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := underTestSource.Configure(context.Background(), tt.in)
+			err := source.Configure(context.Background(), tt.in)
 			if err != nil {
 				if !tt.wantErr {
 					t.Errorf("parse error = \"%s\", wantErr %t", err.Error(), tt.wantErr)
@@ -81,8 +78,8 @@ func TestSource_Configure(t *testing.T) {
 				return
 			}
 
-			if !reflect.DeepEqual(underTestSource.cfg, tt.want.cfg) {
-				t.Errorf("parse = %v, want %v", underTestSource.cfg, tt.want.cfg)
+			if !reflect.DeepEqual(source.cfg, tt.want.cfg) {
+				t.Errorf("parse = %v, want %v", source.cfg, tt.want.cfg)
 
 				return
 			}

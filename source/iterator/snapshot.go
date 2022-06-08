@@ -20,39 +20,40 @@ import (
 	"time"
 
 	sdk "github.com/conduitio/conduit-connector-sdk"
-
 	"github.com/conduitio/conduit-connector-stripe/models"
 	"github.com/conduitio/conduit-connector-stripe/source/position"
 )
 
-// A Snapshot represents a struct of snapshot iterator.
-type Snapshot struct {
+// A SnapshotIterator represents a struct of snapshot iterator.
+type SnapshotIterator struct {
 	stripeSvc Stripe
 	position  *position.Position
 	response  *models.ResourceResponse
 	index     int
 }
 
-// NewSnapshot initializes snapshot iterator.
-func NewSnapshot(stripeSvc Stripe, pos *position.Position) *Snapshot {
-	return &Snapshot{
+// NewSnapshotIterator initializes snapshot iterator.
+func NewSnapshotIterator(stripeSvc Stripe, pos *position.Position) *SnapshotIterator {
+	return &SnapshotIterator{
 		stripeSvc: stripeSvc,
 		position:  pos,
 	}
 }
 
 // Next returns the next record.
-func (iter *Snapshot) Next() (sdk.Record, error) {
+// Note: The `Snapshot` iterator creates a copy of the data, which is sorted by date of creation in descending order.
+func (iter *SnapshotIterator) Next() (sdk.Record, error) {
 	if iter.response == nil || len(iter.response.Data) == iter.index {
-		if err := iter.populateWithResource(); err != nil {
+		if err := iter.refreshData(); err != nil {
 			return sdk.Record{}, fmt.Errorf("populate with the resource: %w", err)
 		}
 
+		// if there is no data - go to `CDC` iterator
 		if len(iter.response.Data) == 0 {
-			iter.position.IteratorType = position.CDCType
+			iter.position.IteratorType = models.CDCIterator
 			iter.position.Cursor = ""
 
-			return sdk.Record{}, sdk.ErrBackoffRetry
+			return sdk.Record{}, nil
 		}
 	}
 
@@ -68,8 +69,13 @@ func (iter *Snapshot) Next() (sdk.Record, error) {
 		created = float64(time.Now().Unix())
 	}
 
+	rp, err := iter.position.FormatSDKPosition()
+	if err != nil {
+		return sdk.Record{}, fmt.Errorf("format sdk position: %w", err)
+	}
+
 	output := sdk.Record{
-		Position: iter.position.FormatSDKPosition(),
+		Position: rp,
 		Metadata: map[string]string{
 			models.ActionKey: models.InsertAction,
 		},
@@ -85,7 +91,8 @@ func (iter *Snapshot) Next() (sdk.Record, error) {
 	return output, nil
 }
 
-func (iter *Snapshot) populateWithResource() error {
+// refreshData receives the resource data from Stripe, and assigns them to the iterator.
+func (iter *SnapshotIterator) refreshData() error {
 	resp, err := iter.stripeSvc.GetResource(iter.position.Cursor)
 	if err != nil {
 		return fmt.Errorf("get list of resource objects: %w", err)
