@@ -16,33 +16,26 @@ package config
 
 import (
 	"strconv"
-)
 
-const (
-	RetryMaxDefault = 3
-	LimitDefault    = 50
+	"github.com/conduitio/conduit-connector-stripe/validator"
 )
 
 const (
 	// SecretKey is the configuration name for Stripe secret key.
-	SecretKey = "key"
+	SecretKey = "secretKey"
 
 	// ResourceName is the configuration name for Stripe resource.
-	ResourceName = "resource"
+	ResourceName = "resourceName"
 
-	// HTTPClientRetryMax is the configuration name for the maximum number of retries in the HTTP client.
-	HTTPClientRetryMax = "retryMax"
-
-	// Limit is the configuration name for the number of objects returned by the query to Stripe.
-	Limit = "limit"
+	// BatchSize is the configuration name for the number of objects in the batch returned from Stripe.
+	BatchSize = "batchSize"
 )
 
 // A Config represents the configuration needed for Stripe.
 type Config struct {
-	SecretKey          string `validate:"required"`
-	ResourceName       string `validate:"required,resource_name"`
-	HTTPClientRetryMax int    `validate:"gte=1,lte=10"`
-	Limit              int    `validate:"gte=1,lte=100"`
+	SecretKey    string `validate:"required"`
+	ResourceName string `validate:"required,resource_name"`
+	BatchSize    int    `validate:"omitempty,gte=1,lte=100"`
 }
 
 // Parse parses Stripe configuration into a Config struct.
@@ -52,25 +45,19 @@ func Parse(cfg map[string]string) (Config, error) {
 		ResourceName: cfg[ResourceName],
 	}
 
-	config.HTTPClientRetryMax = RetryMaxDefault
-	if cfg[HTTPClientRetryMax] != "" {
-		retryMax, err := strconv.Atoi(cfg[HTTPClientRetryMax])
+	if cfg[BatchSize] != "" {
+		batchSize, err := strconv.Atoi(cfg[BatchSize])
 		if err != nil {
-			return Config{}, config.IntegerTypeConfigErr(HTTPClientRetryMax)
+			return Config{}, validator.IntegerTypeConfigErr(BatchSize)
 		}
 
-		config.HTTPClientRetryMax = retryMax
+		config.BatchSize = batchSize
 	}
 
-	config.Limit = LimitDefault
-	if cfg[Limit] != "" {
-		limit, err := strconv.Atoi(cfg[Limit])
-		if err != nil {
-			return Config{}, config.IntegerTypeConfigErr(Limit)
-		}
-
-		config.Limit = limit
+	err := config.Validate()
+	if err != nil {
+		return Config{}, err
 	}
 
-	return config, config.Validate()
+	return config, nil
 }

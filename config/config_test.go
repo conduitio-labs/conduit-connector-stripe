@@ -18,12 +18,11 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/conduitio/conduit-connector-stripe/validator"
 	"go.uber.org/multierr"
 )
 
 func TestParse(t *testing.T) {
-	underTestConfig := Config{}
-
 	tests := []struct {
 		name        string
 		in          map[string]string
@@ -34,105 +33,49 @@ func TestParse(t *testing.T) {
 		{
 			name: "valid config",
 			in: map[string]string{
-				SecretKey:          "sk_51JB",
-				ResourceName:       "subscription",
-				HTTPClientRetryMax: "5",
-				Limit:              "10",
-			},
-			want: Config{
-				SecretKey:          "sk_51JB",
-				ResourceName:       "subscription",
-				HTTPClientRetryMax: 5,
-				Limit:              10,
-			},
-		},
-		{
-			name: "HTTPClientRetryMax and Limit by default",
-			in: map[string]string{
 				SecretKey:    "sk_51JB",
 				ResourceName: "subscription",
 			},
 			want: Config{
-				SecretKey:          "sk_51JB",
-				ResourceName:       "subscription",
-				HTTPClientRetryMax: RetryMaxDefault,
-				Limit:              LimitDefault,
+				SecretKey:    "sk_51JB",
+				ResourceName: "subscription",
 			},
 		},
 		{
-			name: "no secret key",
+			name: "valid config",
 			in: map[string]string{
-				SecretKey:    "",
+				SecretKey:    "sk_51JB",
+				ResourceName: "subscription",
+				BatchSize:    "20",
+			},
+			want: Config{
+				SecretKey:    "sk_51JB",
+				ResourceName: "subscription",
+				BatchSize:    20,
+			},
+		},
+		{
+			name: "secret key is empty",
+			in: map[string]string{
 				ResourceName: "subscription",
 			},
 			wantErr:     true,
-			expectedErr: underTestConfig.RequiredConfigErr(SecretKey).Error(),
+			expectedErr: validator.RequiredErr(SecretKey).Error(),
 		},
 		{
-			name: "empty secret key",
-			in: map[string]string{
-				SecretKey:    "",
-				ResourceName: "subscription",
-			},
-			wantErr:     true,
-			expectedErr: underTestConfig.RequiredConfigErr(SecretKey).Error(),
-		},
-		{
-			name: "no resource name",
+			name: "resource name is empty",
 			in: map[string]string{
 				SecretKey: "sk_51JB",
 			},
 			wantErr:     true,
-			expectedErr: underTestConfig.RequiredConfigErr(ResourceName).Error(),
+			expectedErr: validator.RequiredErr(ResourceName).Error(),
 		},
 		{
-			name: "empty resource name",
-			in: map[string]string{
-				SecretKey:    "sk_51JB",
-				ResourceName: "",
-			},
-			wantErr:     true,
-			expectedErr: underTestConfig.RequiredConfigErr(ResourceName).Error(),
-		},
-		{
-			name: "no secret key and resource name",
-			in: map[string]string{
-				SecretKey:    "",
-				ResourceName: "",
-			},
+			name:    "secret key and resource name are empty",
+			in:      map[string]string{},
 			wantErr: true,
-			expectedErr: multierr.Combine(underTestConfig.RequiredConfigErr(SecretKey),
-				underTestConfig.RequiredConfigErr(ResourceName)).Error(),
-		},
-		{
-			name: "HTTPClientRetryMax is greater than the value of lte tag",
-			in: map[string]string{
-				SecretKey:          "sk_51JB",
-				ResourceName:       "subscription",
-				HTTPClientRetryMax: "12",
-			},
-			wantErr:     true,
-			expectedErr: underTestConfig.OutOfRangeConfigErr(HTTPClientRetryMax).Error(),
-		},
-		{
-			name: "HTTPClientRetryMax is more than the value of lte tag",
-			in: map[string]string{
-				SecretKey:          "sk_51JB",
-				ResourceName:       "subscription",
-				HTTPClientRetryMax: "0",
-			},
-			wantErr:     true,
-			expectedErr: underTestConfig.OutOfRangeConfigErr(HTTPClientRetryMax).Error(),
-		},
-		{
-			name: "invalid HTTPClientRetryMax",
-			in: map[string]string{
-				SecretKey:          "sk_51JB",
-				ResourceName:       "subscription",
-				HTTPClientRetryMax: "test",
-			},
-			wantErr:     true,
-			expectedErr: underTestConfig.IntegerTypeConfigErr(HTTPClientRetryMax).Error(),
+			expectedErr: multierr.Combine(validator.RequiredErr(SecretKey),
+				validator.RequiredErr(ResourceName)).Error(),
 		},
 		{
 			name: "wrong resource name",
@@ -141,7 +84,37 @@ func TestParse(t *testing.T) {
 				ResourceName: "test",
 			},
 			wantErr:     true,
-			expectedErr: underTestConfig.WrongResourceNameConfigErr(ResourceName).Error(),
+			expectedErr: validator.WrongResourceNameErr(ResourceName).Error(),
+		},
+		{
+			name: "invalid batch size",
+			in: map[string]string{
+				SecretKey:    "sk_51JB",
+				ResourceName: "subscription",
+				BatchSize:    "invalid",
+			},
+			wantErr:     true,
+			expectedErr: validator.IntegerTypeConfigErr(BatchSize).Error(),
+		},
+		{
+			name: "batch size is out of range (more than the maximum)",
+			in: map[string]string{
+				SecretKey:    "sk_51JB",
+				ResourceName: "subscription",
+				BatchSize:    "110",
+			},
+			wantErr:     true,
+			expectedErr: validator.OutOfRangeConfigErr(BatchSize).Error(),
+		},
+		{
+			name: "batch size is out of range (less than the minimum)",
+			in: map[string]string{
+				SecretKey:    "sk_51JB",
+				ResourceName: "subscription",
+				BatchSize:    "-1",
+			},
+			wantErr:     true,
+			expectedErr: validator.OutOfRangeConfigErr(BatchSize).Error(),
 		},
 	}
 

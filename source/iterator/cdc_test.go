@@ -20,16 +20,14 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/golang/mock/gomock"
-
 	sdk "github.com/conduitio/conduit-connector-sdk"
-
 	"github.com/conduitio/conduit-connector-stripe/models"
 	"github.com/conduitio/conduit-connector-stripe/source/iterator/mock"
 	"github.com/conduitio/conduit-connector-stripe/source/position"
+	"github.com/golang/mock/gomock"
 )
 
-func TestCDC_Next(t *testing.T) {
+func TestCDCIterator_Next(t *testing.T) {
 	t.Run("success starting_after case", func(t *testing.T) {
 		var (
 			ctrl = gomock.NewController(t)
@@ -102,14 +100,14 @@ func TestCDC_Next(t *testing.T) {
 		result.Data = append(result.Data, responseSecond.Data...)
 
 		pos := &position.Position{
-			IteratorType: position.CDCType,
+			IteratorType: models.CDCIterator,
 			CreatedAt:    1652790765,
 		}
 
 		m.EXPECT().GetEvent(pos.CreatedAt, "", "").Return(responseFirst, nil)
 		m.EXPECT().GetEvent(pos.CreatedAt, responseFirst.Data[len(responseFirst.Data)-1].ID, "").Return(responseSecond, nil)
 
-		iter := NewCDC(m, pos)
+		iter := NewCDCIterator(m, pos)
 
 		// reverse loop due to starting_after case
 		for i := len(result.Data) - 1; i >= 0; i-- {
@@ -118,7 +116,12 @@ func TestCDC_Next(t *testing.T) {
 				t.Errorf("next error = \"%s\"", err.Error())
 			}
 
-			err = compareResult(record, pos.FormatSDKPosition(), result.Data[i])
+			rp, err := pos.FormatSDKPosition()
+			if err != nil {
+				t.Errorf("format sdk position error = \"%s\"", err.Error())
+			}
+
+			err = compareResult(record, rp, result.Data[i])
 			if err != nil {
 				t.Error(err)
 			}
@@ -205,7 +208,7 @@ func TestCDC_Next(t *testing.T) {
 		}
 
 		pos := &position.Position{
-			IteratorType: position.CDCType,
+			IteratorType: models.CDCIterator,
 			Cursor:       cursor,
 			CreatedAt:    1652790765,
 		}
@@ -213,7 +216,7 @@ func TestCDC_Next(t *testing.T) {
 		m.EXPECT().GetEvent(pos.CreatedAt, "", cursor).Return(responseFirst, nil)
 		m.EXPECT().GetEvent(pos.CreatedAt, "", responseFirst.Data[0].ID).Return(responseSecond, nil)
 
-		iter := NewCDC(m, pos)
+		iter := NewCDCIterator(m, pos)
 
 		for i := range result.Data {
 			record, err := iter.Next()
@@ -221,7 +224,12 @@ func TestCDC_Next(t *testing.T) {
 				t.Errorf("next error = \"%s\"", err.Error())
 			}
 
-			err = compareResult(record, pos.FormatSDKPosition(), result.Data[i])
+			rp, err := pos.FormatSDKPosition()
+			if err != nil {
+				t.Errorf("format sdk position error = \"%s\"", err.Error())
+			}
+
+			err = compareResult(record, rp, result.Data[i])
 			if err != nil {
 				t.Error(err)
 			}

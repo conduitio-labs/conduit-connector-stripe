@@ -20,17 +20,28 @@ import (
 	"github.com/conduitio/conduit-connector-stripe/models/resources"
 )
 
+// An UnexpectedErrorWithStatusCode represents an unexpected error message with status code.
+const (
+	APIURL                        = "https://api.stripe.com/v1"
+	PathFmt                       = "/%s"
+	HeaderAuthKey                 = "Authorization"
+	HeaderAuthValueFormat         = "Bearer %s"
+	UnexpectedErrorWithStatusCode = "unexpected error with status code %d"
+)
+
 // A ResourceResponse represents a response resource data from Stripe.
 type ResourceResponse struct {
-	Data    []map[string]interface{} `json:"data"`
-	HasMore bool                     `json:"has_more"`
+	Data []map[string]interface{} `json:"data"`
 }
 
 // A EventResponse represents a response event data from Stripe.
 type EventResponse struct {
-	Data    []EventData `json:"data"`
-	HasMore bool        `json:"has_more"`
+	Data    EventsData `json:"data"`
+	HasMore bool       `json:"has_more"`
 }
+
+// An EventsData represents a slice of EventData.
+type EventsData []EventData
 
 // A EventData represents a data of event response.
 type EventData struct {
@@ -40,9 +51,17 @@ type EventData struct {
 	Type    string          `json:"type"`
 }
 
-// An EventDataObject represents an object of event's data.
+// An EventDataObject represents a full object of event data.
 type EventDataObject struct {
 	Object map[string]interface{} `json:"object"`
+}
+
+// An ErrorResponse represents a response error from Stripe.
+type ErrorResponse struct {
+	Error struct {
+		Message string `json:"message"`
+		Type    string `json:"type"`
+	} `json:"error"`
 }
 
 // ResourcesMap represents a dictionary with valid resources,
@@ -157,3 +176,10 @@ var EventsAction = (func() map[string]string {
 
 	return eventsAction
 })()
+
+// Reverse reverses an EventsData.
+func (e EventsData) Reverse() {
+	for i, j := 0, len(e)-1; i < j; i, j = i+1, j-1 {
+		e[i], e[j] = e[j], e[i]
+	}
+}
