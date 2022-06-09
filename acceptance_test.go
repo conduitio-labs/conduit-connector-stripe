@@ -49,14 +49,37 @@ type ConfigurableAcceptanceTestDriver struct {
 }
 
 // WriteToSource returns a slice of records that should be prepared in the Stripe so that the source will read them.
-func (d ConfigurableAcceptanceTestDriver) WriteToSource(_ *testing.T, records []sdk.Record) []sdk.Record {
+func (d ConfigurableAcceptanceTestDriver) WriteToSource(t *testing.T, records []sdk.Record) []sdk.Record {
+	const id = "id"
+
+	for i := range records {
+		m := make(map[string]string)
+
+		err := json.Unmarshal(records[i].Payload.Bytes(), &m)
+		if err != nil {
+			t.Error(err)
+		}
+
+		resource, err := addResource(ctx, cfg, m)
+		if err != nil {
+			t.Error(err)
+		}
+
+		payload, _ := json.Marshal(resource)
+
+		records[i].Key = sdk.StructuredData{
+			id: resource[id],
+		}
+
+		records[i].Payload = sdk.RawData(payload)
+	}
+
 	return records
 }
 
 // GenerateRecord generates a new Stripe record.
 func (d ConfigurableAcceptanceTestDriver) GenerateRecord(t *testing.T) sdk.Record {
 	const (
-		id               = "id"
 		nameValue        = "client-%s"
 		descriptionValue = "info about the %s"
 	)
@@ -66,24 +89,17 @@ func (d ConfigurableAcceptanceTestDriver) GenerateRecord(t *testing.T) sdk.Recor
 		description = fmt.Sprintf(descriptionValue, name)
 	)
 
-	resource, err := addResource(ctx, cfg, map[string]string{
+	payload, _ := json.Marshal(map[string]string{
 		"name":        name,
 		"description": description,
 	})
-	if err != nil {
-		t.Error(err)
-	}
-
-	payload, _ := json.Marshal(resource)
 
 	return sdk.Record{
-		Position:  sdk.Position(uuid.New().String()),
+		Position:  nil,
 		Metadata:  nil,
 		CreatedAt: time.Now(),
-		Key: sdk.StructuredData{
-			id: resource[id],
-		},
-		Payload: sdk.RawData(payload),
+		Key:       nil,
+		Payload:   sdk.RawData(payload),
 	}
 }
 
