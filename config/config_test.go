@@ -97,24 +97,34 @@ func TestParse(t *testing.T) {
 			expectedErr: validator.IntegerTypeConfigErr(BatchSize).Error(),
 		},
 		{
-			name: "batch size is out of range (more than the maximum)",
+			name: "batch size is greater than or equal to 100",
 			in: map[string]string{
 				SecretKey:    "sk_51JB",
 				ResourceName: "subscription",
 				BatchSize:    "110",
 			},
 			wantErr:     true,
-			expectedErr: validator.OutOfRangeConfigErr(BatchSize).Error(),
+			expectedErr: validator.InvalidBatchSizeErr(BatchSize).Error(),
 		},
 		{
-			name: "batch size is out of range (less than the minimum)",
+			name: "batch size less than or equal to 1",
+			in: map[string]string{
+				SecretKey:    "sk_51JB",
+				ResourceName: "subscription",
+				BatchSize:    "0",
+			},
+			wantErr:     true,
+			expectedErr: validator.InvalidBatchSizeErr(BatchSize).Error(),
+		},
+		{
+			name: "batch size is negative",
 			in: map[string]string{
 				SecretKey:    "sk_51JB",
 				ResourceName: "subscription",
 				BatchSize:    "-1",
 			},
 			wantErr:     true,
-			expectedErr: validator.OutOfRangeConfigErr(BatchSize).Error(),
+			expectedErr: validator.InvalidBatchSizeErr(BatchSize).Error(),
 		},
 	}
 

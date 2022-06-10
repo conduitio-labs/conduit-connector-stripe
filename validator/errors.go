@@ -36,7 +36,7 @@ func IntegerTypeConfigErr(name string) error {
 	return fmt.Errorf("%q config value must be an integer", name)
 }
 
-// OutOfRangeConfigErr returns the formatted out of range error.
-func OutOfRangeConfigErr(name string) error {
-	return fmt.Errorf("%q is out of range", name)
+// InvalidBatchSizeErr returns the formatted invalid batch size value error.
+func InvalidBatchSizeErr(name string) error {
+	return fmt.Errorf("%q must be greater than or equal to 1 and less than or equal to 100", name)
 }

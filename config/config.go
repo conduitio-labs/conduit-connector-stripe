@@ -35,7 +35,7 @@ const (
 type Config struct {
 	SecretKey    string `validate:"required"`
 	ResourceName string `validate:"required,resource_name"`
-	BatchSize    int    `validate:"omitempty,gte=1,lte=100"`
+	BatchSize    int
 }
 
 // Parse parses Stripe configuration into a Config struct.
@@ -49,6 +49,10 @@ func Parse(cfg map[string]string) (Config, error) {
 		batchSize, err := strconv.Atoi(cfg[BatchSize])
 		if err != nil {
 			return Config{}, validator.IntegerTypeConfigErr(BatchSize)
+		}
+
+		if batchSize <= 0 || batchSize > 100 {
+			return Config{}, validator.InvalidBatchSizeErr(BatchSize)
 		}
 
 		config.BatchSize = batchSize
