@@ -38,8 +38,6 @@ func (c Config) Validate() error {
 				err = multierr.Append(err, validator.RequiredErr(c.configName(e.Field())))
 			case "resource_name":
 				err = multierr.Append(err, validator.WrongResourceNameErr(c.configName(e.Field())))
-			case "gte", "lte":
-				err = multierr.Append(err, validator.OutOfRangeConfigErr(c.configName(e.Field())))
 			}
 		}
 	}

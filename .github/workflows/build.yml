@@ -18,6 +18,5 @@ jobs:
 
       - name: Test
         env:
-          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
-          STRIPE_RESOUSE_NAME: ${{ secrets.STRIPE_RESOUSE_NAME }}
+          secretKey: ${{ secrets.STRIPE_SECRET_KEY }}
         run: make test GOTEST_FLAGS="-v -count=1"
