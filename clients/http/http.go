@@ -32,10 +32,8 @@ type Client struct {
 
 // NewClient returns a new retryable http client.
 func NewClient() Client {
-	retryClient := retryablehttp.NewClient()
-
 	return Client{
-		httpClient: retryClient,
+		httpClient: retryablehttp.NewClient(),
 	}
 }
 
