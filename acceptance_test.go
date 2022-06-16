@@ -33,7 +33,6 @@ import (
 	"github.com/conduitio/conduit-connector-stripe/source"
 	"github.com/google/uuid"
 	"github.com/hashicorp/go-retryablehttp"
-	"go.uber.org/goleak"
 )
 
 var (
@@ -52,6 +51,9 @@ type ConfigurableAcceptanceTestDriver struct {
 func (d ConfigurableAcceptanceTestDriver) WriteToSource(t *testing.T, records []sdk.Record) []sdk.Record {
 	const id = "id"
 
+	cli := retryablehttp.NewClient()
+	defer cli.HTTPClient.CloseIdleConnections()
+
 	for i := range records {
 		m := make(map[string]string)
 
@@ -60,7 +62,7 @@ func (d ConfigurableAcceptanceTestDriver) WriteToSource(t *testing.T, records []
 			t.Error(err)
 		}
 
-		resource, err := addResource(ctx, cfg, m)
+		resource, err := addResource(ctx, cli, cfg, m)
 		if err != nil {
 			t.Error(err)
 		}
@@ -131,28 +133,31 @@ func TestAcceptance(t *testing.T) {
 			SourceConfig:      cfg,
 			DestinationConfig: nil,
 			BeforeTest: func(t *testing.T) {
-				if err := isEmpty(ctx, cfg); err != nil {
+				cli := retryablehttp.NewClient()
+				defer cli.HTTPClient.CloseIdleConnections()
+
+				if err := isEmpty(ctx, cli, cfg); err != nil {
 					t.Error(err)
 				}
 			},
 			AfterTest: func(t *testing.T) {
-				if err := clearResources(ctx, cfg); err != nil {
+				cli := retryablehttp.NewClient()
+				defer cli.HTTPClient.CloseIdleConnections()
+
+				if err := clearResources(ctx, cli, cfg); err != nil {
 					t.Error(err)
 				}
-			},
-			GoleakOptions: []goleak.Option{
-				goleak.IgnoreTopFunction("net/http.(*persistConn).writeLoop"),
-				goleak.IgnoreTopFunction("internal/poll.runtime_pollWait"),
 			},
 		},
 	}},
 	)
 }
 
-func addResource(ctx context.Context, cfg, params map[string]string) (map[string]interface{}, error) {
+func addResource(ctx context.Context, cli *retryablehttp.Client, cfg, params map[string]string,
+) (map[string]interface{}, error) {
 	var resource map[string]interface{}
 
-	data, err := makeRequest(ctx, http.MethodPost, "", cfg, params)
+	data, err := makeRequest(ctx, cli, http.MethodPost, "", cfg, params)
 	if err != nil {
 		return nil, fmt.Errorf("make post request: %w", err)
 	}
@@ -171,10 +176,10 @@ func addResource(ctx context.Context, cfg, params map[string]string) (map[string
 	return resource, nil
 }
 
-func isEmpty(ctx context.Context, cfg map[string]string) error {
+func isEmpty(ctx context.Context, cli *retryablehttp.Client, cfg map[string]string) error {
 	var resource models.ResourceResponse
 
-	data, err := makeRequest(ctx, http.MethodGet, "", cfg, nil)
+	data, err := makeRequest(ctx, cli, http.MethodGet, "", cfg, nil)
 	if err != nil {
 		return fmt.Errorf("make get request: %w", err)
 	}
@@ -191,11 +196,11 @@ func isEmpty(ctx context.Context, cfg map[string]string) error {
 	return nil
 }
 
-func clearResources(ctx context.Context, cfg map[string]string) error {
+func clearResources(ctx context.Context, cli *retryablehttp.Client, cfg map[string]string) error {
 	var err error
 
 	for k := range clients {
-		_, err = makeRequest(ctx, http.MethodDelete, k, cfg, nil)
+		_, err = makeRequest(ctx, cli, http.MethodDelete, k, cfg, nil)
 		if err != nil {
 			return fmt.Errorf("make delete request: %w", err)
 		}
@@ -206,7 +211,8 @@ func clearResources(ctx context.Context, cfg map[string]string) error {
 	return nil
 }
 
-func makeRequest(ctx context.Context, method, path string, cfg, params map[string]string) ([]byte, error) {
+func makeRequest(ctx context.Context, cli *retryablehttp.Client, method, path string, cfg, params map[string]string,
+) ([]byte, error) {
 	reqURL, err := url.Parse(models.APIURL)
 	if err != nil {
 		return nil, fmt.Errorf("parse api url: %w", err)
@@ -224,8 +230,6 @@ func makeRequest(ctx context.Context, method, path string, cfg, params map[strin
 	}
 
 	reqURL.RawQuery = values.Encode()
-
-	cli := retryablehttp.NewClient()
 
 	req, err := retryablehttp.NewRequestWithContext(ctx, method, reqURL.String(), nil)
 	if err != nil {
