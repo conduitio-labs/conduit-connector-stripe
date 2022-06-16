@@ -65,7 +65,10 @@ func (d ConfigurableAcceptanceTestDriver) WriteToSource(t *testing.T, records []
 			t.Error(err)
 		}
 
-		payload, _ := json.Marshal(resource)
+		payload, err := json.Marshal(resource)
+		if err != nil {
+			t.Error(err)
+		}
 
 		records[i].Key = sdk.StructuredData{
 			id: resource[id],
