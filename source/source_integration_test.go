@@ -27,12 +27,12 @@ import (
 	"testing"
 
 	sdk "github.com/conduitio/conduit-connector-sdk"
-	httpClient "github.com/conduitio/conduit-connector-stripe/clients/http"
 	"github.com/conduitio/conduit-connector-stripe/config"
 	"github.com/conduitio/conduit-connector-stripe/models"
 	r "github.com/conduitio/conduit-connector-stripe/models/resources"
 	"github.com/google/uuid"
 	"github.com/hashicorp/go-retryablehttp"
+	"go.uber.org/goleak"
 )
 
 const (
@@ -48,31 +48,83 @@ const (
 var clients = make(map[string]interface{})
 
 func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
+	t.Run("read nothing", func(t *testing.T) {
+		var ctx = context.Background()
+
+		defer goleak.VerifyNone(t)
+
+		cfg, err := prepareDefaultConfig()
+		if err != nil {
+			t.Log(err)
+			t.Skip()
+		}
+
+		source := NewSource()
+
+		err = source.Configure(ctx, cfg)
+		if err != nil {
+			t.Errorf("configure: %s", err.Error())
+		}
+
+		err = source.Open(ctx, nil)
+		if err != nil {
+			t.Errorf("open: %s", err.Error())
+		}
+
+		_, err = source.Read(ctx)
+		if err != sdk.ErrBackoffRetry {
+			t.Errorf("read: %s", err.Error())
+		}
+
+		err = source.Teardown(ctx)
+		if err != nil {
+			t.Errorf("teardown: %s", err.Error())
+		}
+	})
+
 	t.Run("invalid secret key", func(t *testing.T) {
 		const (
 			invalidSecretKey = "invalid_secret_key"
-			expectedErr      = "Invalid API Key provided: invalid_******_key"
+			expectedErr      = "populate with the resource: " +
+				"get list of resource objects: " +
+				"get data from stripe, by url https://api.stripe.com/v1/customers and header: " +
+				"Invalid API Key provided: invalid_******_key"
 		)
 
-		reqURL, err := url.Parse(models.APIURL)
+		var ctx = context.Background()
+
+		defer goleak.VerifyNone(t)
+
+		cfg, err := prepareConfig(invalidSecretKey, "")
 		if err != nil {
-			t.Errorf("parse api url: %s", err.Error())
+			t.Log(err)
+			t.Skip()
 		}
 
-		reqURL.Path += fmt.Sprintf(models.PathFmt, models.ResourcesMap[resourceName])
+		source := NewSource()
 
-		httpCli := httpClient.NewClient()
+		err = source.Configure(ctx, cfg)
+		if err != nil {
+			t.Errorf("configure: %s", err.Error())
+		}
 
-		header := make(map[string]string, 1)
-		header[models.HeaderAuthKey] = fmt.Sprintf(models.HeaderAuthValueFormat, invalidSecretKey)
+		err = source.Open(ctx, nil)
+		if err != nil {
+			t.Errorf("open: %s", err.Error())
+		}
 
-		_, err = httpCli.Get(reqURL.String(), header)
+		_, err = source.Read(ctx)
 		if err != nil {
 			if err.Error() != expectedErr {
 				t.Errorf("expected error \"%s\", got \"%s\"", expectedErr, err.Error())
 
 				return
 			}
+		}
+
+		err = source.Teardown(ctx)
+		if err != nil {
+			t.Errorf("teardown: %s", err.Error())
 		}
 	})
 
@@ -90,13 +142,18 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 			pos    sdk.Position
 		)
 
-		cfg, err := prepareConfig()
+		defer goleak.VerifyNone(t)
+
+		cfg, err := prepareDefaultConfig()
 		if err != nil {
 			t.Log(err)
 			t.Skip()
 		}
 
-		err = isEmpty(ctx, cfg)
+		cli := retryablehttp.NewClient()
+		defer cli.HTTPClient.CloseIdleConnections()
+
+		err = isEmpty(ctx, cli, cfg)
 		if err != nil {
 			t.Errorf("check is empty: %s", err.Error())
 
@@ -104,7 +161,7 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 		}
 
 		defer func(ctx context.Context, cfg map[string]string) {
-			err = clearResources(ctx, cfg)
+			err = clearResources(ctx, cli, cfg)
 			if err != nil {
 				t.Errorf("clear resources: %s", err.Error())
 			}
@@ -114,7 +171,7 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 		genResCount := 12
 		stopReadIndex := 5
 
-		resources, err := generateResources(ctx, cfg, genResCount)
+		resources, err := generateResources(ctx, cli, cfg, genResCount)
 		if err != nil {
 			t.Errorf("prepare data: %s", err.Error())
 		}
@@ -201,13 +258,18 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 			rp     sdk.Position
 		)
 
-		cfg, err := prepareConfig()
+		defer goleak.VerifyNone(t)
+
+		cfg, err := prepareDefaultConfig()
 		if err != nil {
 			t.Log(err)
 			t.Skip()
 		}
 
-		err = isEmpty(ctx, cfg)
+		cli := retryablehttp.NewClient()
+		defer cli.HTTPClient.CloseIdleConnections()
+
+		err = isEmpty(ctx, cli, cfg)
 		if err != nil {
 			t.Errorf("check is empty: %s", err.Error())
 
@@ -215,7 +277,7 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 		}
 
 		defer func(ctx context.Context, cfg map[string]string) {
-			err = clearResources(ctx, cfg)
+			err = clearResources(ctx, cli, cfg)
 			if err != nil {
 				t.Errorf("clear resources: %s", err.Error())
 			}
@@ -224,7 +286,7 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 		// add resCount resources
 		genResCount := 3
 
-		resources, err := generateResources(ctx, cfg, genResCount)
+		resources, err := generateResources(ctx, cli, cfg, genResCount)
 		if err != nil {
 			t.Errorf("prepare data: %s", err.Error())
 		}
@@ -273,7 +335,7 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 		}
 
 		// add resource
-		resource, err := addResource(ctx, cfg, map[string]string{
+		resource, err := addResource(ctx, cli, cfg, map[string]string{
 			nameKey:        "inserted",
 			descriptionKey: "inserted description",
 		})
@@ -319,13 +381,18 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 			record sdk.Record
 		)
 
+		defer goleak.VerifyNone(t)
+
 		cfg, err := prepareConfigWithBatchSize("7")
 		if err != nil {
 			t.Log(err)
 			t.Skip()
 		}
 
-		err = isEmpty(ctx, cfg)
+		cli := retryablehttp.NewClient()
+		defer cli.HTTPClient.CloseIdleConnections()
+
+		err = isEmpty(ctx, cli, cfg)
 		if err != nil {
 			t.Errorf("check is empty: %s", err.Error())
 
@@ -333,7 +400,7 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 		}
 
 		defer func(ctx context.Context, cfg map[string]string) {
-			err = clearResources(ctx, cfg)
+			err = clearResources(ctx, cli, cfg)
 			if err != nil {
 				t.Errorf("clear resources: %s", err.Error())
 			}
@@ -345,7 +412,7 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 		updateIndex2 := 2
 		deleteIndex := 1
 
-		resources, err := generateResources(ctx, cfg, genResCount)
+		resources, err := generateResources(ctx, cli, cfg, genResCount)
 		if err != nil {
 			t.Errorf("prepare data: %s", err.Error())
 		}
@@ -385,7 +452,7 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 		}
 
 		// add resource
-		addedResource, err := addResource(ctx, cfg, map[string]string{
+		addedResource, err := addResource(ctx, cli, cfg, map[string]string{
 			nameKey:        "inserted",
 			descriptionKey: "inserted description",
 		})
@@ -404,7 +471,7 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 		}
 
 		// update resource
-		updatedResource1, err := updateDescription(ctx, cfg, updateID1, "new description")
+		updatedResource1, err := updateDescription(ctx, cli, cfg, updateID1, "new description")
 		if err != nil {
 			t.Errorf("update resource: %s", err.Error())
 		}
@@ -420,7 +487,7 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 		}
 
 		// delete resource
-		deletedResource, err := deleteResource(ctx, cfg, deleteID)
+		deletedResource, err := deleteResource(ctx, cli, cfg, deleteID)
 		if err != nil {
 			t.Errorf("delete resource: %s", err.Error())
 		}
@@ -453,7 +520,7 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 		}
 
 		// update resource
-		updatedResource2, err := updateDescription(ctx, cfg, updateID2, "new description after stop")
+		updatedResource2, err := updateDescription(ctx, cli, cfg, updateID2, "new description after stop")
 		if err != nil {
 			t.Errorf("update resource: %s", err.Error())
 		}
@@ -471,7 +538,7 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 		// generate new clients for more than one page
 		genResCount = 23
 
-		resources, err = generateResources(ctx, cfg, genResCount)
+		resources, err = generateResources(ctx, cli, cfg, genResCount)
 		if err != nil {
 			t.Errorf("prepare data: %s", err.Error())
 		}
@@ -512,7 +579,7 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 			t.Errorf("teardown: %s", err.Error())
 		}
 
-		cfg, err := prepareConfig()
+		cfg, err := prepareDefaultConfig()
 		if err != nil {
 			t.Log(err)
 			t.Skip()
@@ -532,14 +599,20 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 	})
 }
 
-func prepareConfig() (map[string]string, error) {
-	return prepareConfigWithBatchSize("")
+func prepareDefaultConfig() (map[string]string, error) {
+	return prepareConfig("", "")
 }
 
 func prepareConfigWithBatchSize(batchSize string) (map[string]string, error) {
-	secretKey := os.Getenv("STRIPE_SECRET_KEY")
+	return prepareConfig("", batchSize)
+}
+
+func prepareConfig(secretKey, batchSize string) (map[string]string, error) {
 	if secretKey == "" {
-		return map[string]string{}, errors.New("STRIPE_SECRET_KEY env var must be set")
+		secretKey = os.Getenv("STRIPE_SECRET_KEY")
+		if secretKey == "" {
+			return map[string]string{}, errors.New("STRIPE_SECRET_KEY env var must be set")
+		}
 	}
 
 	return map[string]string{
@@ -549,10 +622,10 @@ func prepareConfigWithBatchSize(batchSize string) (map[string]string, error) {
 	}, nil
 }
 
-func isEmpty(ctx context.Context, cfg map[string]string) error {
+func isEmpty(ctx context.Context, cli *retryablehttp.Client, cfg map[string]string) error {
 	var resource models.ResourceResponse
 
-	data, err := makeRequest(ctx, http.MethodGet, "", cfg, nil)
+	data, err := makeRequest(ctx, cli, http.MethodGet, "", cfg, nil)
 	if err != nil {
 		return fmt.Errorf("make get request: %w", err)
 	}
@@ -569,7 +642,8 @@ func isEmpty(ctx context.Context, cfg map[string]string) error {
 	return nil
 }
 
-func generateResources(ctx context.Context, cfg map[string]string, count int) ([]map[string]interface{}, error) {
+func generateResources(ctx context.Context, cli *retryablehttp.Client, cfg map[string]string, count int,
+) ([]map[string]interface{}, error) {
 	const (
 		nameValue        = "client-%s"
 		descriptionValue = "info about the %s"
@@ -584,7 +658,7 @@ func generateResources(ctx context.Context, cfg map[string]string, count int) ([
 	for i := 0; i < count; i++ {
 		clientName := fmt.Sprintf(nameValue, uuid.New().String())
 
-		resource, err = addResource(ctx, cfg, map[string]string{
+		resource, err = addResource(ctx, cli, cfg, map[string]string{
 			nameKey:        clientName,
 			descriptionKey: fmt.Sprintf(descriptionValue, clientName),
 		})
@@ -598,10 +672,11 @@ func generateResources(ctx context.Context, cfg map[string]string, count int) ([
 	return resources, nil
 }
 
-func addResource(ctx context.Context, cfg, params map[string]string) (map[string]interface{}, error) {
+func addResource(ctx context.Context, cli *retryablehttp.Client, cfg, params map[string]string,
+) (map[string]interface{}, error) {
 	var resource map[string]interface{}
 
-	data, err := makeRequest(ctx, http.MethodPost, "", cfg, params)
+	data, err := makeRequest(ctx, cli, http.MethodPost, "", cfg, params)
 	if err != nil {
 		return nil, fmt.Errorf("make post request: %w", err)
 	}
@@ -620,11 +695,11 @@ func addResource(ctx context.Context, cfg, params map[string]string) (map[string
 	return resource, nil
 }
 
-func updateDescription(ctx context.Context, cfg map[string]string, id, description string,
+func updateDescription(ctx context.Context, cli *retryablehttp.Client, cfg map[string]string, id, description string,
 ) (map[string]interface{}, error) {
 	var resource map[string]interface{}
 
-	data, err := makeRequest(ctx, http.MethodPost, id, cfg, map[string]string{
+	data, err := makeRequest(ctx, cli, http.MethodPost, id, cfg, map[string]string{
 		descriptionKey: description,
 	})
 	if err != nil {
@@ -643,10 +718,11 @@ func updateDescription(ctx context.Context, cfg map[string]string, id, descripti
 	return resource, nil
 }
 
-func deleteResource(ctx context.Context, cfg map[string]string, id string) (map[string]interface{}, error) {
+func deleteResource(ctx context.Context, cli *retryablehttp.Client, cfg map[string]string, id string,
+) (map[string]interface{}, error) {
 	var resource map[string]interface{}
 
-	data, err := makeRequest(ctx, http.MethodDelete, id, cfg, nil)
+	data, err := makeRequest(ctx, cli, http.MethodDelete, id, cfg, nil)
 	if err != nil {
 		return nil, fmt.Errorf("make delete request: %w", err)
 	}
@@ -665,11 +741,11 @@ func deleteResource(ctx context.Context, cfg map[string]string, id string) (map[
 	return resource, nil
 }
 
-func clearResources(ctx context.Context, cfg map[string]string) error {
+func clearResources(ctx context.Context, cli *retryablehttp.Client, cfg map[string]string) error {
 	var err error
 
 	for k := range clients {
-		_, err = makeRequest(ctx, http.MethodDelete, k, cfg, nil)
+		_, err = makeRequest(ctx, cli, http.MethodDelete, k, cfg, nil)
 		if err != nil {
 			return fmt.Errorf("make delete request: %w", err)
 		}
@@ -680,7 +756,8 @@ func clearResources(ctx context.Context, cfg map[string]string) error {
 	return nil
 }
 
-func makeRequest(ctx context.Context, method, path string, cfg, params map[string]string) ([]byte, error) {
+func makeRequest(ctx context.Context, cli *retryablehttp.Client, method, path string, cfg, params map[string]string,
+) ([]byte, error) {
 	reqURL, err := url.Parse(models.APIURL)
 	if err != nil {
 		return nil, fmt.Errorf("parse api url: %w", err)
@@ -698,8 +775,6 @@ func makeRequest(ctx context.Context, method, path string, cfg, params map[strin
 	}
 
 	reqURL.RawQuery = values.Encode()
-
-	cli := retryablehttp.NewClient()
 
 	req, err := retryablehttp.NewRequestWithContext(ctx, method, reqURL.String(), nil)
 	if err != nil {

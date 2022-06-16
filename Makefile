@@ -9,5 +9,9 @@ test:
 lint:
 	golangci-lint run -c .golangci.yml --go=1.18
 
+dep:
+	go mod download
+	go mod tidy
+
 mockgen:
 	mockgen -package mock -source source/iterator/interface.go -destination source/iterator/mock/stripe.go

@@ -21,5 +21,9 @@ import (
 )
 
 func main() {
-	sdk.Serve(stripe.Specification, source.NewSource, nil)
+	sdk.Serve(sdk.Connector{
+		NewSpecification: stripe.Specification,
+		NewSource:        source.NewSource,
+		NewDestination:   nil,
+	})
 }
