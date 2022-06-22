@@ -39,6 +39,7 @@ func TestParse(t *testing.T) {
 			want: Config{
 				SecretKey:    "sk_51JB",
 				ResourceName: "subscription",
+				BatchSize:    BatchSizeDefault,
 			},
 		},
 		{
@@ -104,7 +105,7 @@ func TestParse(t *testing.T) {
 				BatchSize:    "110",
 			},
 			wantErr:     true,
-			expectedErr: validator.InvalidBatchSizeErr(BatchSize).Error(),
+			expectedErr: validator.OutOfRangeErr(BatchSize).Error(),
 		},
 		{
 			name: "batch size less than or equal to 1",
@@ -114,7 +115,7 @@ func TestParse(t *testing.T) {
 				BatchSize:    "0",
 			},
 			wantErr:     true,
-			expectedErr: validator.InvalidBatchSizeErr(BatchSize).Error(),
+			expectedErr: validator.OutOfRangeErr(BatchSize).Error(),
 		},
 		{
 			name: "batch size is negative",
@@ -124,7 +125,7 @@ func TestParse(t *testing.T) {
 				BatchSize:    "-1",
 			},
 			wantErr:     true,
-			expectedErr: validator.InvalidBatchSizeErr(BatchSize).Error(),
+			expectedErr: validator.OutOfRangeErr(BatchSize).Error(),
 		},
 	}
 

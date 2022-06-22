@@ -87,7 +87,7 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 			invalidSecretKey = "invalid_secret_key"
 			expectedErr      = "populate with the resource: " +
 				"get list of resource objects: " +
-				"get data from stripe, by url https://api.stripe.com/v1/customers and header: " +
+				"get data from stripe, by url https://api.stripe.com/v1/customers?limit=10 and header: " +
 				"Invalid API Key provided: invalid_******_key"
 		)
 

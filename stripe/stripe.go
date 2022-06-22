@@ -59,19 +59,14 @@ func (s Stripe) GetResource(startingAfter string) (models.ResourceResponse, erro
 
 	reqURL.Path += fmt.Sprintf(models.PathFmt, models.ResourcesMap[s.cfg.ResourceName])
 
-	if startingAfter != "" || s.cfg.BatchSize != 0 {
-		values := reqURL.Query()
+	values := reqURL.Query()
+	values.Add(batchSize, strconv.Itoa(s.cfg.BatchSize))
 
-		if startingAfter != "" {
-			values.Add(startingAfterKey, startingAfter)
-		}
-
-		if s.cfg.BatchSize != 0 {
-			values.Add(batchSize, strconv.Itoa(s.cfg.BatchSize))
-		}
-
-		reqURL.RawQuery = values.Encode()
+	if startingAfter != "" {
+		values.Add(startingAfterKey, startingAfter)
 	}
+
+	reqURL.RawQuery = values.Encode()
 
 	header := make(map[string]string, 1)
 	header[models.HeaderAuthKey] = fmt.Sprintf(models.HeaderAuthValueFormat, s.cfg.SecretKey)
@@ -102,6 +97,7 @@ func (s Stripe) GetEvent(createdAt int64, startingAfter, endingBefore string) (m
 
 	values := reqURL.Query()
 	values.Add(createdKey, strconv.FormatInt(createdAt, 10))
+	values.Add(batchSize, strconv.Itoa(s.cfg.BatchSize))
 
 	if events, ok := models.EventsMap[s.cfg.ResourceName]; ok {
 		for i := range events {
@@ -115,10 +111,6 @@ func (s Stripe) GetEvent(createdAt int64, startingAfter, endingBefore string) (m
 
 	if endingBefore != "" {
 		values.Add(endingBeforeKey, endingBefore)
-	}
-
-	if s.cfg.BatchSize != 0 {
-		values.Add(batchSize, strconv.Itoa(s.cfg.BatchSize))
 	}
 
 	reqURL.RawQuery = values.Encode()
