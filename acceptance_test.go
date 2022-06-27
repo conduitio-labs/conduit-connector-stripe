@@ -52,6 +52,7 @@ func (d ConfigurableAcceptanceTestDriver) WriteToSource(t *testing.T, records []
 	const id = "id"
 
 	cli := retryablehttp.NewClient()
+	cli.Logger = sdk.Logger(ctx)
 	defer cli.HTTPClient.CloseIdleConnections()
 
 	for i := range records {
@@ -134,6 +135,7 @@ func TestAcceptance(t *testing.T) {
 			DestinationConfig: nil,
 			BeforeTest: func(t *testing.T) {
 				cli := retryablehttp.NewClient()
+				cli.Logger = sdk.Logger(ctx)
 				defer cli.HTTPClient.CloseIdleConnections()
 
 				if err := isEmpty(ctx, cli, cfg); err != nil {
@@ -142,6 +144,7 @@ func TestAcceptance(t *testing.T) {
 			},
 			AfterTest: func(t *testing.T) {
 				cli := retryablehttp.NewClient()
+				cli.Logger = sdk.Logger(ctx)
 				defer cli.HTTPClient.CloseIdleConnections()
 
 				if err := clearResources(ctx, cli, cfg); err != nil {

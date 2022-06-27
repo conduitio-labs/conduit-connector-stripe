@@ -15,12 +15,14 @@
 package http
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 
+	sdk "github.com/conduitio/conduit-connector-sdk"
 	"github.com/conduitio/conduit-connector-stripe/models"
 	"github.com/hashicorp/go-retryablehttp"
 )
@@ -31,9 +33,12 @@ type Client struct {
 }
 
 // NewClient returns a new retryable http client.
-func NewClient() Client {
+func NewClient(ctx context.Context) Client {
+	retryClient := retryablehttp.NewClient()
+	retryClient.Logger = sdk.Logger(ctx)
+
 	return Client{
-		httpClient: retryablehttp.NewClient(),
+		httpClient: retryClient,
 	}
 }
 
