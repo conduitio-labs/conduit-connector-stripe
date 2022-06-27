@@ -151,6 +151,7 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 		}
 
 		cli := retryablehttp.NewClient()
+		cli.Logger = sdk.Logger(ctx)
 		defer cli.HTTPClient.CloseIdleConnections()
 
 		err = isEmpty(ctx, cli, cfg)
@@ -267,6 +268,7 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 		}
 
 		cli := retryablehttp.NewClient()
+		cli.Logger = sdk.Logger(ctx)
 		defer cli.HTTPClient.CloseIdleConnections()
 
 		err = isEmpty(ctx, cli, cfg)
@@ -390,6 +392,7 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 		}
 
 		cli := retryablehttp.NewClient()
+		cli.Logger = sdk.Logger(ctx)
 		defer cli.HTTPClient.CloseIdleConnections()
 
 		err = isEmpty(ctx, cli, cfg)
