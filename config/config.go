@@ -29,13 +29,16 @@ const (
 
 	// BatchSize is the configuration name for the number of objects in the batch returned from Stripe.
 	BatchSize = "batchSize"
+
+	// BatchSizeDefault is the default value of the batch size.
+	BatchSizeDefault = 10
 )
 
 // A Config represents the configuration needed for Stripe.
 type Config struct {
 	SecretKey    string `validate:"required"`
 	ResourceName string `validate:"required,resource_name"`
-	BatchSize    int
+	BatchSize    int    `validate:"gte=1,lte=100,omitempty"`
 }
 
 // Parse parses Stripe configuration into a Config struct.
@@ -43,16 +46,13 @@ func Parse(cfg map[string]string) (Config, error) {
 	config := Config{
 		SecretKey:    cfg[SecretKey],
 		ResourceName: cfg[ResourceName],
+		BatchSize:    BatchSizeDefault,
 	}
 
 	if cfg[BatchSize] != "" {
 		batchSize, err := strconv.Atoi(cfg[BatchSize])
 		if err != nil {
 			return Config{}, validator.IntegerTypeConfigErr(BatchSize)
-		}
-
-		if batchSize <= 0 || batchSize > 100 {
-			return Config{}, validator.InvalidBatchSizeErr(BatchSize)
 		}
 
 		config.BatchSize = batchSize

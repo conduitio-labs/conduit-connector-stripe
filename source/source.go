@@ -57,7 +57,7 @@ func (s *Source) Open(ctx context.Context, rp sdk.Position) error {
 		return err
 	}
 
-	s.httpCli = http.NewClient()
+	s.httpCli = http.NewClient(ctx)
 
 	s.iterator = iterator.NewIterator(stripe.New(s.cfg, s.httpCli), &pos)
 
