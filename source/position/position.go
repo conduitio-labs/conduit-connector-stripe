@@ -19,8 +19,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/conduitio-labs/conduit-connector-stripe/models"
 	sdk "github.com/conduitio/conduit-connector-sdk"
-	"github.com/conduitio/conduit-connector-stripe/models"
 )
 
 // A Position represents a Stripe position.

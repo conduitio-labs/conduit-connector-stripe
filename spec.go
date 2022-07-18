@@ -15,8 +15,8 @@
 package stripe
 
 import (
+	"github.com/conduitio-labs/conduit-connector-stripe/config"
 	sdk "github.com/conduitio/conduit-connector-sdk"
-	"github.com/conduitio/conduit-connector-stripe/config"
 )
 
 // Specification returns specification of the connector.

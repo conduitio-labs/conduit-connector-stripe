@@ -22,8 +22,8 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"github.com/conduitio-labs/conduit-connector-stripe/models"
 	sdk "github.com/conduitio/conduit-connector-sdk"
-	"github.com/conduitio/conduit-connector-stripe/models"
 	"github.com/hashicorp/go-retryablehttp"
 )
 

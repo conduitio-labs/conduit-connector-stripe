@@ -7,8 +7,8 @@ package mock
 import (
 	reflect "reflect"
 
+	models "github.com/conduitio-labs/conduit-connector-stripe/models"
 	sdk "github.com/conduitio/conduit-connector-sdk"
-	models "github.com/conduitio/conduit-connector-stripe/models"
 	gomock "github.com/golang/mock/gomock"
 )
 

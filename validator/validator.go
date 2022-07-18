@@ -17,7 +17,7 @@ package validator
 import (
 	"sync"
 
-	"github.com/conduitio/conduit-connector-stripe/models"
+	"github.com/conduitio-labs/conduit-connector-stripe/models"
 	v "github.com/go-playground/validator/v10"
 )
 

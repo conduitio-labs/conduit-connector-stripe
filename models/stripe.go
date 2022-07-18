@@ -17,7 +17,7 @@ package models
 import (
 	"strings"
 
-	"github.com/conduitio/conduit-connector-stripe/models/resources"
+	"github.com/conduitio-labs/conduit-connector-stripe/models/resources"
 )
 
 // An UnexpectedErrorWithStatusCode represents an unexpected error message with status code.

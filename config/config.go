@@ -17,7 +17,7 @@ package config
 import (
 	"strconv"
 
-	"github.com/conduitio/conduit-connector-stripe/validator"
+	"github.com/conduitio-labs/conduit-connector-stripe/validator"
 )
 
 const (

@@ -20,10 +20,10 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/conduitio-labs/conduit-connector-stripe/models"
+	"github.com/conduitio-labs/conduit-connector-stripe/source/iterator/mock"
+	"github.com/conduitio-labs/conduit-connector-stripe/source/position"
 	sdk "github.com/conduitio/conduit-connector-sdk"
-	"github.com/conduitio/conduit-connector-stripe/models"
-	"github.com/conduitio/conduit-connector-stripe/source/iterator/mock"
-	"github.com/conduitio/conduit-connector-stripe/source/position"
 	"github.com/golang/mock/gomock"
 )
 

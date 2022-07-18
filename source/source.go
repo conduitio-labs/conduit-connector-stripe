@@ -17,12 +17,12 @@ package source
 import (
 	"context"
 
+	"github.com/conduitio-labs/conduit-connector-stripe/clients/http"
+	"github.com/conduitio-labs/conduit-connector-stripe/config"
+	"github.com/conduitio-labs/conduit-connector-stripe/source/iterator"
+	"github.com/conduitio-labs/conduit-connector-stripe/source/position"
+	"github.com/conduitio-labs/conduit-connector-stripe/stripe"
 	sdk "github.com/conduitio/conduit-connector-sdk"
-	"github.com/conduitio/conduit-connector-stripe/clients/http"
-	"github.com/conduitio/conduit-connector-stripe/config"
-	"github.com/conduitio/conduit-connector-stripe/source/iterator"
-	"github.com/conduitio/conduit-connector-stripe/source/position"
-	"github.com/conduitio/conduit-connector-stripe/stripe"
 )
 
 // A Source represents the source connector.

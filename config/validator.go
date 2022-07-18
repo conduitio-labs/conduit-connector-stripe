@@ -17,7 +17,7 @@ package config
 import (
 	"fmt"
 
-	"github.com/conduitio/conduit-connector-stripe/validator"
+	"github.com/conduitio-labs/conduit-connector-stripe/validator"
 	v "github.com/go-playground/validator/v10"
 	"go.uber.org/multierr"
 )
