@@ -20,9 +20,9 @@ import (
 	"net/url"
 	"strconv"
 
-	"github.com/conduitio/conduit-connector-stripe/clients/http"
-	"github.com/conduitio/conduit-connector-stripe/config"
-	"github.com/conduitio/conduit-connector-stripe/models"
+	"github.com/conduitio-labs/conduit-connector-stripe/clients/http"
+	"github.com/conduitio-labs/conduit-connector-stripe/config"
+	"github.com/conduitio-labs/conduit-connector-stripe/models"
 )
 
 const (

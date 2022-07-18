@@ -19,8 +19,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/conduitio/conduit-connector-stripe/config"
-	"github.com/conduitio/conduit-connector-stripe/validator"
+	"github.com/conduitio-labs/conduit-connector-stripe/config"
+	"github.com/conduitio-labs/conduit-connector-stripe/validator"
 	"go.uber.org/multierr"
 )
 

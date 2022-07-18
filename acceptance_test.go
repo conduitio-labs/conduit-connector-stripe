@@ -26,11 +26,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/conduitio-labs/conduit-connector-stripe/config"
+	"github.com/conduitio-labs/conduit-connector-stripe/models"
+	r "github.com/conduitio-labs/conduit-connector-stripe/models/resources"
+	"github.com/conduitio-labs/conduit-connector-stripe/source"
 	sdk "github.com/conduitio/conduit-connector-sdk"
-	"github.com/conduitio/conduit-connector-stripe/config"
-	"github.com/conduitio/conduit-connector-stripe/models"
-	r "github.com/conduitio/conduit-connector-stripe/models/resources"
-	"github.com/conduitio/conduit-connector-stripe/source"
 	"github.com/google/uuid"
 	"github.com/hashicorp/go-retryablehttp"
 )

@@ -26,10 +26,10 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/conduitio-labs/conduit-connector-stripe/config"
+	"github.com/conduitio-labs/conduit-connector-stripe/models"
+	r "github.com/conduitio-labs/conduit-connector-stripe/models/resources"
 	sdk "github.com/conduitio/conduit-connector-sdk"
-	"github.com/conduitio/conduit-connector-stripe/config"
-	"github.com/conduitio/conduit-connector-stripe/models"
-	r "github.com/conduitio/conduit-connector-stripe/models/resources"
 	"github.com/google/uuid"
 	"github.com/hashicorp/go-retryablehttp"
 	"go.uber.org/goleak"

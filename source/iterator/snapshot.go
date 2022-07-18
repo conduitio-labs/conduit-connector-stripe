@@ -19,9 +19,9 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/conduitio-labs/conduit-connector-stripe/models"
+	"github.com/conduitio-labs/conduit-connector-stripe/source/position"
 	sdk "github.com/conduitio/conduit-connector-sdk"
-	"github.com/conduitio/conduit-connector-stripe/models"
-	"github.com/conduitio/conduit-connector-stripe/source/position"
 )
 
 // A SnapshotIterator represents a struct of snapshot iterator.
