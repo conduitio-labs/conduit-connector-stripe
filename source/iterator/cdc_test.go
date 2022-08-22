@@ -19,12 +19,17 @@ import (
 	"fmt"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/conduitio-labs/conduit-connector-stripe/models"
+	"github.com/conduitio-labs/conduit-connector-stripe/models/resources"
 	"github.com/conduitio-labs/conduit-connector-stripe/source/iterator/mock"
-	"github.com/conduitio-labs/conduit-connector-stripe/source/position"
 	sdk "github.com/conduitio/conduit-connector-sdk"
 	"github.com/golang/mock/gomock"
+)
+
+const (
+	cursor = "some_id"
 )
 
 func TestCDCIterator_Next(t *testing.T) {
@@ -43,24 +48,24 @@ func TestCDCIterator_Next(t *testing.T) {
 					ID:      "evt_1652447199",
 					Created: 1652447199,
 					Data: models.EventDataObject{Object: map[string]interface{}{
-						"id":      "price_1651153850",
-						"object":  "plan",
-						"amount":  1499,
-						"created": float64(1651153850),
+						models.KeyID:      "price_1651153850",
+						models.KeyObject:  "plan",
+						models.KeyAmount:  1499,
+						models.KeyCreated: float64(1651153850),
 					}},
-					Type: "plan.deleted",
+					Type: resources.PlanDeletedEvent,
 				},
 				// 3rd event, update amount of a plan from 12.99 to 14.99
 				{
 					ID:      "evt_1652447186",
 					Created: 1652447186,
 					Data: models.EventDataObject{Object: map[string]interface{}{
-						"id":      "price_1651153850",
-						"object":  "plan",
-						"amount":  1499,
-						"created": float64(1651153850),
+						models.KeyID:      "price_1651153850",
+						models.KeyObject:  "plan",
+						models.KeyAmount:  1499,
+						models.KeyCreated: float64(1651153850),
 					}},
-					Type: "plan.updated",
+					Type: resources.PlanUpdatedEvent,
 				},
 			},
 			HasMore: true,
@@ -73,24 +78,24 @@ func TestCDCIterator_Next(t *testing.T) {
 					ID:      "evt_1652447179",
 					Created: 1652447179,
 					Data: models.EventDataObject{Object: map[string]interface{}{
-						"id":      "price_1651153850",
-						"object":  "plan",
-						"amount":  1299,
-						"created": float64(1651153850),
+						models.KeyID:      "price_1651153850",
+						models.KeyObject:  "plan",
+						models.KeyAmount:  1299,
+						models.KeyCreated: float64(1651153850),
 					}},
-					Type: "plan.updated",
+					Type: resources.PlanUpdatedEvent,
 				},
 				// 1st event, create a new plan
 				{
 					ID:      "evt_1652447136",
 					Created: 1652447136,
 					Data: models.EventDataObject{Object: map[string]interface{}{
-						"id":      "price_1651153850",
-						"object":  "plan",
-						"amount":  1099,
-						"created": float64(1651153850),
+						models.KeyID:      "price_1651153850",
+						models.KeyObject:  "plan",
+						models.KeyAmount:  1099,
+						models.KeyCreated: float64(1651153850),
 					}},
-					Type: "plan.created",
+					Type: resources.PlanCreatedEvent,
 				},
 			},
 			HasMore: false,
@@ -99,15 +104,15 @@ func TestCDCIterator_Next(t *testing.T) {
 		result.Data = append(result.Data, responseFirst.Data...)
 		result.Data = append(result.Data, responseSecond.Data...)
 
-		pos := &position.Position{
-			IteratorType: models.CDCIterator,
+		pos := &Position{
+			IteratorMode: modeCDC,
 			CreatedAt:    1652790765,
 		}
 
 		m.EXPECT().GetEvent(pos.CreatedAt, "", "").Return(responseFirst, nil)
 		m.EXPECT().GetEvent(pos.CreatedAt, responseFirst.Data[len(responseFirst.Data)-1].ID, "").Return(responseSecond, nil)
 
-		iter := NewCDCIterator(m, pos)
+		iter := NewCDC(m, pos)
 
 		// reverse loop due to starting_after case
 		for i := len(result.Data) - 1; i >= 0; i-- {
@@ -116,7 +121,7 @@ func TestCDCIterator_Next(t *testing.T) {
 				t.Errorf("next error = \"%s\"", err.Error())
 			}
 
-			rp, err := pos.FormatSDKPosition()
+			rp, err := pos.marshalPosition()
 			if err != nil {
 				t.Errorf("format sdk position error = \"%s\"", err.Error())
 			}
@@ -136,8 +141,6 @@ func TestCDCIterator_Next(t *testing.T) {
 			result = models.EventResponse{}
 		)
 
-		const cursor = "some_id"
-
 		responseFirst := models.EventResponse{
 			Data: []models.EventData{
 				// 2nd event, update amount of a plan from 10.99 to 12.99
@@ -145,24 +148,24 @@ func TestCDCIterator_Next(t *testing.T) {
 					ID:      "evt_1652447179",
 					Created: 1652447179,
 					Data: models.EventDataObject{Object: map[string]interface{}{
-						"id":      "price_1651153850",
-						"object":  "plan",
-						"amount":  1299,
-						"created": float64(1651153850),
+						models.KeyID:      "price_1651153850",
+						models.KeyObject:  "plan",
+						models.KeyAmount:  1299,
+						models.KeyCreated: float64(1651153850),
 					}},
-					Type: "plan.updated",
+					Type: resources.PlanUpdatedEvent,
 				},
 				// 1st event, create a new plan
 				{
 					ID:      "evt_1652447136",
 					Created: 1652447136,
 					Data: models.EventDataObject{Object: map[string]interface{}{
-						"id":      "price_1651153850",
-						"object":  "plan",
-						"amount":  1099,
-						"created": float64(1651153850),
+						models.KeyID:      "price_1651153850",
+						models.KeyObject:  "plan",
+						models.KeyAmount:  1099,
+						models.KeyCreated: float64(1651153850),
 					}},
-					Type: "plan.created",
+					Type: resources.PlanCreatedEvent,
 				},
 			},
 			HasMore: true,
@@ -175,24 +178,24 @@ func TestCDCIterator_Next(t *testing.T) {
 					ID:      "evt_1652447199",
 					Created: 1652447199,
 					Data: models.EventDataObject{Object: map[string]interface{}{
-						"id":      "price_1651153850",
-						"object":  "plan",
-						"amount":  1499,
-						"created": float64(1651153850),
+						models.KeyID:      "price_1651153850",
+						models.KeyObject:  "plan",
+						models.KeyAmount:  1499,
+						models.KeyCreated: float64(1651153850),
 					}},
-					Type: "plan.deleted",
+					Type: resources.PlanDeletedEvent,
 				},
 				// 3rd event, update amount of a plan from 12.99 to 14.99
 				{
 					ID:      "evt_1652447186",
 					Created: 1652447186,
 					Data: models.EventDataObject{Object: map[string]interface{}{
-						"id":      "price_1651153850",
-						"object":  "plan",
-						"amount":  1499,
-						"created": float64(1651153850),
+						models.KeyID:      "price_1651153850",
+						models.KeyObject:  "plan",
+						models.KeyAmount:  1499,
+						models.KeyCreated: float64(1651153850),
 					}},
-					Type: "plan.updated",
+					Type: resources.PlanUpdatedEvent,
 				},
 			},
 			HasMore: false,
@@ -207,8 +210,8 @@ func TestCDCIterator_Next(t *testing.T) {
 			result.Data = append(result.Data, responseSecond.Data[i])
 		}
 
-		pos := &position.Position{
-			IteratorType: models.CDCIterator,
+		pos := &Position{
+			IteratorMode: modeCDC,
 			Cursor:       cursor,
 			CreatedAt:    1652790765,
 		}
@@ -216,7 +219,7 @@ func TestCDCIterator_Next(t *testing.T) {
 		m.EXPECT().GetEvent(pos.CreatedAt, "", cursor).Return(responseFirst, nil)
 		m.EXPECT().GetEvent(pos.CreatedAt, "", responseFirst.Data[0].ID).Return(responseSecond, nil)
 
-		iter := NewCDCIterator(m, pos)
+		iter := NewCDC(m, pos)
 
 		for i := range result.Data {
 			record, err := iter.Next()
@@ -224,7 +227,7 @@ func TestCDCIterator_Next(t *testing.T) {
 				t.Errorf("next error = \"%s\"", err.Error())
 			}
 
-			rp, err := pos.FormatSDKPosition()
+			rp, err := pos.marshalPosition()
 			if err != nil {
 				t.Errorf("format sdk position error = \"%s\"", err.Error())
 			}
@@ -238,30 +241,39 @@ func TestCDCIterator_Next(t *testing.T) {
 }
 
 func compareResult(record sdk.Record, position sdk.Position, data models.EventData) error {
+	if !reflect.DeepEqual(record.Key, sdk.StructuredData{models.KeyID: data.Data.Object[models.KeyID]}) {
+		return fmt.Errorf("key: got = %v, want %v", string(record.Key.Bytes()), data.Data.Object[models.KeyID])
+	}
+
+	createdAt, err := record.Metadata.GetCreatedAt()
+	if err != nil {
+		return fmt.Errorf("get created_at error = \"%s\"", err.Error())
+	}
+
+	if createdAt != time.Unix(data.Created, 0) {
+		return fmt.Errorf("created at: got = %v, want %v", createdAt, time.Unix(data.Created, 0))
+	}
+
+	operation := models.EventsOperation[data.Type]
+	if record.Operation != operation {
+		return fmt.Errorf("operation: got = %v, want %v", record.Operation, operation)
+	}
+
+	if !reflect.DeepEqual(record.Position, position) {
+		return fmt.Errorf("position: got = %v, want %v", string(record.Position), string(position))
+	}
+
+	if operation == sdk.OperationDelete {
+		return nil
+	}
+
 	payload, err := json.Marshal(data.Data.Object)
 	if err != nil {
 		return fmt.Errorf("marshal payload error = \"%s\"", err.Error())
 	}
 
-	if !reflect.DeepEqual(record.Payload.Bytes(), payload) {
-		return fmt.Errorf("payload: got = %v, want %v", string(record.Payload.Bytes()), string(payload))
-	}
-
-	if !reflect.DeepEqual(record.Key, sdk.StructuredData{idKey: data.Data.Object["id"]}) {
-		return fmt.Errorf("key: got = %v, want %v", string(record.Key.Bytes()), data.Data.Object["id"])
-	}
-
-	if record.CreatedAt.Unix() != data.Created {
-		return fmt.Errorf("created: got = %v, want %v", record.CreatedAt.Unix(), data.Created)
-	}
-
-	action := models.EventsAction[data.Type]
-	if record.Metadata[models.ActionKey] != action {
-		return fmt.Errorf("action: got = %v, want %v", record.Metadata[models.ActionKey], action)
-	}
-
-	if !reflect.DeepEqual(record.Position, position) {
-		return fmt.Errorf("position: got = %v, want %v", string(record.Position), string(position))
+	if !reflect.DeepEqual(record.Payload.After.Bytes(), payload) {
+		return fmt.Errorf("payload: got = %v, want %v", string(record.Payload.After.Bytes()), string(payload))
 	}
 
 	return nil

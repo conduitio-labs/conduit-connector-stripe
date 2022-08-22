@@ -37,11 +37,6 @@ func Get() *v.Validate {
 		if err != nil {
 			return
 		}
-
-		err = validatorInstance.RegisterValidation("iterator_type", validateIteratorType)
-		if err != nil {
-			return
-		}
 	})
 
 	return validatorInstance
@@ -49,12 +44,6 @@ func Get() *v.Validate {
 
 func validateResourceName(fl v.FieldLevel) bool {
 	_, ok := models.ResourcesMap[fl.Field().String()]
-
-	return ok
-}
-
-func validateIteratorType(fl v.FieldLevel) bool {
-	_, ok := models.IteratorTypeMap[models.IteratorType(fl.Field().String())]
 
 	return ok
 }

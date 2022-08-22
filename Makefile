@@ -14,4 +14,5 @@ dep:
 	go mod tidy
 
 mockgen:
-	mockgen -package mock -source source/iterator/interface.go -destination source/iterator/mock/stripe.go
+	mockgen -package mock -source source/source.go -destination source/mock/source.go
+	mockgen -package mock -source source/iterator/iterator.go -destination source/iterator/mock/iterator.go

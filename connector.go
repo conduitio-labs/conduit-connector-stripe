@@ -12,20 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package iterator
+package stripe
 
 import (
-	"github.com/conduitio-labs/conduit-connector-stripe/models"
+	"github.com/conduitio-labs/conduit-connector-stripe/source"
 	sdk "github.com/conduitio/conduit-connector-sdk"
 )
 
-// An Interface defines the interface to iterator methods.
-type Interface interface {
-	Next() (sdk.Record, error)
-}
-
-// A Stripe defines the interface of methods.
-type Stripe interface {
-	GetResource(string) (models.ResourceResponse, error)
-	GetEvent(createdAt int64, startingAfter, endingBefore string) (models.EventResponse, error)
+// Connector represents a sdk.Connector of Stripe.
+var Connector = sdk.Connector{
+	NewSpecification: Specification,
+	NewSource:        source.New,
+	NewDestination:   nil,
 }

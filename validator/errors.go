@@ -18,9 +18,6 @@ import (
 	"fmt"
 )
 
-// An UnexpectedIteratorTypeErr represents the message of unexpected iterator type error.
-const UnexpectedIteratorTypeErr = "unexpected iterator type"
-
 // WrongResourceNameErr returns the formatted wrong resource name error.
 func WrongResourceNameErr(name string) error {
 	return fmt.Errorf("%q wrong resource name", name)

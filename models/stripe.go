@@ -18,15 +18,7 @@ import (
 	"strings"
 
 	"github.com/conduitio-labs/conduit-connector-stripe/models/resources"
-)
-
-// An UnexpectedErrorWithStatusCode represents an unexpected error message with status code.
-const (
-	APIURL                        = "https://api.stripe.com/v1"
-	PathFmt                       = "/%s"
-	HeaderAuthKey                 = "Authorization"
-	HeaderAuthValueFormat         = "Bearer %s"
-	UnexpectedErrorWithStatusCode = "unexpected error with status code %d"
+	sdk "github.com/conduitio/conduit-connector-sdk"
 )
 
 // A ResourceResponse represents a response resource data from Stripe.
@@ -156,25 +148,25 @@ var EventsMap = map[string][]string{
 	resources.TerminalReaderResource:              resources.TerminalReaderEvents,
 }
 
-// EventsAction represents a dictionary with actions of events,
+// EventsOperation represents a dictionary with operations of events,
 // where the key is an event and the value is an action.
-var EventsAction = (func() map[string]string {
-	eventsAction := make(map[string]string)
+var EventsOperation = (func() map[string]sdk.Operation {
+	eventsOperation := make(map[string]sdk.Operation)
 
 	for _, events := range EventsMap {
 		for _, event := range events {
 			switch e := event; {
-			case strings.Contains(e, eventKeyCreated):
-				eventsAction[e] = InsertAction
-			case strings.Contains(e, eventKeyDeleted):
-				eventsAction[e] = DeleteAction
+			case strings.Contains(e, KeyCreated):
+				eventsOperation[e] = sdk.OperationCreate
+			case strings.Contains(e, KeyDeleted):
+				eventsOperation[e] = sdk.OperationDelete
 			default:
-				eventsAction[e] = UpdateAction
+				eventsOperation[e] = sdk.OperationUpdate
 			}
 		}
 	}
 
-	return eventsAction
+	return eventsOperation
 })()
 
 // Reverse reverses an EventsData.
