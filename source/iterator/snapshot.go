@@ -20,21 +20,20 @@ import (
 	"time"
 
 	"github.com/conduitio-labs/conduit-connector-stripe/models"
-	"github.com/conduitio-labs/conduit-connector-stripe/source/position"
 	sdk "github.com/conduitio/conduit-connector-sdk"
 )
 
-// A SnapshotIterator represents a struct of snapshot iterator.
-type SnapshotIterator struct {
+// A Snapshot represents a struct of snapshot iterator.
+type Snapshot struct {
 	stripeSvc Stripe
-	position  *position.Position
+	position  *Position
 	response  *models.ResourceResponse
 	index     int
 }
 
-// NewSnapshotIterator initializes snapshot iterator.
-func NewSnapshotIterator(stripeSvc Stripe, pos *position.Position) *SnapshotIterator {
-	return &SnapshotIterator{
+// NewSnapshot initializes snapshot iterator.
+func NewSnapshot(stripeSvc Stripe, pos *Position) *Snapshot {
+	return &Snapshot{
 		stripeSvc: stripeSvc,
 		position:  pos,
 	}
@@ -42,64 +41,84 @@ func NewSnapshotIterator(stripeSvc Stripe, pos *position.Position) *SnapshotIter
 
 // Next returns the next record.
 // Note: The `Snapshot` iterator creates a copy of the data, which is sorted by date of creation in descending order.
-func (iter *SnapshotIterator) Next() (sdk.Record, error) {
-	if iter.response == nil || len(iter.response.Data) == iter.index {
-		if err := iter.refreshData(); err != nil {
+func (i *Snapshot) Next() (sdk.Record, error) {
+	if i.response == nil || len(i.response.Data) == i.index {
+		if err := i.refreshData(); err != nil {
 			return sdk.Record{}, fmt.Errorf("populate with the resource: %w", err)
 		}
 
 		// if there is no data - go to `CDC` iterator
-		if len(iter.response.Data) == 0 {
-			iter.position.IteratorType = models.CDCIterator
-			iter.position.Cursor = ""
+		if len(i.response.Data) == 0 {
+			i.position.IteratorMode = modeCDC
+			i.position.Cursor = ""
 
 			return sdk.Record{}, nil
 		}
 	}
 
-	payload, err := json.Marshal(iter.response.Data[iter.index])
+	i.position.Cursor = i.response.Data[i.index][models.KeyID].(string)
+
+	position, err := i.position.marshalPosition()
 	if err != nil {
-		return sdk.Record{}, fmt.Errorf("marshal payload: %w", err)
+		return sdk.Record{}, fmt.Errorf("build record position: %w", err)
 	}
 
-	iter.position.Cursor = iter.response.Data[iter.index][idKey].(string)
-
-	created, ok := iter.response.Data[iter.index]["created"].(float64)
-	if !ok {
-		created = float64(time.Now().Unix())
-	}
-
-	rp, err := iter.position.FormatSDKPosition()
+	payload, err := i.buildRecordPayload()
 	if err != nil {
-		return sdk.Record{}, fmt.Errorf("format sdk position: %w", err)
+		return sdk.Record{}, fmt.Errorf("build record payload: %w", err)
 	}
 
-	output := sdk.Record{
-		Position: rp,
-		Metadata: map[string]string{
-			models.ActionKey: models.InsertAction,
-		},
-		CreatedAt: time.Unix(int64(created), 0),
-		Key: sdk.StructuredData{
-			idKey: iter.response.Data[iter.index][idKey].(string),
-		},
-		Payload: sdk.RawData(payload),
-	}
+	record := sdk.Util.Source.NewRecordSnapshot(
+		position,
+		i.buildRecordMetadata(),
+		i.buildRecordKey(),
+		payload,
+	)
 
-	iter.index++
+	i.index++
 
-	return output, nil
+	return record, nil
 }
 
 // refreshData receives the resource data from Stripe, and assigns them to the iterator.
-func (iter *SnapshotIterator) refreshData() error {
-	resp, err := iter.stripeSvc.GetResource(iter.position.Cursor)
+func (i *Snapshot) refreshData() error {
+	resp, err := i.stripeSvc.GetResource(i.position.Cursor)
 	if err != nil {
 		return fmt.Errorf("get list of resource objects: %w", err)
 	}
 
-	iter.response = &resp
-	iter.index = 0
+	i.response = &resp
+	i.index = 0
 
 	return nil
+}
+
+// buildRecordMetadata returns the metadata for the record.
+func (i *Snapshot) buildRecordMetadata() map[string]string {
+	metadata := make(sdk.Metadata, 1)
+
+	createdAt := time.Now()
+	if c, ok := i.response.Data[i.index][models.KeyCreated].(float64); ok {
+		createdAt = time.Unix(int64(c), 0)
+	}
+	metadata.SetCreatedAt(createdAt)
+
+	return metadata
+}
+
+// buildRecordKey returns the key for the record.
+func (i *Snapshot) buildRecordKey() sdk.Data {
+	return sdk.StructuredData{
+		models.KeyID: i.response.Data[i.index][models.KeyID].(string),
+	}
+}
+
+// buildRecordPayload returns the payload for the record.
+func (i *Snapshot) buildRecordPayload() (sdk.Data, error) {
+	payload, err := json.Marshal(i.response.Data[i.index])
+	if err != nil {
+		return nil, fmt.Errorf("marshal payload: %w", err)
+	}
+
+	return sdk.RawData(payload), nil
 }

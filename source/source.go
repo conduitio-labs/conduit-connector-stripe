@@ -20,70 +20,93 @@ import (
 	"github.com/conduitio-labs/conduit-connector-stripe/clients/http"
 	"github.com/conduitio-labs/conduit-connector-stripe/config"
 	"github.com/conduitio-labs/conduit-connector-stripe/source/iterator"
-	"github.com/conduitio-labs/conduit-connector-stripe/source/position"
 	"github.com/conduitio-labs/conduit-connector-stripe/stripe"
 	sdk "github.com/conduitio/conduit-connector-sdk"
 )
+
+// An Iterator defines the interface to iterator methods.
+type Iterator interface {
+	Next() (sdk.Record, error)
+}
 
 // A Source represents the source connector.
 type Source struct {
 	sdk.UnimplementedSource
 	cfg      config.Config
-	iterator iterator.Interface
+	iterator Iterator
 	httpCli  http.Client
 }
 
 // NewSource initialises a new source.
 func NewSource() sdk.Source {
-	return &Source{}
+	return sdk.SourceWithMiddleware(&Source{}, sdk.DefaultSourceMiddleware()...)
+}
+
+// Parameters returns a map of named Parameters that describe how to configure the Source.
+func (s *Source) Parameters() map[string]sdk.Parameter {
+	return map[string]sdk.Parameter{
+		config.SecretKey: {
+			Default:     "",
+			Required:    true,
+			Description: "Stripe secret key.",
+		},
+		config.ResourceName: {
+			Default:     "",
+			Required:    true,
+			Description: "Stripe resource name.",
+		},
+		config.BatchSize: {
+			Default:     "",
+			Required:    false,
+			Description: "Number of Stripe objects in the batch.",
+		},
+	}
 }
 
 // Configure parses and stores configurations, returns an error in case of invalid configuration.
-func (s *Source) Configure(ctx context.Context, cfgRaw map[string]string) error {
-	cfg, err := config.Parse(cfgRaw)
+func (s *Source) Configure(_ context.Context, cfgRaw map[string]string) (err error) {
+	s.cfg, err = config.Parse(cfgRaw)
 	if err != nil {
 		return err
 	}
-
-	s.cfg = cfg
 
 	return nil
 }
 
 // Open parses sdk.Position and initializes a SnapshotIterator iterator.
-func (s *Source) Open(ctx context.Context, rp sdk.Position) error {
-	pos, err := position.ParseSDKPosition(rp)
+func (s *Source) Open(ctx context.Context, position sdk.Position) error {
+	pos, err := iterator.ParseSDKPosition(position)
 	if err != nil {
 		return err
 	}
 
 	s.httpCli = http.NewClient(ctx)
 
-	s.iterator = iterator.NewIterator(stripe.New(s.cfg, s.httpCli), &pos)
+	s.iterator = iterator.New(stripe.New(s.cfg, s.httpCli), pos)
 
 	return nil
 }
 
 // Read returns the next sdk.Record.
-func (s *Source) Read(ctx context.Context) (sdk.Record, error) {
-	r, err := s.iterator.Next()
+func (s *Source) Read(_ context.Context) (sdk.Record, error) {
+	record, err := s.iterator.Next()
 	if err != nil {
 		return sdk.Record{}, err
 	}
 
-	return r, nil
+	return record, nil
 }
 
 // Ack does nothing.
-func (s *Source) Ack(ctx context.Context, rp sdk.Position) error {
-	sdk.Logger(ctx).Debug().Str("position", string(rp)).Msg("got ack")
+func (s *Source) Ack(ctx context.Context, position sdk.Position) error {
+	sdk.Logger(ctx).Debug().Str("position", string(position)).Msg("got ack")
 
 	return nil
 }
 
 // Teardown closes any connections which were previously connected from previous requests.
 func (s *Source) Teardown(ctx context.Context) error {
-	sdk.Logger(ctx).Info().Msg("tearing down a stripe source...")
+	sdk.Logger(ctx).Info().Msg("tearing down a stripe source")
 
 	s.httpCli.Close()
 

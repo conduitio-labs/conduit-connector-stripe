@@ -35,15 +35,7 @@ import (
 	"go.uber.org/goleak"
 )
 
-const (
-	resourceName = r.CustomerResource
-
-	idKey          = "id"
-	nameKey        = "name"
-	descriptionKey = "description"
-
-	backoffRetryErr = "backoff retry"
-)
+const resourceName = r.CustomerResource
 
 var clients = make(map[string]interface{})
 
@@ -197,7 +189,7 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 
 			pos = record.Position
 
-			err = compareResult(record, resources[i], models.InsertAction)
+			err = compareResult(record, resources[i], sdk.OperationSnapshot)
 			if err != nil {
 				t.Errorf(err.Error())
 			}
@@ -226,7 +218,7 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 				t.Errorf("read: %s", err.Error())
 			}
 
-			err = compareResult(record, resources[i], models.InsertAction)
+			err = compareResult(record, resources[i], sdk.OperationSnapshot)
 			if err != nil {
 				t.Errorf(err.Error())
 			}
@@ -234,7 +226,7 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 
 		// read empty source
 		_, err = source.Read(ctx)
-		if err != nil && err.Error() != backoffRetryErr {
+		if err != nil && err != sdk.ErrBackoffRetry {
 			t.Errorf("read: %s", err.Error())
 		}
 
@@ -313,7 +305,7 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 
 			rp = record.Position
 
-			err = compareResult(record, resources[i], models.InsertAction)
+			err = compareResult(record, resources[i], sdk.OperationSnapshot)
 			if err != nil {
 				t.Errorf(err.Error())
 			}
@@ -338,8 +330,8 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 
 		// add resource
 		resource, err := addResource(ctx, cli, cfg, map[string]string{
-			nameKey:        "inserted",
-			descriptionKey: "inserted description",
+			models.KeyName:        "inserted",
+			models.KeyDescription: "inserted description",
 		})
 		if err != nil {
 			t.Errorf("add resource: %s", err.Error())
@@ -350,14 +342,14 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 			t.Errorf("read: %s", err.Error())
 		}
 
-		err = compareResult(record, resource, models.InsertAction)
+		err = compareResult(record, resource, sdk.OperationCreate)
 		if err != nil {
 			t.Errorf(err.Error())
 		}
 
 		// read empty source
 		_, err = source.Read(ctx)
-		if err != nil && err.Error() != backoffRetryErr {
+		if err != nil && err != sdk.ErrBackoffRetry {
 			t.Errorf("read: %s", err.Error())
 		}
 
@@ -438,26 +430,26 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 				t.Errorf("read: %s", err.Error())
 			}
 
-			err = compareResult(record, resources[i], models.InsertAction)
+			err = compareResult(record, resources[i], sdk.OperationSnapshot)
 			if err != nil {
 				t.Errorf(err.Error())
 			}
 		}
 
-		updateID1 := resources[updateIndex1]["id"].(string)
-		updateID2 := resources[updateIndex2]["id"].(string)
-		deleteID := resources[deleteIndex]["id"].(string)
+		updateID1 := resources[updateIndex1][models.KeyID].(string)
+		updateID2 := resources[updateIndex2][models.KeyID].(string)
+		deleteID := resources[deleteIndex][models.KeyID].(string)
 
 		// read empty source
 		_, err = source.Read(ctx)
-		if err != nil && err.Error() != backoffRetryErr {
+		if err != nil && err != sdk.ErrBackoffRetry {
 			t.Errorf("read: %s", err.Error())
 		}
 
 		// add resource
 		addedResource, err := addResource(ctx, cli, cfg, map[string]string{
-			nameKey:        "inserted",
-			descriptionKey: "inserted description",
+			models.KeyName:        "inserted",
+			models.KeyDescription: "inserted description",
 		})
 		if err != nil {
 			t.Errorf("add resource: %s", err.Error())
@@ -468,7 +460,7 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 			t.Errorf("read: %s", err.Error())
 		}
 
-		err = compareResult(record, addedResource, models.InsertAction)
+		err = compareResult(record, addedResource, sdk.OperationCreate)
 		if err != nil {
 			t.Errorf(err.Error())
 		}
@@ -484,7 +476,7 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 			t.Errorf("read: %s", err.Error())
 		}
 
-		err = compareResult(record, updatedResource1, models.UpdateAction)
+		err = compareResult(record, updatedResource1, sdk.OperationUpdate)
 		if err != nil {
 			t.Errorf(err.Error())
 		}
@@ -500,7 +492,7 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 			t.Errorf("read: %s", err.Error())
 		}
 
-		err = compareResult(record, deletedResource, models.DeleteAction)
+		err = compareResult(record, deletedResource, sdk.OperationDelete)
 		if err != nil {
 			t.Errorf(err.Error())
 		}
@@ -533,7 +525,7 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 			t.Errorf("read: %s", err.Error())
 		}
 
-		err = compareResult(record, updatedResource2, models.UpdateAction)
+		err = compareResult(record, updatedResource2, sdk.OperationUpdate)
 		if err != nil {
 			t.Errorf(err.Error())
 		}
@@ -552,7 +544,7 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 				t.Errorf("read: %s", err.Error())
 			}
 
-			err = compareResult(record, resources[i], models.InsertAction)
+			err = compareResult(record, resources[i], sdk.OperationCreate)
 			if err != nil {
 				t.Errorf(err.Error())
 			}
@@ -560,7 +552,7 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 
 		// read empty source
 		_, err = source.Read(ctx)
-		if err != nil && err.Error() != backoffRetryErr {
+		if err != nil && err != sdk.ErrBackoffRetry {
 			t.Errorf("read: %s", err.Error())
 		}
 
@@ -662,8 +654,8 @@ func generateResources(ctx context.Context, cli *retryablehttp.Client, cfg map[s
 		clientName := fmt.Sprintf(nameValue, uuid.New().String())
 
 		resource, err = addResource(ctx, cli, cfg, map[string]string{
-			nameKey:        clientName,
-			descriptionKey: fmt.Sprintf(descriptionValue, clientName),
+			models.KeyName:        clientName,
+			models.KeyDescription: fmt.Sprintf(descriptionValue, clientName),
 		})
 		if err != nil {
 			return nil, fmt.Errorf("add resource: %w", err)
@@ -693,7 +685,7 @@ func addResource(ctx context.Context, cli *retryablehttp.Client, cfg, params map
 		return nil, errors.New("response is empty")
 	}
 
-	clients[resource["id"].(string)] = nil
+	clients[resource[models.KeyID].(string)] = nil
 
 	return resource, nil
 }
@@ -703,7 +695,7 @@ func updateDescription(ctx context.Context, cli *retryablehttp.Client, cfg map[s
 	var resource map[string]interface{}
 
 	data, err := makeRequest(ctx, cli, http.MethodPost, id, cfg, map[string]string{
-		descriptionKey: description,
+		models.KeyDescription: description,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("make put request: %w", err)
@@ -800,16 +792,16 @@ func makeRequest(ctx context.Context, cli *retryablehttp.Client, method, path st
 	return data, nil
 }
 
-func compareResult(record sdk.Record, resource map[string]interface{}, action string) error {
-	if !reflect.DeepEqual(record.Key, sdk.StructuredData{idKey: resource["id"].(string)}) {
-		return fmt.Errorf("key: got = %v, want %v", string(record.Key.Bytes()), resource["id"].(string))
+func compareResult(record sdk.Record, resource map[string]interface{}, operation sdk.Operation) error {
+	if !reflect.DeepEqual(record.Key, sdk.StructuredData{models.KeyID: resource[models.KeyID].(string)}) {
+		return fmt.Errorf("key: got = %v, want %v", string(record.Key.Bytes()), resource[models.KeyID].(string))
 	}
 
-	if record.Metadata[models.ActionKey] != action {
-		return fmt.Errorf("action: got = %v, want %v", record.Metadata[models.ActionKey], action)
+	if record.Operation != operation {
+		return fmt.Errorf("action: got = %v, want %v", record.Operation, operation)
 	}
 
-	if action == models.DeleteAction {
+	if operation == sdk.OperationDelete {
 		return nil
 	}
 
@@ -818,8 +810,8 @@ func compareResult(record sdk.Record, resource map[string]interface{}, action st
 		return fmt.Errorf("marshal payload error = \"%s\"", err)
 	}
 
-	if !reflect.DeepEqual(record.Payload.Bytes(), payload) {
-		return fmt.Errorf("payload: got = %v, want %v", string(record.Payload.Bytes()), string(payload))
+	if !reflect.DeepEqual(record.Payload.After.Bytes(), payload) {
+		return fmt.Errorf("payload: got = %v, want %v", string(record.Payload.After.Bytes()), string(payload))
 	}
 
 	return nil

@@ -12,24 +12,31 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package position
+package iterator
 
 import (
 	"encoding/json"
 	"fmt"
 	"time"
 
-	"github.com/conduitio-labs/conduit-connector-stripe/models"
 	sdk "github.com/conduitio/conduit-connector-sdk"
 )
 
-// A Position represents a Stripe position.
+// Mode defines an iterator mode.
+type mode string
+
+const (
+	modeSnapshot mode = "snapshot"
+	modeCDC      mode = "cdc"
+)
+
+// Position represents Oracle position.
 type Position struct {
-	// IteratorType is the type of the current iterator.
-	IteratorType models.IteratorType `json:"iterator_type" validate:"required,iterator_type"`
+	// Mode represents current iterator mode.
+	IteratorMode mode `json:"mode"`
 
 	// CreatedAt is the Unix time from which the system should receive events of the resource in the CDC iterator.
-	CreatedAt int64 `json:"created_at" validate:"required"`
+	CreatedAt int64 `json:"created_at"`
 
 	// Cursor is the resource or event identifier for receiving shifted data in the following requests.
 	Cursor string `json:"cursor"`
@@ -38,41 +45,31 @@ type Position struct {
 	Index int `json:"index"`
 }
 
-// ParseSDKPosition unmarshal sdk.Position and returns Position.
-func ParseSDKPosition(rp sdk.Position) (Position, error) {
-	if rp == nil {
-		return Position{
-			IteratorType: models.SnapshotIterator,
+// ParseSDKPosition parses sdk.Position and returns Position.
+func ParseSDKPosition(position sdk.Position) (*Position, error) {
+	if position == nil {
+		return &Position{
+			IteratorMode: modeSnapshot,
 			CreatedAt:    time.Now().Unix(),
 		}, nil
 	}
 
 	pos := Position{}
 
-	err := json.Unmarshal(rp, &pos)
+	err := json.Unmarshal(position, &pos)
 	if err != nil {
-		return Position{}, fmt.Errorf("failed to unmarshal position: %w", err)
+		return nil, fmt.Errorf("unmarshal sdk.Position into Position: %w", err)
 	}
 
-	err = pos.Validate()
-	if err != nil {
-		return Position{}, err
-	}
-
-	return pos, nil
+	return &pos, nil
 }
 
-// FormatSDKPosition marshals Position and returns sdk.Position.
-func (p Position) FormatSDKPosition() (sdk.Position, error) {
-	err := p.Validate()
+// marshalPosition marshals Position and returns sdk.Position or an error.
+func (p Position) marshalPosition() (sdk.Position, error) {
+	positionBytes, err := json.Marshal(p)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("marshal position: %w", err)
 	}
 
-	rp, err := json.Marshal(p)
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal position: %w", err)
-	}
-
-	return rp, nil
+	return positionBytes, nil
 }

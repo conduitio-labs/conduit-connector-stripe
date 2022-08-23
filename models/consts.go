@@ -15,12 +15,19 @@
 package models
 
 const (
-	ActionKey = "action"
+	APIURL                = "https://api.stripe.com/v1"
+	PathFmt               = "/%s"
+	HeaderAuthKey         = "Authorization"
+	HeaderAuthValueFormat = "Bearer %s"
 
-	InsertAction = "insert"
-	UpdateAction = "update"
-	DeleteAction = "delete"
+	// UnexpectedErrorWithStatusCode represents an unexpected error message with status code.
+	UnexpectedErrorWithStatusCode = "unexpected error with status code %d"
 
-	eventKeyCreated = "created"
-	eventKeyDeleted = "deleted"
+	KeyID          = "id"
+	KeyName        = "name"
+	KeyObject      = "object"
+	KeyAmount      = "amount"
+	KeyDescription = "description"
+	KeyCreated     = "created"
+	KeyDeleted     = "deleted"
 )

@@ -24,32 +24,36 @@ import (
 	"net/url"
 	"os"
 	"testing"
-	"time"
 
 	"github.com/conduitio-labs/conduit-connector-stripe/config"
 	"github.com/conduitio-labs/conduit-connector-stripe/models"
 	r "github.com/conduitio-labs/conduit-connector-stripe/models/resources"
-	"github.com/conduitio-labs/conduit-connector-stripe/source"
 	sdk "github.com/conduitio/conduit-connector-sdk"
 	"github.com/google/uuid"
 	"github.com/hashicorp/go-retryablehttp"
 )
 
+const (
+	resourceName = r.CustomerResource
+
+	clientNameFmt        = "client-%s"
+	clientDescriptionFmt = "info about the %s"
+)
+
 var (
-	ctx context.Context
 	cfg map[string]string
 
 	clients = make(map[string]interface{})
 )
 
-// ConfigurableAcceptanceTestDriver driver for the test.
-type ConfigurableAcceptanceTestDriver struct {
+// AcceptanceTestDriver driver for the test.
+type AcceptanceTestDriver struct {
 	sdk.ConfigurableAcceptanceTestDriver
 }
 
 // WriteToSource returns a slice of records that should be prepared in the Stripe so that the source will read them.
-func (d ConfigurableAcceptanceTestDriver) WriteToSource(t *testing.T, records []sdk.Record) []sdk.Record {
-	const id = "id"
+func (d AcceptanceTestDriver) WriteToSource(t *testing.T, records []sdk.Record) []sdk.Record {
+	ctx := context.Background()
 
 	cli := retryablehttp.NewClient()
 	cli.Logger = sdk.Logger(ctx)
@@ -58,7 +62,7 @@ func (d ConfigurableAcceptanceTestDriver) WriteToSource(t *testing.T, records []
 	for i := range records {
 		m := make(map[string]string)
 
-		err := json.Unmarshal(records[i].Payload.Bytes(), &m)
+		err := json.Unmarshal(records[i].Payload.After.Bytes(), &m)
 		if err != nil {
 			t.Error(err)
 		}
@@ -74,45 +78,35 @@ func (d ConfigurableAcceptanceTestDriver) WriteToSource(t *testing.T, records []
 		}
 
 		records[i].Key = sdk.StructuredData{
-			id: resource[id],
+			models.KeyID: resource[models.KeyID],
 		}
 
-		records[i].Payload = sdk.RawData(payload)
+		records[i].Payload.After = sdk.RawData(payload)
 	}
 
 	return records
 }
 
 // GenerateRecord generates a new Stripe record.
-func (d ConfigurableAcceptanceTestDriver) GenerateRecord(t *testing.T) sdk.Record {
-	const (
-		nameValue        = "client-%s"
-		descriptionValue = "info about the %s"
-	)
-
+func (d AcceptanceTestDriver) GenerateRecord(t *testing.T, operation sdk.Operation) sdk.Record {
 	var (
-		name        = fmt.Sprintf(nameValue, uuid.New().String())
-		description = fmt.Sprintf(descriptionValue, name)
+		name        = fmt.Sprintf(clientNameFmt, uuid.New().String())
+		description = fmt.Sprintf(clientDescriptionFmt, name)
 	)
 
 	payload, _ := json.Marshal(map[string]string{
-		"name":        name,
-		"description": description,
+		models.KeyName:        name,
+		models.KeyDescription: description,
 	})
 
 	return sdk.Record{
-		Position:  nil,
-		Metadata:  nil,
-		CreatedAt: time.Now(),
-		Key:       nil,
-		Payload:   sdk.RawData(payload),
+		Operation: operation,
+		Payload:   sdk.Change{After: sdk.RawData(payload)},
 	}
 }
 
 func TestAcceptance(t *testing.T) {
-	const resourceName = r.CustomerResource
-
-	ctx = context.Background()
+	ctx := context.Background()
 
 	secretKey := os.Getenv("STRIPE_SECRET_KEY")
 	if secretKey == "" {
@@ -124,13 +118,9 @@ func TestAcceptance(t *testing.T) {
 		config.ResourceName: resourceName,
 	}
 
-	sdk.AcceptanceTest(t, ConfigurableAcceptanceTestDriver{sdk.ConfigurableAcceptanceTestDriver{
+	sdk.AcceptanceTest(t, AcceptanceTestDriver{sdk.ConfigurableAcceptanceTestDriver{
 		Config: sdk.ConfigurableAcceptanceTestDriverConfig{
-			Connector: sdk.Connector{
-				NewSpecification: Specification,
-				NewSource:        source.NewSource,
-				NewDestination:   nil,
-			},
+			Connector:         Connector,
 			SourceConfig:      cfg,
 			DestinationConfig: nil,
 			BeforeTest: func(t *testing.T) {
@@ -174,7 +164,7 @@ func addResource(ctx context.Context, cli *retryablehttp.Client, cfg, params map
 		return nil, errors.New("response is empty")
 	}
 
-	clients[resource["id"].(string)] = nil
+	clients[resource[models.KeyID].(string)] = nil
 
 	return resource, nil
 }

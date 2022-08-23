@@ -25,7 +25,7 @@ import (
 )
 
 func TestSource_Configure(t *testing.T) {
-	source := Source{}
+	source := new(Source)
 
 	tests := []struct {
 		name        string

@@ -18,10 +18,10 @@ import (
 	"encoding/json"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/conduitio-labs/conduit-connector-stripe/models"
 	"github.com/conduitio-labs/conduit-connector-stripe/source/iterator/mock"
-	"github.com/conduitio-labs/conduit-connector-stripe/source/position"
 	sdk "github.com/conduitio/conduit-connector-sdk"
 	"github.com/golang/mock/gomock"
 )
@@ -33,27 +33,27 @@ func TestSnapshotIterator_Next(t *testing.T) {
 		result := models.ResourceResponse{
 			Data: []map[string]interface{}{
 				{
-					"id":      "cus_LY6gsj",
-					"object":  "customer",
-					"created": float64(1651153903),
+					models.KeyID:      "cus_LY6gsj",
+					models.KeyObject:  "customer",
+					models.KeyCreated: float64(1651153903),
 				},
 				{
-					"id":      "prod_LajCFS",
-					"object":  "product",
-					"created": float64(1651153850),
+					models.KeyID:      "prod_LajCFS",
+					models.KeyObject:  "product",
+					models.KeyCreated: float64(1651153850),
 				},
 			},
 		}
 
-		pos := position.Position{
-			IteratorType: models.SnapshotIterator,
+		pos := Position{
+			IteratorMode: modeSnapshot,
 			CreatedAt:    1652790765,
 		}
 
 		m := mock.NewMockStripe(ctrl)
 		m.EXPECT().GetResource(pos.Cursor).Return(result, nil)
 
-		iter := NewSnapshotIterator(m, &pos)
+		iter := NewSnapshot(m, &pos)
 
 		for i := 0; i < len(result.Data); i++ {
 			record, err := iter.Next()
@@ -66,24 +66,30 @@ func TestSnapshotIterator_Next(t *testing.T) {
 				t.Errorf("marshal payload error = \"%s\"", err.Error())
 			}
 
-			if !reflect.DeepEqual(record.Payload.Bytes(), payload) {
-				t.Errorf("payload: got = %v, want %v", string(record.Payload.Bytes()), string(payload))
+			if !reflect.DeepEqual(record.Payload.After.Bytes(), payload) {
+				t.Errorf("payload: got = %v, want %v", string(record.Payload.After.Bytes()), string(payload))
 			}
 
-			if !reflect.DeepEqual(record.Key, sdk.StructuredData{idKey: result.Data[i]["id"]}) {
-				t.Errorf("key: got = %v, want %v", string(record.Key.Bytes()), result.Data[i]["id"])
+			if !reflect.DeepEqual(record.Key, sdk.StructuredData{models.KeyID: result.Data[i][models.KeyID]}) {
+				t.Errorf("key: got = %v, want %v", string(record.Key.Bytes()), result.Data[i][models.KeyID])
 			}
 
-			if record.CreatedAt.Unix() != int64(result.Data[i]["created"].(float64)) {
-				t.Errorf("created: got = %v, want %v",
-					record.CreatedAt.Unix(), int64(result.Data[i]["created"].(float64)))
+			createdAt, err := record.Metadata.GetCreatedAt()
+			if err != nil {
+				t.Errorf("get created_at error = \"%s\"", err.Error())
 			}
 
-			if record.Metadata[models.ActionKey] != models.InsertAction {
-				t.Errorf("action: got = %v, want %v", record.Metadata[models.ActionKey], models.InsertAction)
+			createdAtWant := time.Unix(int64(result.Data[i]["created"].(float64)), 0)
+
+			if createdAt != createdAtWant {
+				t.Errorf("action: got = %v, want %v", createdAt, createdAtWant)
 			}
 
-			rp, err := pos.FormatSDKPosition()
+			if record.Operation != sdk.OperationSnapshot {
+				t.Errorf("operation: got = %v, want %v", record.Operation, sdk.OperationSnapshot)
+			}
+
+			rp, err := pos.marshalPosition()
 			if err != nil {
 				t.Errorf("format sdk position error = \"%s\"", err.Error())
 			}

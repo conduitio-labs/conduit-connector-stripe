@@ -15,7 +15,6 @@
 package stripe
 
 import (
-	"github.com/conduitio-labs/conduit-connector-stripe/config"
 	sdk "github.com/conduitio/conduit-connector-sdk"
 )
 
@@ -27,22 +26,5 @@ func Specification() sdk.Specification {
 		Description: "The Stripe connector is one of Conduit plugins. It provides a source Stripe connector.",
 		Version:     "v0.1.0",
 		Author:      "Meroxa, Inc.",
-		SourceParams: map[string]sdk.Parameter{
-			config.SecretKey: {
-				Default:     "",
-				Required:    true,
-				Description: "Stripe secret key.",
-			},
-			config.ResourceName: {
-				Default:     "",
-				Required:    true,
-				Description: "Stripe resource name.",
-			},
-			config.BatchSize: {
-				Default:     "",
-				Required:    false,
-				Description: "Number of Stripe objects in the batch.",
-			},
-		},
 	}
 }

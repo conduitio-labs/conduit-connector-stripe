@@ -20,88 +20,104 @@ import (
 	"time"
 
 	"github.com/conduitio-labs/conduit-connector-stripe/models"
-	"github.com/conduitio-labs/conduit-connector-stripe/source/position"
 	sdk "github.com/conduitio/conduit-connector-sdk"
 )
 
-// A CDCIterator represents a struct of cdc iterator.
-type CDCIterator struct {
+// A CDC represents a struct of cdc iterator.
+type CDC struct {
 	stripeSvc Stripe
-	position  *position.Position
+	position  *Position
 
 	// eventData is a slice of the event data from the Stripe response.
 	eventData []models.EventData
 }
 
-// NewCDCIterator initializes cdc iterator.
-func NewCDCIterator(stripeSvc Stripe, pos *position.Position) *CDCIterator {
-	return &CDCIterator{
+// NewCDC initializes cdc iterator.
+func NewCDC(stripeSvc Stripe, pos *Position) *CDC {
+	return &CDC{
 		stripeSvc: stripeSvc,
 		position:  pos,
 	}
 }
 
 // Next returns the next record.
-func (iter *CDCIterator) Next() (sdk.Record, error) {
-	if iter.eventData == nil || iter.position.Index == 0 {
-		if err := iter.getData(); err != nil {
+func (i *CDC) Next() (sdk.Record, error) {
+	if i.eventData == nil || i.position.Index == 0 {
+		if err := i.getData(); err != nil {
 			return sdk.Record{}, fmt.Errorf("get event data: %w", err)
 		}
 
-		if len(iter.eventData) == 0 {
+		if len(i.eventData) == 0 {
 			return sdk.Record{}, sdk.ErrBackoffRetry
 		}
 	}
 
-	index := iter.position.Index
+	metadata := i.buildRecordMetadata()
 
-	iter.position.Index++
+	key := i.buildRecordKey()
+
+	payload, err := i.buildRecordPayload()
+	if err != nil {
+		return sdk.Record{}, fmt.Errorf("build record payload: %w", err)
+	}
+
+	index := i.position.Index
+
+	i.position.Index++
 
 	// update `Cursor` in the position if it is the last element of the resulting slice
-	if len(iter.eventData) == iter.position.Index {
-		iter.position.Index = 0
-		iter.position.Cursor = iter.eventData[len(iter.eventData)-1].ID
+	if len(i.eventData) == i.position.Index {
+		i.position.Index = 0
+		i.position.Cursor = i.eventData[len(i.eventData)-1].ID
 	}
 
-	payload, err := json.Marshal(iter.eventData[index].Data.Object)
+	position, err := i.position.marshalPosition()
 	if err != nil {
-		return sdk.Record{}, fmt.Errorf("marshal payload: %w", err)
+		return sdk.Record{}, fmt.Errorf("build record position: %w", err)
 	}
 
-	rp, err := iter.position.FormatSDKPosition()
-	if err != nil {
-		return sdk.Record{}, fmt.Errorf("format sdk position: %w", err)
+	// there is no default case, because sdk.OperationUpdate is the default operation
+	switch models.EventsOperation[i.eventData[index].Type] {
+	case sdk.OperationCreate:
+		return sdk.Util.Source.NewRecordCreate(
+			position,
+			metadata,
+			key,
+			payload,
+		), nil
+	case sdk.OperationUpdate:
+		return sdk.Util.Source.NewRecordUpdate(
+			position,
+			metadata,
+			key,
+			nil,
+			payload,
+		), nil
+	case sdk.OperationDelete:
+		return sdk.Util.Source.NewRecordDelete(
+			position,
+			metadata,
+			key,
+		), nil
 	}
 
-	output := sdk.Record{
-		Position: rp,
-		Metadata: map[string]string{
-			models.ActionKey: models.EventsAction[iter.eventData[index].Type],
-		},
-		CreatedAt: time.Unix(iter.eventData[index].Created, 0),
-		Key: sdk.StructuredData{
-			idKey: iter.eventData[index].Data.Object[idKey].(string),
-		},
-		Payload: sdk.RawData(payload),
-	}
-
-	return output, nil
+	return sdk.Record{}, nil
 }
 
 // getData calls methods to assign Stripe event data to the iterator.
-func (iter *CDCIterator) getData() error {
-	if iter.position.Cursor == "" {
+func (i *CDC) getData() error {
+	if i.position.Cursor == "" {
 		// because the data is sorted by date of creation in descending order
 		// and the shift `ending_before` is not known, it takes all the data and reverses it
-		return iter.getDataWithStartingAfter()
+		return i.getDataWithStartingAfter()
 	}
 
-	return iter.getDataWithEndingBefore()
+	return i.getDataWithEndingBefore()
 }
 
 // getDataWithStartingAfter makes requests with `starting_after` parameter
 // to receive all the event data, and assigns Stripe event data to the iterator.
-func (iter *CDCIterator) getDataWithStartingAfter() error {
+func (i *CDC) getDataWithStartingAfter() error {
 	var (
 		eventsData models.EventsData
 
@@ -111,7 +127,7 @@ func (iter *CDCIterator) getDataWithStartingAfter() error {
 	// get all the event data
 	for {
 		// receive the data with `starting_after` parameter
-		resp, err := iter.stripeSvc.GetEvent(iter.position.CreatedAt, startingAfter, "")
+		resp, err := i.stripeSvc.GetEvent(i.position.CreatedAt, startingAfter, "")
 		if err != nil {
 			return fmt.Errorf("get list of event objects: %w", err)
 		}
@@ -134,18 +150,18 @@ func (iter *CDCIterator) getDataWithStartingAfter() error {
 		eventsData.Reverse()
 	}
 
-	iter.eventData = eventsData
+	i.eventData = eventsData
 
 	return nil
 }
 
 // getDataWithEndingBefore makes requests with `ending_before` parameter
 // and assigns Stripe event data to the iterator.
-func (iter *CDCIterator) getDataWithEndingBefore() error {
+func (i *CDC) getDataWithEndingBefore() error {
 	var eventsData models.EventsData
 
 	// receive the data with `ending_before` parameter
-	resp, err := iter.stripeSvc.GetEvent(iter.position.CreatedAt, "", iter.position.Cursor)
+	resp, err := i.stripeSvc.GetEvent(i.position.CreatedAt, "", i.position.Cursor)
 	if err != nil {
 		return fmt.Errorf("get list of event objects: %w", err)
 	}
@@ -157,7 +173,33 @@ func (iter *CDCIterator) getDataWithEndingBefore() error {
 		eventsData = append(eventsData, resp.Data...)
 	}
 
-	iter.eventData = eventsData
+	i.eventData = eventsData
 
 	return nil
+}
+
+// buildRecordMetadata returns the metadata for the record.
+func (i *CDC) buildRecordMetadata() map[string]string {
+	metadata := sdk.Metadata{}
+
+	metadata.SetCreatedAt(time.Unix(i.eventData[i.position.Index].Created, 0))
+
+	return metadata
+}
+
+// buildRecordKey returns the key for the record.
+func (i *CDC) buildRecordKey() sdk.Data {
+	return sdk.StructuredData{
+		models.KeyID: i.eventData[i.position.Index].Data.Object[models.KeyID].(string),
+	}
+}
+
+// buildRecordPayload returns the payload for the record.
+func (i *CDC) buildRecordPayload() (sdk.Data, error) {
+	payload, err := json.Marshal(i.eventData[i.position.Index].Data.Object)
+	if err != nil {
+		return nil, fmt.Errorf("marshal payload: %w", err)
+	}
+
+	return sdk.RawData(payload), nil
 }
