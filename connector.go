@@ -22,6 +22,6 @@ import (
 // Connector represents a sdk.Connector of Stripe.
 var Connector = sdk.Connector{
 	NewSpecification: Specification,
-	NewSource:        source.New,
+	NewSource:        source.NewSource,
 	NewDestination:   nil,
 }

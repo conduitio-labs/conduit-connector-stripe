@@ -51,7 +51,7 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 			t.Skip()
 		}
 
-		source := New()
+		source := NewSource()
 
 		err = source.Configure(ctx, cfg)
 		if err != nil {
@@ -93,7 +93,7 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 			t.Skip()
 		}
 
-		source := New()
+		source := NewSource()
 
 		err = source.Configure(ctx, cfg)
 		if err != nil {
@@ -169,7 +169,7 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 			t.Errorf("prepare data: %s", err.Error())
 		}
 
-		source := New()
+		source := NewSource()
 
 		err = source.Configure(ctx, cfg)
 		if err != nil {
@@ -200,7 +200,7 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 			t.Errorf("teardown: %s", err.Error())
 		}
 
-		source = New()
+		source = NewSource()
 
 		err = source.Configure(ctx, cfg)
 		if err != nil {
@@ -285,7 +285,7 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 			t.Errorf("prepare data: %s", err.Error())
 		}
 
-		source := New()
+		source := NewSource()
 
 		err = source.Configure(ctx, cfg)
 		if err != nil {
@@ -316,7 +316,7 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 			t.Errorf("teardown: %s", err.Error())
 		}
 
-		source = New()
+		source = NewSource()
 
 		err = source.Configure(ctx, cfg)
 		if err != nil {
@@ -412,7 +412,7 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 			t.Errorf("prepare data: %s", err.Error())
 		}
 
-		source := New()
+		source := NewSource()
 
 		err = source.Configure(ctx, cfg)
 		if err != nil {
@@ -502,7 +502,7 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 			t.Errorf("teardown: %s", err.Error())
 		}
 
-		source = New()
+		source = NewSource()
 
 		err = source.Configure(ctx, cfg)
 		if err != nil {
@@ -567,7 +567,7 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 			ctx = context.Background()
 		)
 
-		source := New()
+		source := NewSource()
 
 		err := source.Teardown(ctx)
 		if err != nil {
@@ -580,7 +580,7 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 			t.Skip()
 		}
 
-		source = New()
+		source = NewSource()
 
 		err = source.Configure(ctx, cfg)
 		if err != nil {

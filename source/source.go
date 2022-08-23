@@ -37,9 +37,9 @@ type Source struct {
 	httpCli  http.Client
 }
 
-// New initialises a new source.
-func New() sdk.Source {
-	return sdk.SourceWithMiddleware(new(Source), sdk.DefaultSourceMiddleware()...)
+// NewSource initialises a new source.
+func NewSource() sdk.Source {
+	return sdk.SourceWithMiddleware(&Source{}, sdk.DefaultSourceMiddleware()...)
 }
 
 // Parameters returns a map of named Parameters that describe how to configure the Source.
