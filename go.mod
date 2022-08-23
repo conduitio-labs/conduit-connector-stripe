@@ -3,7 +3,7 @@ module github.com/conduitio-labs/conduit-connector-stripe
 go 1.18
 
 require (
-	github.com/conduitio/conduit-connector-sdk v0.2.1-0.20220812170036-f0ac2714fe94
+	github.com/conduitio/conduit-connector-sdk v0.2.1-0.20220823112121-47067cda967a
 	github.com/go-playground/validator/v10 v10.11.0
 	github.com/golang/mock v1.6.0
 	github.com/google/uuid v1.3.0
