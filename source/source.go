@@ -58,7 +58,7 @@ func (s *Source) Parameters() map[string]sdk.Parameter {
 		config.Snapshot: {
 			Default:     "true",
 			Required:    false,
-			Description: "Whether the connector will take a snapshot of the entire table before starting cdc mode.",
+			Description: "Whether the connector will take a snapshot of the entire resource before starting cdc mode.",
 		},
 		config.BatchSize: {
 			Default:     "",

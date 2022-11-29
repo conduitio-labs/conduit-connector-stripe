@@ -21,8 +21,6 @@ import (
 	"github.com/conduitio-labs/conduit-connector-stripe/validator"
 )
 
-type SnapshotMode string
-
 const (
 	// SecretKey is the configuration name for Stripe secret key.
 	SecretKey = "secretKey"
