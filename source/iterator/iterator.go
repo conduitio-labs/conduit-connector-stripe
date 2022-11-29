@@ -35,10 +35,14 @@ type Iterator struct {
 }
 
 // New initializes an iterator.
-func New(stripeSvc Stripe, pos *Position) *Iterator {
+func New(stripeSvc Stripe, pos *Position, snapshot bool) *Iterator {
 	iterator := &Iterator{
 		position: pos,
 		cdc:      NewCDC(stripeSvc, pos),
+	}
+
+	if !snapshot {
+		pos.IteratorMode = modeCDC
 	}
 
 	if pos.IteratorMode == modeSnapshot {
