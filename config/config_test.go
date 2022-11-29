@@ -15,6 +15,7 @@
 package config
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 
@@ -39,6 +40,7 @@ func TestParse(t *testing.T) {
 			want: Config{
 				SecretKey:    "sk_51JB",
 				ResourceName: "subscription",
+				Snapshot:     SnapshotDefault,
 				BatchSize:    BatchSizeDefault,
 			},
 		},
@@ -47,11 +49,13 @@ func TestParse(t *testing.T) {
 			in: map[string]string{
 				SecretKey:    "sk_51JB",
 				ResourceName: "subscription",
+				Snapshot:     "false",
 				BatchSize:    "20",
 			},
 			want: Config{
 				SecretKey:    "sk_51JB",
 				ResourceName: "subscription",
+				Snapshot:     false,
 				BatchSize:    20,
 			},
 		},
@@ -126,6 +130,16 @@ func TestParse(t *testing.T) {
 			},
 			wantErr:     true,
 			expectedErr: validator.OutOfRangeErr(BatchSize).Error(),
+		},
+		{
+			name: "invalid snapshot mode",
+			in: map[string]string{
+				SecretKey:    "sk_51JB",
+				ResourceName: "subscription",
+				Snapshot:     "test",
+			},
+			wantErr:     true,
+			expectedErr: fmt.Sprintf(`parse %q: strconv.ParseBool: parsing "test": invalid syntax`, Snapshot),
 		},
 	}
 

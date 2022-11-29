@@ -55,6 +55,11 @@ func (s *Source) Parameters() map[string]sdk.Parameter {
 			Required:    true,
 			Description: "Stripe resource name.",
 		},
+		config.Snapshot: {
+			Default:     "true",
+			Required:    false,
+			Description: "Whether the connector will take a snapshot of the entire table before starting cdc mode.",
+		},
 		config.BatchSize: {
 			Default:     "",
 			Required:    false,
@@ -81,6 +86,10 @@ func (s *Source) Open(ctx context.Context, position sdk.Position) error {
 	}
 
 	s.httpCli = http.NewClient(ctx)
+
+	if !s.cfg.Snapshot {
+		pos.IteratorMode = "cdc"
+	}
 
 	s.iterator = iterator.New(stripe.New(s.cfg, s.httpCli), pos)
 

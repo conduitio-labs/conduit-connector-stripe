@@ -15,6 +15,7 @@ The config passed to `Configure` can contain the following fields:
 |----------------|----------------------------------------------------------------------------------------------------------------------|----------|----------------------------|
 | `secretKey`    | Stripe [secret key](https://dashboard.stripe.com/apikeys).                                                           | yes      | sk_51Kr0QrJit566F2YtZAwMlh |
 | `resourceName` | The name of Stripe resource. A list of supported resources can be found [here](models/resources/README.md).          | yes      | plan                       |
+| `snapshot`     | The field determines whether the connector will take a snapshot of the entire table before starting cdc mode.        | no       | false                      |
 | `batchSize`    | A batch size is the number of objects to be returned. Batch size can range between 1 and 100, and the default is 10. | no       | 20                         |
 
 ### How to build it

@@ -25,6 +25,7 @@ import (
 	"os"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/conduitio-labs/conduit-connector-stripe/config"
 	"github.com/conduitio-labs/conduit-connector-stripe/models"
@@ -51,6 +52,17 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 			t.Skip()
 		}
 
+		cli := retryablehttp.NewClient()
+		cli.Logger = sdk.Logger(ctx)
+		defer cli.HTTPClient.CloseIdleConnections()
+
+		err = isEmpty(ctx, cli, cfg)
+		if err != nil {
+			t.Errorf("check is empty: %s", err.Error())
+
+			return
+		}
+
 		source := NewSource()
 
 		err = source.Configure(ctx, cfg)
@@ -65,7 +77,7 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 
 		_, err = source.Read(ctx)
 		if err != sdk.ErrBackoffRetry {
-			t.Errorf("read: %s", err.Error())
+			t.Errorf("read: %s", err)
 		}
 
 		err = source.Teardown(ctx)
@@ -227,7 +239,7 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 		// read empty source
 		_, err = source.Read(ctx)
 		if err != nil && err != sdk.ErrBackoffRetry {
-			t.Errorf("read: %s", err.Error())
+			t.Errorf("read: %s", err)
 		}
 
 		err = source.Teardown(ctx)
@@ -329,12 +341,9 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 		}
 
 		// add resource
-		resource, err := addResource(ctx, cli, cfg, map[string]string{
-			models.KeyName:        "inserted",
-			models.KeyDescription: "inserted description",
-		})
+		resources, err = generateResources(ctx, cli, cfg, 1)
 		if err != nil {
-			t.Errorf("add resource: %s", err.Error())
+			t.Errorf("prepare data: %s", err.Error())
 		}
 
 		record, err = source.Read(ctx)
@@ -342,7 +351,7 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 			t.Errorf("read: %s", err.Error())
 		}
 
-		err = compareResult(record, resource, sdk.OperationCreate)
+		err = compareResult(record, resources[0], sdk.OperationCreate)
 		if err != nil {
 			t.Errorf(err.Error())
 		}
@@ -350,7 +359,7 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 		// read empty source
 		_, err = source.Read(ctx)
 		if err != nil && err != sdk.ErrBackoffRetry {
-			t.Errorf("read: %s", err.Error())
+			t.Errorf("read: %s", err)
 		}
 
 		err = source.Teardown(ctx)
@@ -443,16 +452,13 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 		// read empty source
 		_, err = source.Read(ctx)
 		if err != nil && err != sdk.ErrBackoffRetry {
-			t.Errorf("read: %s", err.Error())
+			t.Errorf("read: %s", err)
 		}
 
 		// add resource
-		addedResource, err := addResource(ctx, cli, cfg, map[string]string{
-			models.KeyName:        "inserted",
-			models.KeyDescription: "inserted description",
-		})
+		resources, err = generateResources(ctx, cli, cfg, 1)
 		if err != nil {
-			t.Errorf("add resource: %s", err.Error())
+			t.Errorf("prepare data: %s", err.Error())
 		}
 
 		record, err = source.Read(ctx)
@@ -460,7 +466,7 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 			t.Errorf("read: %s", err.Error())
 		}
 
-		err = compareResult(record, addedResource, sdk.OperationCreate)
+		err = compareResult(record, resources[0], sdk.OperationCreate)
 		if err != nil {
 			t.Errorf(err.Error())
 		}
@@ -553,7 +559,7 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 		// read empty source
 		_, err = source.Read(ctx)
 		if err != nil && err != sdk.ErrBackoffRetry {
-			t.Errorf("read: %s", err.Error())
+			t.Errorf("read: %s", err)
 		}
 
 		err = source.Teardown(ctx)
@@ -585,6 +591,90 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 		err = source.Configure(ctx, cfg)
 		if err != nil {
 			t.Errorf("configure: %s", err.Error())
+		}
+
+		err = source.Teardown(ctx)
+		if err != nil {
+			t.Errorf("teardown: %s", err.Error())
+		}
+	})
+
+	t.Run("snapshot mode", func(t *testing.T) {
+		var (
+			ctx = context.Background()
+
+			record sdk.Record
+		)
+
+		defer goleak.VerifyNone(t)
+
+		cfg, err := prepareDefaultConfig()
+		if err != nil {
+			t.Log(err)
+			t.Skip()
+		}
+
+		// update snapshot field in the config
+		cfg[config.Snapshot] = "false"
+
+		cli := retryablehttp.NewClient()
+		cli.Logger = sdk.Logger(ctx)
+		defer cli.HTTPClient.CloseIdleConnections()
+
+		err = isEmpty(ctx, cli, cfg)
+		if err != nil {
+			t.Errorf("check is empty: %s", err.Error())
+
+			return
+		}
+
+		defer func(ctx context.Context, cfg map[string]string) {
+			err = clearResources(ctx, cli, cfg)
+			if err != nil {
+				t.Errorf("clear resources: %s", err.Error())
+			}
+		}(ctx, cfg)
+
+		_, err = generateResources(ctx, cli, cfg, 1)
+		if err != nil {
+			t.Errorf("prepare data: %s", err.Error())
+		}
+
+		source := NewSource()
+
+		err = source.Configure(ctx, cfg)
+		if err != nil {
+			t.Errorf("configure: %s", err.Error())
+		}
+
+		err = source.Open(ctx, nil)
+		if err != nil {
+			t.Errorf("open: %s", err.Error())
+		}
+
+		_, err = source.Read(ctx)
+		if err != sdk.ErrBackoffRetry {
+			t.Errorf("read: %s", err)
+		}
+
+		resources, err := generateResources(ctx, cli, cfg, 1)
+		if err != nil {
+			t.Errorf("prepare data: %s", err.Error())
+		}
+
+		record, err = source.Read(ctx)
+		if err != nil {
+			t.Errorf("read: %s", err)
+		}
+
+		err = compareResult(record, resources[0], sdk.OperationCreate)
+		if err != nil {
+			t.Errorf(err.Error())
+		}
+
+		_, err = source.Read(ctx)
+		if err != sdk.ErrBackoffRetry {
+			t.Errorf("read: %s", err)
 		}
 
 		err = source.Teardown(ctx)
@@ -663,6 +753,8 @@ func generateResources(ctx context.Context, cli *retryablehttp.Client, cfg map[s
 
 		resources = append(resources, resource)
 	}
+
+	time.Sleep(5 * time.Second)
 
 	return resources, nil
 }
