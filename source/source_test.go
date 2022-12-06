@@ -44,6 +44,7 @@ func TestSource_Configure(t *testing.T) {
 				cfg: config.Config{
 					SecretKey:    "sk_51JB",
 					ResourceName: "subscription",
+					Snapshot:     config.SnapshotDefault,
 					BatchSize:    config.BatchSizeDefault,
 				},
 			},
