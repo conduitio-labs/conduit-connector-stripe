@@ -1,3 +1,9 @@
+**Regression Test Run 8/30/2022 - Stripe source**
+
+**branch:** https://github.com/conduitio-labs/conduit-connector-stripe/tree/main
+
+**commit:** 5777ba3b16bad4f8e66bf28edfef75946860c5c8
+
 | ID       | Title                                                                                                                                                                                                                                                       | Status | Comment |
 | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------- |
 | T2831694 | Data from two different Stripe source connectors are transferred to the File Destination connector                                                                                                                                                          | Passed |         |
