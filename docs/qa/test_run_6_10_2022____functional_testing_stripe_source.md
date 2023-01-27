@@ -1,3 +1,9 @@
+**Test Run 6/10/2022 - Functional testing Stripe source connector**
+
+**branch:** https://github.com/conduitio-labs/conduit-connector-stripe/tree/main
+
+**commit** 961642afc2ee4105a8a19bb176f42e505d93e817
+
 | ID       | Title                                                                                                                                                                                                                                                       | Status | Comment |
 | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------- |
 | T2406676 | The user can't create the Stripe source connector without the "type" key -> the system is returned an error                                                                                                                                                 | Passed |         |
@@ -16,7 +22,7 @@
 | T2406689 | Check that the Stripe source connector can't create without the "resourceName" key -> the system is returned an error "\\"resourceName\\" value must be set""                                                                                               | Passed |         |
 | T2406690 | The user can't create Stripe source connector with empty the "resource" key -> the system is returned an error "\\"resourceName\\" value must be set""                                                                                                      | Passed |         |
 | T2406691 | The user can't create the Stripe source connector with an invalid value in the "resource" key -> the system is returned an error "\\"resourceName\\" wrong resource name"                                                                                   | Passed |         |
-| T2406692 | The user can create the Stripe source connector with a valid the "resourceName" key = map[string]string{<br>"plan": "plans",<br>"product": "products",<br>"subscription": "subscriptions",<br>}                                                          | Passed |         |
+| T2406692 | The user can create the Stripe source connector with a valid the "resourceName" key = map[string]string{<br> "plan": "plans",<br> "product": "products",<br> "subscription": "subscriptions",<br>}                                                          | Passed |         |
 | T2406694 | Check that the "batchSize" key isn't necessary and the user can create the Stripe source connector without this key (By the number of objects returned by the query to Stripe is 50)                                                                        | Passed |         |
 | T2406695 | The user can't create the Stripe source connector with an invalid value in the "batchSize" key (for example: enter text) -> the system is returned an error "%q config value must be an integer"                                                            | Passed |         |
 | T2406696 | ["batchSize" key validation] The user can't create the Stripe source connector with a value more than 100 the number of objects returned by the query to Stripe -> the system is returned an error                                                          | Passed |         |
