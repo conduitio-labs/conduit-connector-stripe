@@ -1,3 +1,9 @@
+**Test Run 12/2/2022 - Testing Stripe source connector ability working in modes**
+
+**branch:** https://github.com/conduitio-labs/conduit-connector-stripe/tree/snapshot-mode
+
+**commit** 70f4dd4a465a5c91dd5ccc0def6270d8dca2820b
+
 | ID       | Title                                                                                                                                                                                                                                             | Status | Comment |
 | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------- |
 | T3205198 | \------- snapshot config                                                                                                                                                                                                                          | Passed |         |
