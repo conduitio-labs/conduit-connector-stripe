@@ -88,7 +88,7 @@ func (d AcceptanceTestDriver) WriteToSource(t *testing.T, records []sdk.Record) 
 }
 
 // GenerateRecord generates a new Stripe record.
-func (d AcceptanceTestDriver) GenerateRecord(t *testing.T, operation sdk.Operation) sdk.Record {
+func (d AcceptanceTestDriver) GenerateRecord(_ *testing.T, operation sdk.Operation) sdk.Record {
 	var (
 		name        = fmt.Sprintf(clientNameFmt, uuid.New().String())
 		description = fmt.Sprintf(clientDescriptionFmt, name)
