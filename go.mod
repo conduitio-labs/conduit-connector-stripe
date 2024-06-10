@@ -9,7 +9,7 @@ require (
 	github.com/go-playground/validator/v10 v10.21.0
 	github.com/golang/mock v1.6.0
 	github.com/golangci/golangci-lint v1.55.2
-	github.com/google/uuid v1.4.0
+	github.com/google/uuid v1.6.0
 	github.com/hashicorp/go-retryablehttp v0.7.7
 	go.uber.org/goleak v1.3.0
 	go.uber.org/multierr v1.11.0
