@@ -203,7 +203,7 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 
 			err = compareResult(record, resources[i], sdk.OperationSnapshot)
 			if err != nil {
-				t.Errorf(err.Error())
+				t.Error(err.Error())
 			}
 		}
 
@@ -232,7 +232,7 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 
 			err = compareResult(record, resources[i], sdk.OperationSnapshot)
 			if err != nil {
-				t.Errorf(err.Error())
+				t.Error(err.Error())
 			}
 		}
 
@@ -319,7 +319,7 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 
 			err = compareResult(record, resources[i], sdk.OperationSnapshot)
 			if err != nil {
-				t.Errorf(err.Error())
+				t.Error(err.Error())
 			}
 		}
 
@@ -353,7 +353,7 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 
 		err = compareResult(record, resources[0], sdk.OperationCreate)
 		if err != nil {
-			t.Errorf(err.Error())
+			t.Error(err.Error())
 		}
 
 		// read empty source
@@ -441,7 +441,7 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 
 			err = compareResult(record, resources[i], sdk.OperationSnapshot)
 			if err != nil {
-				t.Errorf(err.Error())
+				t.Error(err.Error())
 			}
 		}
 
@@ -468,7 +468,7 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 
 		err = compareResult(record, resources[0], sdk.OperationCreate)
 		if err != nil {
-			t.Errorf(err.Error())
+			t.Error(err.Error())
 		}
 
 		// update resource
@@ -484,7 +484,7 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 
 		err = compareResult(record, updatedResource1, sdk.OperationUpdate)
 		if err != nil {
-			t.Errorf(err.Error())
+			t.Error(err.Error())
 		}
 
 		// delete resource
@@ -500,7 +500,7 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 
 		err = compareResult(record, deletedResource, sdk.OperationDelete)
 		if err != nil {
-			t.Errorf(err.Error())
+			t.Error(err.Error())
 		}
 
 		err = source.Teardown(ctx)
@@ -533,7 +533,7 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 
 		err = compareResult(record, updatedResource2, sdk.OperationUpdate)
 		if err != nil {
-			t.Errorf(err.Error())
+			t.Error(err.Error())
 		}
 
 		// generate new clients for more than one page
@@ -552,7 +552,7 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 
 			err = compareResult(record, resources[i], sdk.OperationCreate)
 			if err != nil {
-				t.Errorf(err.Error())
+				t.Error(err.Error())
 			}
 		}
 
@@ -669,7 +669,7 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 
 		err = compareResult(record, resources[0], sdk.OperationCreate)
 		if err != nil {
-			t.Errorf(err.Error())
+			t.Error(err.Error())
 		}
 
 		_, err = source.Read(ctx)
