@@ -18,7 +18,7 @@ import (
 	"fmt"
 
 	"github.com/conduitio-labs/conduit-connector-stripe/models"
-	sdk "github.com/conduitio/conduit-connector-sdk"
+	"github.com/conduitio/conduit-commons/opencdc"
 )
 
 // A Stripe defines the interface of methods.
@@ -53,12 +53,12 @@ func New(stripeSvc Stripe, pos *Position, snapshot bool) *Iterator {
 }
 
 // Next returns the next record.
-func (iter *Iterator) Next() (sdk.Record, error) {
+func (iter *Iterator) Next() (opencdc.Record, error) {
 	switch iter.position.IteratorMode {
 	case modeSnapshot:
 		record, err := iter.snapshot.Next()
 		if err != nil {
-			return sdk.Record{}, err
+			return opencdc.Record{}, err
 		}
 
 		if record.Key != nil {
@@ -70,5 +70,5 @@ func (iter *Iterator) Next() (sdk.Record, error) {
 		return iter.cdc.Next()
 	}
 
-	return sdk.Record{}, fmt.Errorf("unexpected iterator mode: %s", iter.position.IteratorMode)
+	return opencdc.Record{}, fmt.Errorf("unexpected iterator mode: %s", iter.position.IteratorMode)
 }

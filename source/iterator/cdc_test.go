@@ -24,7 +24,7 @@ import (
 	"github.com/conduitio-labs/conduit-connector-stripe/models"
 	"github.com/conduitio-labs/conduit-connector-stripe/models/resources"
 	"github.com/conduitio-labs/conduit-connector-stripe/source/iterator/mock"
-	sdk "github.com/conduitio/conduit-connector-sdk"
+	"github.com/conduitio/conduit-commons/opencdc"
 	"github.com/golang/mock/gomock"
 )
 
@@ -240,8 +240,8 @@ func TestCDCIterator_Next(t *testing.T) {
 	})
 }
 
-func compareResult(record sdk.Record, position sdk.Position, data models.EventData) error {
-	if !reflect.DeepEqual(record.Key, sdk.StructuredData{models.KeyID: data.Data.Object[models.KeyID]}) {
+func compareResult(record opencdc.Record, position opencdc.Position, data models.EventData) error {
+	if !reflect.DeepEqual(record.Key, opencdc.StructuredData{models.KeyID: data.Data.Object[models.KeyID]}) {
 		return fmt.Errorf("key: got = %v, want %v", string(record.Key.Bytes()), data.Data.Object[models.KeyID])
 	}
 
@@ -263,7 +263,7 @@ func compareResult(record sdk.Record, position sdk.Position, data models.EventDa
 		return fmt.Errorf("position: got = %v, want %v", string(record.Position), string(position))
 	}
 
-	if operation == sdk.OperationDelete {
+	if operation == opencdc.OperationDelete {
 		return nil
 	}
 

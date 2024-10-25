@@ -22,7 +22,7 @@ import (
 
 	"github.com/conduitio-labs/conduit-connector-stripe/models"
 	"github.com/conduitio-labs/conduit-connector-stripe/source/iterator/mock"
-	sdk "github.com/conduitio/conduit-connector-sdk"
+	"github.com/conduitio/conduit-commons/opencdc"
 	"github.com/golang/mock/gomock"
 )
 
@@ -70,7 +70,7 @@ func TestSnapshotIterator_Next(t *testing.T) {
 				t.Errorf("payload: got = %v, want %v", string(record.Payload.After.Bytes()), string(payload))
 			}
 
-			if !reflect.DeepEqual(record.Key, sdk.StructuredData{models.KeyID: result.Data[i][models.KeyID]}) {
+			if !reflect.DeepEqual(record.Key, opencdc.StructuredData{models.KeyID: result.Data[i][models.KeyID]}) {
 				t.Errorf("key: got = %v, want %v", string(record.Key.Bytes()), result.Data[i][models.KeyID])
 			}
 
@@ -85,8 +85,8 @@ func TestSnapshotIterator_Next(t *testing.T) {
 				t.Errorf("action: got = %v, want %v", createdAt, createdAtWant)
 			}
 
-			if record.Operation != sdk.OperationSnapshot {
-				t.Errorf("operation: got = %v, want %v", record.Operation, sdk.OperationSnapshot)
+			if record.Operation != opencdc.OperationSnapshot {
+				t.Errorf("operation: got = %v, want %v", record.Operation, opencdc.OperationSnapshot)
 			}
 
 			rp, err := pos.marshalPosition()
