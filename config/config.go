@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//go:generate paramgen -output=paramgen.go Config
+//go:generate paramgen Config
 
 package config
 

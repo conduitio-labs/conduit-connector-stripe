@@ -1,4 +1,4 @@
-name: build
+name: test
 
 on:
   push:
@@ -6,9 +6,10 @@ on:
   pull_request:
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
     steps:
+      - name: Check out the code
       - uses: actions/checkout@v4
 
       - name: Set up Go
@@ -16,7 +17,7 @@ jobs:
         with:
           go-version-file: 'go.mod'
 
-      - name: Test
+      - name: Run tests
         env:
           secretKey: ${{ secrets.STRIPE_SECRET_KEY }}
         run: make test GOTEST_FLAGS="-v -count=1"
