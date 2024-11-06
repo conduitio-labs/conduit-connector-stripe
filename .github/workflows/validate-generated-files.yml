@@ -17,9 +17,6 @@ jobs:
         with:
           go-version-file: 'go.mod'
 
-      - name: Install mockgen
-        run: go install github.com/golang/mock/mockgen@latest
-
       - name: Check generated files
         run: |
           export PATH=$PATH:$(go env GOPATH)/bin
