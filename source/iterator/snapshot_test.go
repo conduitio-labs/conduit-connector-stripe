@@ -23,7 +23,7 @@ import (
 	"github.com/conduitio-labs/conduit-connector-stripe/models"
 	"github.com/conduitio-labs/conduit-connector-stripe/source/iterator/mock"
 	"github.com/conduitio/conduit-commons/opencdc"
-	"github.com/golang/mock/gomock"
+	"go.uber.org/mock/gomock"
 )
 
 func TestSnapshotIterator_Next(t *testing.T) {

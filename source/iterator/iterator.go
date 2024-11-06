@@ -21,6 +21,8 @@ import (
 	"github.com/conduitio/conduit-commons/opencdc"
 )
 
+//go:generate mockgen -package mock -source iterator.go -destination ./mock/iterator.go
+
 // A Stripe defines the interface of methods.
 type Stripe interface {
 	GetResource(string) (models.ResourceResponse, error)

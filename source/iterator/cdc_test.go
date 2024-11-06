@@ -25,7 +25,7 @@ import (
 	"github.com/conduitio-labs/conduit-connector-stripe/models/resources"
 	"github.com/conduitio-labs/conduit-connector-stripe/source/iterator/mock"
 	"github.com/conduitio/conduit-commons/opencdc"
-	"github.com/golang/mock/gomock"
+	"go.uber.org/mock/gomock"
 )
 
 const (

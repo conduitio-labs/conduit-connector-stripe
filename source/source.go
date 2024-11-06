@@ -27,6 +27,8 @@ import (
 	sdk "github.com/conduitio/conduit-connector-sdk"
 )
 
+//go:generate mockgen -package mock -source source.go -destination ./mock/source.go
+
 // An Iterator defines the interface to iterator methods.
 type Iterator interface {
 	Next() (opencdc.Record, error)

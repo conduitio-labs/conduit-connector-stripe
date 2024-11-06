@@ -21,11 +21,6 @@ dep:
 	go mod download
 	go mod tidy
 
-.PHONY: mockgen
-mockgen:
-	mockgen -package mock -source source/source.go -destination source/mock/source.go
-	mockgen -package mock -source source/iterator/iterator.go -destination source/iterator/mock/iterator.go
-
 .PHONY: fmt
 fmt:
 	gofumpt -l -w .
