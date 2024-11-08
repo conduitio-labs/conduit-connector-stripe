@@ -20,8 +20,6 @@ import (
 	"testing"
 
 	"github.com/conduitio-labs/conduit-connector-stripe/config"
-	"github.com/conduitio-labs/conduit-connector-stripe/validator"
-	"go.uber.org/multierr"
 )
 
 func TestSource_Configure(t *testing.T) {
@@ -37,27 +35,26 @@ func TestSource_Configure(t *testing.T) {
 		{
 			name: "valid config",
 			in: map[string]string{
-				config.SecretKey:    "sk_51JB",
-				config.ResourceName: "subscription",
+				config.ConfigSecretKey:    "sk_51JB",
+				config.ConfigResourceName: "subscription",
 			},
 			want: Source{
 				cfg: config.Config{
 					SecretKey:    "sk_51JB",
 					ResourceName: "subscription",
-					Snapshot:     config.SnapshotDefault,
-					BatchSize:    config.BatchSizeDefault,
+					Snapshot:     true,
+					BatchSize:    10,
 				},
 			},
 		},
 		{
-			name: "no secret key and resource name",
+			name: "no secret key",
 			in: map[string]string{
-				config.SecretKey:    "",
-				config.ResourceName: "",
+				config.ConfigSecretKey:    "",
+				config.ConfigResourceName: "subscription",
 			},
-			wantErr: true,
-			expectedErr: multierr.Combine(validator.RequiredErr(config.SecretKey),
-				validator.RequiredErr(config.ResourceName)).Error(),
+			wantErr:     true,
+			expectedErr: `config invalid: error validating "secretKey": required parameter is not provided`,
 		},
 	}
 

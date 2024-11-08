@@ -12,70 +12,37 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//go:generate paramgen Config
+
 package config
 
 import (
 	"fmt"
-	"strconv"
 
-	"github.com/conduitio-labs/conduit-connector-stripe/validator"
+	"github.com/conduitio-labs/conduit-connector-stripe/models"
 )
 
-const (
-	// SecretKey is the configuration name for Stripe secret key.
-	SecretKey = "secretKey"
-	// ResourceName is the configuration name for Stripe resource.
-	ResourceName = "resourceName"
-	// Snapshot is the configuration name for the Snapshot field.
-	Snapshot = "snapshot"
-	// BatchSize is the configuration name for the number of objects in the batch returned from Stripe.
-	BatchSize = "batchSize"
-
-	// BatchSizeDefault is the default value of the batch size.
-	BatchSizeDefault = 10
-	// SnapshotDefault is a default value for the Snapshot field.
-	SnapshotDefault = true
-)
-
-// A Config represents the configuration needed for Stripe.
 type Config struct {
-	SecretKey    string `validate:"required"`
-	ResourceName string `validate:"required,resource_name"`
-	BatchSize    int    `validate:"gte=1,lte=100,omitempty"`
-	Snapshot     bool
+	// SecretKey is the configuration name for Stripe secret key.
+	SecretKey string `json:"secretKey" validate:"required"`
+	// ResourceName is the configuration name for Stripe resource.
+	ResourceName string `json:"resourceName" validate:"required"`
+	// BatchSize is the configuration name for the number of objects in the batch returned from Stripe.
+	BatchSize int `json:"batchSize" default:"10" validate:"gt=0,lt=100001"`
+	// Snapshot is the configuration name for the Snapshot field.
+	Snapshot bool `json:"snapshot" default:"true"`
 }
 
-// Parse parses Stripe configuration into a Config struct.
-func Parse(cfg map[string]string) (Config, error) {
-	config := Config{
-		SecretKey:    cfg[SecretKey],
-		ResourceName: cfg[ResourceName],
-		Snapshot:     SnapshotDefault,
-		BatchSize:    BatchSizeDefault,
+// Validate executes manual validations beyond what is defined in struct tags.
+func (c *Config) Validate() error {
+	// c.SecretKey has required validation handled in struct tag
+
+	// c.ResourceName required validation is handled in stuct tag
+	// handling "resource_name" validation
+	_, ok := models.ResourcesMap[c.ResourceName]
+	if !ok {
+		return fmt.Errorf("%q wrong resource name", c.ResourceName)
 	}
 
-	if cfg[Snapshot] != "" {
-		snapshot, err := strconv.ParseBool(cfg[Snapshot])
-		if err != nil {
-			return Config{}, fmt.Errorf("parse %q: %w", Snapshot, err)
-		}
-
-		config.Snapshot = snapshot
-	}
-
-	if cfg[BatchSize] != "" {
-		batchSize, err := strconv.Atoi(cfg[BatchSize])
-		if err != nil {
-			return Config{}, validator.IntegerTypeConfigErr(BatchSize)
-		}
-
-		config.BatchSize = batchSize
-	}
-
-	err := config.Validate()
-	if err != nil {
-		return Config{}, err
-	}
-
-	return config, nil
+	return nil
 }

@@ -16,154 +16,58 @@ package config
 
 import (
 	"fmt"
-	"reflect"
 	"testing"
 
-	"github.com/conduitio-labs/conduit-connector-stripe/validator"
-	"go.uber.org/multierr"
+	"github.com/conduitio-labs/conduit-connector-stripe/models/resources"
+	"github.com/matryer/is"
 )
 
-func TestParse(t *testing.T) {
+const (
+	testSecretKey = "sk_test_123456789"
+)
+
+func TestValidateConfig(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
-		name        string
-		in          map[string]string
-		want        Config
-		wantErr     bool
-		expectedErr string
+		name    string
+		in      *Config
+		wantErr error
 	}{
 		{
-			name: "valid config",
-			in: map[string]string{
-				SecretKey:    "sk_51JB",
-				ResourceName: "subscription",
+			name: "success_valid_config",
+			in: &Config{
+				SecretKey:    testSecretKey,
+				ResourceName: resources.CreditNoteResource,
+				BatchSize:    10,
+				Snapshot:     true,
 			},
-			want: Config{
-				SecretKey:    "sk_51JB",
-				ResourceName: "subscription",
-				Snapshot:     SnapshotDefault,
-				BatchSize:    BatchSizeDefault,
-			},
+			wantErr: nil,
 		},
 		{
-			name: "valid config",
-			in: map[string]string{
-				SecretKey:    "sk_51JB",
-				ResourceName: "subscription",
-				Snapshot:     "false",
-				BatchSize:    "20",
+			name: "failure_invalid_resource_name",
+			in: &Config{
+				SecretKey:    testSecretKey,
+				ResourceName: "invalid_resource",
+				BatchSize:    10,
+				Snapshot:     true,
 			},
-			want: Config{
-				SecretKey:    "sk_51JB",
-				ResourceName: "subscription",
-				Snapshot:     false,
-				BatchSize:    20,
-			},
-		},
-		{
-			name: "secret key is empty",
-			in: map[string]string{
-				ResourceName: "subscription",
-			},
-			wantErr:     true,
-			expectedErr: validator.RequiredErr(SecretKey).Error(),
-		},
-		{
-			name: "resource name is empty",
-			in: map[string]string{
-				SecretKey: "sk_51JB",
-			},
-			wantErr:     true,
-			expectedErr: validator.RequiredErr(ResourceName).Error(),
-		},
-		{
-			name:    "secret key and resource name are empty",
-			in:      map[string]string{},
-			wantErr: true,
-			expectedErr: multierr.Combine(validator.RequiredErr(SecretKey),
-				validator.RequiredErr(ResourceName)).Error(),
-		},
-		{
-			name: "wrong resource name",
-			in: map[string]string{
-				SecretKey:    "sk_51JB",
-				ResourceName: "test",
-			},
-			wantErr:     true,
-			expectedErr: validator.WrongResourceNameErr(ResourceName).Error(),
-		},
-		{
-			name: "invalid batch size",
-			in: map[string]string{
-				SecretKey:    "sk_51JB",
-				ResourceName: "subscription",
-				BatchSize:    "invalid",
-			},
-			wantErr:     true,
-			expectedErr: validator.IntegerTypeConfigErr(BatchSize).Error(),
-		},
-		{
-			name: "batch size is greater than or equal to 100",
-			in: map[string]string{
-				SecretKey:    "sk_51JB",
-				ResourceName: "subscription",
-				BatchSize:    "110",
-			},
-			wantErr:     true,
-			expectedErr: validator.OutOfRangeErr(BatchSize).Error(),
-		},
-		{
-			name: "batch size less than or equal to 1",
-			in: map[string]string{
-				SecretKey:    "sk_51JB",
-				ResourceName: "subscription",
-				BatchSize:    "0",
-			},
-			wantErr:     true,
-			expectedErr: validator.OutOfRangeErr(BatchSize).Error(),
-		},
-		{
-			name: "batch size is negative",
-			in: map[string]string{
-				SecretKey:    "sk_51JB",
-				ResourceName: "subscription",
-				BatchSize:    "-1",
-			},
-			wantErr:     true,
-			expectedErr: validator.OutOfRangeErr(BatchSize).Error(),
-		},
-		{
-			name: "invalid snapshot mode",
-			in: map[string]string{
-				SecretKey:    "sk_51JB",
-				ResourceName: "subscription",
-				Snapshot:     "test",
-			},
-			wantErr:     true,
-			expectedErr: fmt.Sprintf(`parse %q: strconv.ParseBool: parsing "test": invalid syntax`, Snapshot),
+			wantErr: fmt.Errorf("\"invalid_resource\" wrong resource name"),
 		},
 	}
 
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := Parse(tt.in)
-			if err != nil {
-				if !tt.wantErr {
-					t.Errorf("parse error = \"%s\", wantErr %t", err.Error(), tt.wantErr)
+			t.Parallel()
+			is := is.New(t)
 
-					return
-				}
-
-				if err.Error() != tt.expectedErr {
-					t.Errorf("expected error \"%s\", got \"%s\"", tt.expectedErr, err.Error())
-
-					return
-				}
-
-				return
-			}
-
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("parse = %v, want %v", got, tt.want)
+			err := tt.in.Validate()
+			if tt.wantErr == nil {
+				is.NoErr(err)
+			} else {
+				is.True(err != nil)
+				is.Equal(err.Error(), tt.wantErr.Error())
 			}
 		})
 	}

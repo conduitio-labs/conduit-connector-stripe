@@ -20,6 +20,7 @@ import (
 	"time"
 
 	"github.com/conduitio-labs/conduit-connector-stripe/models"
+	"github.com/conduitio/conduit-commons/opencdc"
 	sdk "github.com/conduitio/conduit-connector-sdk"
 )
 
@@ -41,10 +42,10 @@ func NewSnapshot(stripeSvc Stripe, pos *Position) *Snapshot {
 
 // Next returns the next record.
 // Note: The `Snapshot` iterator creates a copy of the data, which is sorted by date of creation in descending order.
-func (i *Snapshot) Next() (sdk.Record, error) {
+func (i *Snapshot) Next() (opencdc.Record, error) {
 	if i.response == nil || len(i.response.Data) == i.index {
 		if err := i.refreshData(); err != nil {
-			return sdk.Record{}, fmt.Errorf("populate with the resource: %w", err)
+			return opencdc.Record{}, fmt.Errorf("populate with the resource: %w", err)
 		}
 
 		// if there is no data - go to `CDC` iterator
@@ -52,7 +53,7 @@ func (i *Snapshot) Next() (sdk.Record, error) {
 			i.position.IteratorMode = modeCDC
 			i.position.Cursor = ""
 
-			return sdk.Record{}, nil
+			return opencdc.Record{}, nil
 		}
 	}
 
@@ -60,12 +61,12 @@ func (i *Snapshot) Next() (sdk.Record, error) {
 
 	position, err := i.position.marshalPosition()
 	if err != nil {
-		return sdk.Record{}, fmt.Errorf("build record position: %w", err)
+		return opencdc.Record{}, fmt.Errorf("build record position: %w", err)
 	}
 
 	payload, err := i.buildRecordPayload()
 	if err != nil {
-		return sdk.Record{}, fmt.Errorf("build record payload: %w", err)
+		return opencdc.Record{}, fmt.Errorf("build record payload: %w", err)
 	}
 
 	record := sdk.Util.Source.NewRecordSnapshot(
@@ -95,7 +96,7 @@ func (i *Snapshot) refreshData() error {
 
 // buildRecordMetadata returns the metadata for the record.
 func (i *Snapshot) buildRecordMetadata() map[string]string {
-	metadata := make(sdk.Metadata, 1)
+	metadata := make(opencdc.Metadata, 1)
 
 	createdAt := time.Now()
 	if c, ok := i.response.Data[i.index][models.KeyCreated].(float64); ok {
@@ -107,18 +108,18 @@ func (i *Snapshot) buildRecordMetadata() map[string]string {
 }
 
 // buildRecordKey returns the key for the record.
-func (i *Snapshot) buildRecordKey() sdk.Data {
-	return sdk.StructuredData{
+func (i *Snapshot) buildRecordKey() opencdc.Data {
+	return opencdc.StructuredData{
 		models.KeyID: i.response.Data[i.index][models.KeyID].(string),
 	}
 }
 
 // buildRecordPayload returns the payload for the record.
-func (i *Snapshot) buildRecordPayload() (sdk.Data, error) {
+func (i *Snapshot) buildRecordPayload() (opencdc.Data, error) {
 	payload, err := json.Marshal(i.response.Data[i.index])
 	if err != nil {
 		return nil, fmt.Errorf("marshal payload: %w", err)
 	}
 
-	return sdk.RawData(payload), nil
+	return opencdc.RawData(payload), nil
 }

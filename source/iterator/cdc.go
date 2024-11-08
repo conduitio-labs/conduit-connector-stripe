@@ -20,6 +20,7 @@ import (
 	"time"
 
 	"github.com/conduitio-labs/conduit-connector-stripe/models"
+	"github.com/conduitio/conduit-commons/opencdc"
 	sdk "github.com/conduitio/conduit-connector-sdk"
 )
 
@@ -41,14 +42,14 @@ func NewCDC(stripeSvc Stripe, pos *Position) *CDC {
 }
 
 // Next returns the next record.
-func (i *CDC) Next() (sdk.Record, error) {
+func (i *CDC) Next() (opencdc.Record, error) {
 	if i.eventData == nil || i.position.Index == 0 {
 		if err := i.getData(); err != nil {
-			return sdk.Record{}, fmt.Errorf("get event data: %w", err)
+			return opencdc.Record{}, fmt.Errorf("get event data: %w", err)
 		}
 
 		if len(i.eventData) == 0 {
-			return sdk.Record{}, sdk.ErrBackoffRetry
+			return opencdc.Record{}, sdk.ErrBackoffRetry
 		}
 	}
 
@@ -58,7 +59,7 @@ func (i *CDC) Next() (sdk.Record, error) {
 
 	payload, err := i.buildRecordPayload()
 	if err != nil {
-		return sdk.Record{}, fmt.Errorf("build record payload: %w", err)
+		return opencdc.Record{}, fmt.Errorf("build record payload: %w", err)
 	}
 
 	index := i.position.Index
@@ -73,19 +74,19 @@ func (i *CDC) Next() (sdk.Record, error) {
 
 	position, err := i.position.marshalPosition()
 	if err != nil {
-		return sdk.Record{}, fmt.Errorf("build record position: %w", err)
+		return opencdc.Record{}, fmt.Errorf("build record position: %w", err)
 	}
 
-	// there is no default case, because sdk.OperationUpdate is the default operation
+	// there is no default case, because opencdc.OperationUpdate is the default operation
 	switch models.EventsOperation[i.eventData[index].Type] {
-	case sdk.OperationCreate:
+	case opencdc.OperationCreate:
 		return sdk.Util.Source.NewRecordCreate(
 			position,
 			metadata,
 			key,
 			payload,
 		), nil
-	case sdk.OperationUpdate:
+	case opencdc.OperationUpdate:
 		return sdk.Util.Source.NewRecordUpdate(
 			position,
 			metadata,
@@ -93,15 +94,16 @@ func (i *CDC) Next() (sdk.Record, error) {
 			nil,
 			payload,
 		), nil
-	case sdk.OperationDelete:
+	case opencdc.OperationDelete:
 		return sdk.Util.Source.NewRecordDelete(
 			position,
 			metadata,
 			key,
+			payload,
 		), nil
 	}
 
-	return sdk.Record{}, nil
+	return opencdc.Record{}, nil
 }
 
 // getData calls methods to assign Stripe event data to the iterator.
@@ -180,7 +182,7 @@ func (i *CDC) getDataWithEndingBefore() error {
 
 // buildRecordMetadata returns the metadata for the record.
 func (i *CDC) buildRecordMetadata() map[string]string {
-	metadata := sdk.Metadata{}
+	metadata := opencdc.Metadata{}
 
 	metadata.SetCreatedAt(time.Unix(i.eventData[i.position.Index].Created, 0))
 
@@ -188,18 +190,18 @@ func (i *CDC) buildRecordMetadata() map[string]string {
 }
 
 // buildRecordKey returns the key for the record.
-func (i *CDC) buildRecordKey() sdk.Data {
-	return sdk.StructuredData{
+func (i *CDC) buildRecordKey() opencdc.Data {
+	return opencdc.StructuredData{
 		models.KeyID: i.eventData[i.position.Index].Data.Object[models.KeyID].(string),
 	}
 }
 
 // buildRecordPayload returns the payload for the record.
-func (i *CDC) buildRecordPayload() (sdk.Data, error) {
+func (i *CDC) buildRecordPayload() (opencdc.Data, error) {
 	payload, err := json.Marshal(i.eventData[i.position.Index].Data.Object)
 	if err != nil {
 		return nil, fmt.Errorf("marshal payload: %w", err)
 	}
 
-	return sdk.RawData(payload), nil
+	return opencdc.RawData(payload), nil
 }

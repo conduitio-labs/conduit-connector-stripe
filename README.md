@@ -88,3 +88,7 @@ Stripe allows up to 100 read operations per second in live mode, and 25 operatio
 Data from Stripe is sorted by date of creation in descending order, with no manual sort option.
 
 Stripe stores [events](https://api.stripe.com/v1/events) for the last 30 days.
+
+### Useful resources
+
+![scarf pixel](https://static.scarf.sh/a.png?x-pxid=e930edb2-f6c6-4722-9999-c521d16fe8a1)

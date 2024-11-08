@@ -19,7 +19,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"os"
@@ -28,6 +28,7 @@ import (
 	"github.com/conduitio-labs/conduit-connector-stripe/config"
 	"github.com/conduitio-labs/conduit-connector-stripe/models"
 	r "github.com/conduitio-labs/conduit-connector-stripe/models/resources"
+	"github.com/conduitio/conduit-commons/opencdc"
 	sdk "github.com/conduitio/conduit-connector-sdk"
 	"github.com/google/uuid"
 	"github.com/hashicorp/go-retryablehttp"
@@ -52,7 +53,7 @@ type AcceptanceTestDriver struct {
 }
 
 // WriteToSource returns a slice of records that should be prepared in the Stripe so that the source will read them.
-func (d AcceptanceTestDriver) WriteToSource(t *testing.T, records []sdk.Record) []sdk.Record {
+func (d AcceptanceTestDriver) WriteToSource(t *testing.T, records []opencdc.Record) []opencdc.Record {
 	ctx := context.Background()
 
 	cli := retryablehttp.NewClient()
@@ -77,18 +78,18 @@ func (d AcceptanceTestDriver) WriteToSource(t *testing.T, records []sdk.Record) 
 			t.Error(err)
 		}
 
-		records[i].Key = sdk.StructuredData{
+		records[i].Key = opencdc.StructuredData{
 			models.KeyID: resource[models.KeyID],
 		}
 
-		records[i].Payload.After = sdk.RawData(payload)
+		records[i].Payload.After = opencdc.RawData(payload)
 	}
 
 	return records
 }
 
 // GenerateRecord generates a new Stripe record.
-func (d AcceptanceTestDriver) GenerateRecord(_ *testing.T, operation sdk.Operation) sdk.Record {
+func (d AcceptanceTestDriver) GenerateRecord(_ *testing.T, operation opencdc.Operation) opencdc.Record {
 	var (
 		name        = fmt.Sprintf(clientNameFmt, uuid.New().String())
 		description = fmt.Sprintf(clientDescriptionFmt, name)
@@ -99,9 +100,9 @@ func (d AcceptanceTestDriver) GenerateRecord(_ *testing.T, operation sdk.Operati
 		models.KeyDescription: description,
 	})
 
-	return sdk.Record{
+	return opencdc.Record{
 		Operation: operation,
-		Payload:   sdk.Change{After: sdk.RawData(payload)},
+		Payload:   opencdc.Change{After: opencdc.RawData(payload)},
 	}
 }
 
@@ -114,8 +115,8 @@ func TestAcceptance(t *testing.T) {
 	}
 
 	cfg = map[string]string{
-		config.SecretKey:    secretKey,
-		config.ResourceName: resourceName,
+		config.ConfigSecretKey:    secretKey,
+		config.ConfigResourceName: resourceName,
 	}
 
 	sdk.AcceptanceTest(t, AcceptanceTestDriver{sdk.ConfigurableAcceptanceTestDriver{
@@ -211,7 +212,7 @@ func makeRequest(ctx context.Context, cli *retryablehttp.Client, method, path st
 		return nil, fmt.Errorf("parse api url: %w", err)
 	}
 
-	reqURL.Path += fmt.Sprintf(models.PathFmt, models.ResourcesMap[cfg[config.ResourceName]])
+	reqURL.Path += fmt.Sprintf(models.PathFmt, models.ResourcesMap[cfg[config.ConfigResourceName]])
 
 	if path != "" {
 		reqURL.Path += fmt.Sprintf(models.PathFmt, path)
@@ -228,7 +229,7 @@ func makeRequest(ctx context.Context, cli *retryablehttp.Client, method, path st
 	if err != nil {
 		return nil, fmt.Errorf("create new request: %w", err)
 	}
-	req.Header.Add(models.HeaderAuthKey, fmt.Sprintf(models.HeaderAuthValueFormat, cfg[config.SecretKey]))
+	req.Header.Add(models.HeaderAuthKey, fmt.Sprintf(models.HeaderAuthValueFormat, cfg[config.ConfigSecretKey]))
 
 	resp, err := cli.Do(req)
 	if err != nil {
@@ -237,7 +238,7 @@ func makeRequest(ctx context.Context, cli *retryablehttp.Client, method, path st
 
 	defer resp.Body.Close()
 
-	data, err := ioutil.ReadAll(resp.Body)
+	data, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("read all response body: %w", err)
 	}

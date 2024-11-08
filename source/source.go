@@ -16,17 +16,22 @@ package source
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/conduitio-labs/conduit-connector-stripe/clients/http"
 	"github.com/conduitio-labs/conduit-connector-stripe/config"
 	"github.com/conduitio-labs/conduit-connector-stripe/source/iterator"
 	"github.com/conduitio-labs/conduit-connector-stripe/stripe"
+	commonsConfig "github.com/conduitio/conduit-commons/config"
+	"github.com/conduitio/conduit-commons/opencdc"
 	sdk "github.com/conduitio/conduit-connector-sdk"
 )
 
+//go:generate mockgen -package mock -source source.go -destination ./mock/source.go
+
 // An Iterator defines the interface to iterator methods.
 type Iterator interface {
-	Next() (sdk.Record, error)
+	Next() (opencdc.Record, error)
 }
 
 // A Source represents the source connector.
@@ -43,43 +48,27 @@ func NewSource() sdk.Source {
 }
 
 // Parameters returns a map of named Parameters that describe how to configure the Source.
-func (s *Source) Parameters() map[string]sdk.Parameter {
-	return map[string]sdk.Parameter{
-		config.SecretKey: {
-			Default:     "",
-			Required:    true,
-			Description: "Stripe secret key.",
-		},
-		config.ResourceName: {
-			Default:     "",
-			Required:    true,
-			Description: "Stripe resource name.",
-		},
-		config.Snapshot: {
-			Default:     "true",
-			Required:    false,
-			Description: "Whether the connector will take a snapshot of the entire resource before starting cdc mode.",
-		},
-		config.BatchSize: {
-			Default:     "",
-			Required:    false,
-			Description: "Number of Stripe objects in the batch.",
-		},
-	}
+func (s *Source) Parameters() commonsConfig.Parameters {
+	return s.cfg.Parameters()
 }
 
 // Configure parses and stores configurations, returns an error in case of invalid configuration.
-func (s *Source) Configure(_ context.Context, cfgRaw map[string]string) (err error) {
-	s.cfg, err = config.Parse(cfgRaw)
+func (s *Source) Configure(ctx context.Context, cfgRaw commonsConfig.Config) error {
+	err := sdk.Util.ParseConfig(ctx, cfgRaw, &s.cfg, NewSource().Parameters())
 	if err != nil {
 		return err
+	}
+
+	err = s.cfg.Validate()
+	if err != nil {
+		return fmt.Errorf("error validating configuration: %w", err)
 	}
 
 	return nil
 }
 
-// Open parses sdk.Position and initializes a SnapshotIterator iterator.
-func (s *Source) Open(ctx context.Context, position sdk.Position) error {
+// Open parses opencdc.Position and initializes a SnapshotIterator iterator.
+func (s *Source) Open(ctx context.Context, position opencdc.Position) error {
 	pos, err := iterator.ParseSDKPosition(position)
 	if err != nil {
 		return err
@@ -92,18 +81,18 @@ func (s *Source) Open(ctx context.Context, position sdk.Position) error {
 	return nil
 }
 
-// Read returns the next sdk.Record.
-func (s *Source) Read(_ context.Context) (sdk.Record, error) {
+// Read returns the next opencdc.Record.
+func (s *Source) Read(_ context.Context) (opencdc.Record, error) {
 	record, err := s.iterator.Next()
 	if err != nil {
-		return sdk.Record{}, err
+		return opencdc.Record{}, err
 	}
 
 	return record, nil
 }
 
 // Ack does nothing.
-func (s *Source) Ack(ctx context.Context, position sdk.Position) error {
+func (s *Source) Ack(ctx context.Context, position opencdc.Position) error {
 	sdk.Logger(ctx).Debug().Str("position", string(position)).Msg("got ack")
 
 	return nil

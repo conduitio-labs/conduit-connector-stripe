@@ -19,7 +19,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"os"
@@ -30,6 +30,7 @@ import (
 	"github.com/conduitio-labs/conduit-connector-stripe/config"
 	"github.com/conduitio-labs/conduit-connector-stripe/models"
 	r "github.com/conduitio-labs/conduit-connector-stripe/models/resources"
+	"github.com/conduitio/conduit-commons/opencdc"
 	sdk "github.com/conduitio/conduit-connector-sdk"
 	"github.com/google/uuid"
 	"github.com/hashicorp/go-retryablehttp"
@@ -44,7 +45,9 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 	t.Run("read nothing", func(t *testing.T) {
 		var ctx = context.Background()
 
-		defer goleak.VerifyNone(t)
+		// Ignore go-cache's background goroutine used for periodic cleanup operations.
+		// It's not a true leak as it's part of the cache's design.
+		defer goleak.VerifyNone(t, goleak.IgnoreTopFunction("github.com/twmb/go-cache/cache.New[...].func1"))
 
 		cfg, err := prepareDefaultConfig()
 		if err != nil {
@@ -97,7 +100,7 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 
 		var ctx = context.Background()
 
-		defer goleak.VerifyNone(t)
+		defer goleak.VerifyNone(t, goleak.IgnoreTopFunction("github.com/twmb/go-cache/cache.New[...].func1"))
 
 		cfg, err := prepareConfig(invalidSecretKey, "")
 		if err != nil {
@@ -142,11 +145,11 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 		var (
 			ctx = context.Background()
 
-			record sdk.Record
-			pos    sdk.Position
+			record opencdc.Record
+			pos    opencdc.Position
 		)
 
-		defer goleak.VerifyNone(t)
+		defer goleak.VerifyNone(t, goleak.IgnoreTopFunction("github.com/twmb/go-cache/cache.New[...].func1"))
 
 		cfg, err := prepareDefaultConfig()
 		if err != nil {
@@ -201,7 +204,7 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 
 			pos = record.Position
 
-			err = compareResult(record, resources[i], sdk.OperationSnapshot)
+			err = compareResult(record, resources[i], opencdc.OperationSnapshot)
 			if err != nil {
 				t.Error(err.Error())
 			}
@@ -230,7 +233,7 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 				t.Errorf("read: %s", err.Error())
 			}
 
-			err = compareResult(record, resources[i], sdk.OperationSnapshot)
+			err = compareResult(record, resources[i], opencdc.OperationSnapshot)
 			if err != nil {
 				t.Error(err.Error())
 			}
@@ -259,11 +262,11 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 		var (
 			ctx = context.Background()
 
-			record sdk.Record
-			rp     sdk.Position
+			record opencdc.Record
+			rp     opencdc.Position
 		)
 
-		defer goleak.VerifyNone(t)
+		defer goleak.VerifyNone(t, goleak.IgnoreTopFunction("github.com/twmb/go-cache/cache.New[...].func1"))
 
 		cfg, err := prepareDefaultConfig()
 		if err != nil {
@@ -317,7 +320,7 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 
 			rp = record.Position
 
-			err = compareResult(record, resources[i], sdk.OperationSnapshot)
+			err = compareResult(record, resources[i], opencdc.OperationSnapshot)
 			if err != nil {
 				t.Error(err.Error())
 			}
@@ -351,7 +354,7 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 			t.Errorf("read: %s", err.Error())
 		}
 
-		err = compareResult(record, resources[0], sdk.OperationCreate)
+		err = compareResult(record, resources[0], opencdc.OperationCreate)
 		if err != nil {
 			t.Error(err.Error())
 		}
@@ -381,10 +384,10 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 		var (
 			ctx = context.Background()
 
-			record sdk.Record
+			record opencdc.Record
 		)
 
-		defer goleak.VerifyNone(t)
+		defer goleak.VerifyNone(t, goleak.IgnoreTopFunction("github.com/twmb/go-cache/cache.New[...].func1"))
 
 		cfg, err := prepareConfigWithBatchSize("7")
 		if err != nil {
@@ -439,7 +442,7 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 				t.Errorf("read: %s", err.Error())
 			}
 
-			err = compareResult(record, resources[i], sdk.OperationSnapshot)
+			err = compareResult(record, resources[i], opencdc.OperationSnapshot)
 			if err != nil {
 				t.Error(err.Error())
 			}
@@ -466,7 +469,7 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 			t.Errorf("read: %s", err.Error())
 		}
 
-		err = compareResult(record, resources[0], sdk.OperationCreate)
+		err = compareResult(record, resources[0], opencdc.OperationCreate)
 		if err != nil {
 			t.Error(err.Error())
 		}
@@ -482,7 +485,7 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 			t.Errorf("read: %s", err.Error())
 		}
 
-		err = compareResult(record, updatedResource1, sdk.OperationUpdate)
+		err = compareResult(record, updatedResource1, opencdc.OperationUpdate)
 		if err != nil {
 			t.Error(err.Error())
 		}
@@ -498,7 +501,7 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 			t.Errorf("read: %s", err.Error())
 		}
 
-		err = compareResult(record, deletedResource, sdk.OperationDelete)
+		err = compareResult(record, deletedResource, opencdc.OperationDelete)
 		if err != nil {
 			t.Error(err.Error())
 		}
@@ -531,7 +534,7 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 			t.Errorf("read: %s", err.Error())
 		}
 
-		err = compareResult(record, updatedResource2, sdk.OperationUpdate)
+		err = compareResult(record, updatedResource2, opencdc.OperationUpdate)
 		if err != nil {
 			t.Error(err.Error())
 		}
@@ -550,7 +553,7 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 				t.Errorf("read: %s", err.Error())
 			}
 
-			err = compareResult(record, resources[i], sdk.OperationCreate)
+			err = compareResult(record, resources[i], opencdc.OperationCreate)
 			if err != nil {
 				t.Error(err.Error())
 			}
@@ -603,10 +606,10 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 		var (
 			ctx = context.Background()
 
-			record sdk.Record
+			record opencdc.Record
 		)
 
-		defer goleak.VerifyNone(t)
+		defer goleak.VerifyNone(t, goleak.IgnoreTopFunction("github.com/twmb/go-cache/cache.New[...].func1"))
 
 		cfg, err := prepareDefaultConfig()
 		if err != nil {
@@ -615,7 +618,7 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 		}
 
 		// update snapshot field in the config
-		cfg[config.Snapshot] = "false"
+		cfg[config.ConfigSnapshot] = "false"
 
 		cli := retryablehttp.NewClient()
 		cli.Logger = sdk.Logger(ctx)
@@ -667,7 +670,7 @@ func TestSource_Read(t *testing.T) { // nolint:gocyclo,nolintlint
 			t.Errorf("read: %s", err)
 		}
 
-		err = compareResult(record, resources[0], sdk.OperationCreate)
+		err = compareResult(record, resources[0], opencdc.OperationCreate)
 		if err != nil {
 			t.Error(err.Error())
 		}
@@ -701,9 +704,9 @@ func prepareConfig(secretKey, batchSize string) (map[string]string, error) {
 	}
 
 	return map[string]string{
-		config.SecretKey:    secretKey,
-		config.ResourceName: resourceName,
-		config.BatchSize:    batchSize,
+		config.ConfigSecretKey:    secretKey,
+		config.ConfigResourceName: resourceName,
+		config.ConfigBatchSize:    batchSize,
 	}, nil
 }
 
@@ -850,7 +853,7 @@ func makeRequest(ctx context.Context, cli *retryablehttp.Client, method, path st
 		return nil, fmt.Errorf("parse api url: %w", err)
 	}
 
-	reqURL.Path += fmt.Sprintf(models.PathFmt, models.ResourcesMap[cfg[config.ResourceName]])
+	reqURL.Path += fmt.Sprintf(models.PathFmt, models.ResourcesMap[cfg[config.ConfigResourceName]])
 
 	if path != "" {
 		reqURL.Path += fmt.Sprintf(models.PathFmt, path)
@@ -867,7 +870,7 @@ func makeRequest(ctx context.Context, cli *retryablehttp.Client, method, path st
 	if err != nil {
 		return nil, fmt.Errorf("create new request: %w", err)
 	}
-	req.Header.Add(models.HeaderAuthKey, fmt.Sprintf(models.HeaderAuthValueFormat, cfg[config.SecretKey]))
+	req.Header.Add(models.HeaderAuthKey, fmt.Sprintf(models.HeaderAuthValueFormat, cfg[config.ConfigSecretKey]))
 
 	resp, err := cli.Do(req)
 	if err != nil {
@@ -876,7 +879,7 @@ func makeRequest(ctx context.Context, cli *retryablehttp.Client, method, path st
 
 	defer resp.Body.Close()
 
-	data, err := ioutil.ReadAll(resp.Body)
+	data, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("read all response body: %w", err)
 	}
@@ -884,8 +887,8 @@ func makeRequest(ctx context.Context, cli *retryablehttp.Client, method, path st
 	return data, nil
 }
 
-func compareResult(record sdk.Record, resource map[string]interface{}, operation sdk.Operation) error {
-	if !reflect.DeepEqual(record.Key, sdk.StructuredData{models.KeyID: resource[models.KeyID].(string)}) {
+func compareResult(record opencdc.Record, resource map[string]interface{}, operation opencdc.Operation) error {
+	if !reflect.DeepEqual(record.Key, opencdc.StructuredData{models.KeyID: resource[models.KeyID].(string)}) {
 		return fmt.Errorf("key: got = %v, want %v", string(record.Key.Bytes()), resource[models.KeyID].(string))
 	}
 
@@ -893,7 +896,7 @@ func compareResult(record sdk.Record, resource map[string]interface{}, operation
 		return fmt.Errorf("action: got = %v, want %v", record.Operation, operation)
 	}
 
-	if operation == sdk.OperationDelete {
+	if operation == opencdc.OperationDelete {
 		return nil
 	}
 

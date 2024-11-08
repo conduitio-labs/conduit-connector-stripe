@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"time"
 
-	sdk "github.com/conduitio/conduit-connector-sdk"
+	"github.com/conduitio/conduit-commons/opencdc"
 )
 
 // Mode defines an iterator mode.
@@ -45,8 +45,8 @@ type Position struct {
 	Index int `json:"index"`
 }
 
-// ParseSDKPosition parses sdk.Position and returns Position.
-func ParseSDKPosition(position sdk.Position) (*Position, error) {
+// ParseSDKPosition parses opencdc.Position and returns Position.
+func ParseSDKPosition(position opencdc.Position) (*Position, error) {
 	if position == nil {
 		return &Position{
 			IteratorMode: modeSnapshot,
@@ -58,14 +58,14 @@ func ParseSDKPosition(position sdk.Position) (*Position, error) {
 
 	err := json.Unmarshal(position, &pos)
 	if err != nil {
-		return nil, fmt.Errorf("unmarshal sdk.Position into Position: %w", err)
+		return nil, fmt.Errorf("unmarshal opencdc.Position into Position: %w", err)
 	}
 
 	return &pos, nil
 }
 
-// marshalPosition marshals Position and returns sdk.Position or an error.
-func (p Position) marshalPosition() (sdk.Position, error) {
+// marshalPosition marshals Position and returns opencdc.Position or an error.
+func (p Position) marshalPosition() (opencdc.Position, error) {
 	positionBytes, err := json.Marshal(p)
 	if err != nil {
 		return nil, fmt.Errorf("marshal position: %w", err)

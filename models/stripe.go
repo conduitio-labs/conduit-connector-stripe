@@ -18,7 +18,7 @@ import (
 	"strings"
 
 	"github.com/conduitio-labs/conduit-connector-stripe/models/resources"
-	sdk "github.com/conduitio/conduit-connector-sdk"
+	"github.com/conduitio/conduit-commons/opencdc"
 )
 
 // A ResourceResponse represents a response resource data from Stripe.
@@ -150,18 +150,18 @@ var EventsMap = map[string][]string{
 
 // EventsOperation represents a dictionary with operations of events,
 // where the key is an event and the value is an action.
-var EventsOperation = (func() map[string]sdk.Operation {
-	eventsOperation := make(map[string]sdk.Operation)
+var EventsOperation = (func() map[string]opencdc.Operation {
+	eventsOperation := make(map[string]opencdc.Operation)
 
 	for _, events := range EventsMap {
 		for _, event := range events {
 			switch e := event; {
 			case strings.Contains(e, KeyCreated):
-				eventsOperation[e] = sdk.OperationCreate
+				eventsOperation[e] = opencdc.OperationCreate
 			case strings.Contains(e, KeyDeleted):
-				eventsOperation[e] = sdk.OperationDelete
+				eventsOperation[e] = opencdc.OperationDelete
 			default:
-				eventsOperation[e] = sdk.OperationUpdate
+				eventsOperation[e] = opencdc.OperationUpdate
 			}
 		}
 	}
