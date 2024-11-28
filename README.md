@@ -4,9 +4,7 @@
 The Stripe connector is one of [Conduit](https://github.com/ConduitIO/conduit) plugins. It provides a source Stripe connector.
 
 ### Prerequisites
-- [Go](https://go.dev/) 1.18
-- (optional) [golangci-lint](https://github.com/golangci/golangci-lint) 1.50.1
-- (optional) [mock](https://github.com/golang/mock) 1.6.0
+- [Go](https://go.dev/) 1.23
 
 ### Configuration
 The config passed to `Configure` can contain the following fields:

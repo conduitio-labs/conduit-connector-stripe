@@ -20,6 +20,7 @@ import (
 type MockStripe struct {
 	ctrl     *gomock.Controller
 	recorder *MockStripeMockRecorder
+	isgomock struct{}
 }
 
 // MockStripeMockRecorder is the mock recorder for MockStripe.
